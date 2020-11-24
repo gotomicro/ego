@@ -1,0 +1,2 @@
+[server.grpc]
+    port = 9090

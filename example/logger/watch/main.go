@@ -1,0 +1,24 @@
+package main
+
+import (
+	"github.com/gotomicro/ego"
+	"github.com/gotomicro/ego/core/elog"
+	"time"
+)
+
+//  export EGO_DEBUG=true && go run main.go --config=config.toml
+func main() {
+	err := ego.New(func() error {
+		go func() {
+			for {
+				elog.Info("logger info", elog.String("gopher", "ego1"), elog.String("type", "file"))
+				elog.Debug("logger debug", elog.String("gopher", "ego2"), elog.String("type", "file"))
+				time.Sleep(1 * time.Second)
+			}
+		}()
+		return nil
+	}).Hang(true).Run()
+	if err != nil {
+		elog.Panic("startup", elog.Any("err", err))
+	}
+}

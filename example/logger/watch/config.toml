@@ -1,0 +1,2 @@
+[ego.logger.default]
+    level = "info"

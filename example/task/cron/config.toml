@@ -1,0 +1,6 @@
+[cron.test]
+    withSeconds = false
+    concurrentDelay= 1
+    immediatelyRun = false
+    distributedTask = false
+    waitLockTime = "1s"
