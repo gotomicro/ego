@@ -17,7 +17,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gin-gonic/gin v1.6.3
-	github.com/go-redis/redis v6.15.9+incompatible // indirect
+	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.2
@@ -36,6 +36,8 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/onsi/ginkgo v1.14.2 // indirect
+	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.6.0
@@ -52,11 +54,7 @@ require (
 	go.uber.org/automaxprocs v1.3.0
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.15.0
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
-	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
-	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
-	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	golang.org/x/tools v0.0.0-20200426102838-f3a5411a4c3b // indirect
 	google.golang.org/genproto v0.0.0-20191216164720-4f79533eabd1

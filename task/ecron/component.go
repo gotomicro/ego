@@ -4,9 +4,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/robfig/cron/v3"
+
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/util/xstring"
-	"github.com/robfig/cron/v3"
 )
 
 var (
@@ -85,14 +86,13 @@ func (c *Component) Schedule(schedule Schedule, job NamedJob) EntryID {
 		}
 	}
 	innnerJob := &wrappedJob{
-		NamedJob:            job,
-		logger:              c.logger,
-		workerLockDir:       c.Config.WorkerLockDir,
-		distributedTask:     c.Config.DistributedTask,
-		waitLockTime:        c.Config.WaitLockTime,
-		leaseTTL:            c.Config.TTL,
-		client:              c.Config.etcdClient,
-		defaultWaitLockTime: c.Config.DefaultWaitLockTime,
+		NamedJob:        job,
+		logger:          c.logger,
+		workerLockDir:   c.Config.WorkerLockDir,
+		distributedTask: c.Config.DistributedTask,
+		waitLockTime:    c.Config.WaitLockTime,
+		waitUnlockTime:  c.Config.WaitLockTime,
+		leaseTTL:        c.Config.TTL,
 	}
 	c.logger.Info("add job", elog.String("name", job.Name()))
 	return c.Cron.Schedule(schedule, innnerJob)

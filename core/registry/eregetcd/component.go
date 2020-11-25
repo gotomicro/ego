@@ -10,12 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/gotomicro/ego/core/constant"
-
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/coreos/etcd/mvcc/mvccpb"
+
 	"github.com/gotomicro/ego/client/eetcd"
+	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/registry"

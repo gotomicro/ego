@@ -2,7 +2,6 @@ package eetcd
 
 import (
 	"context"
-	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 )
@@ -26,22 +25,13 @@ func (client *Component) NewMutex(key string, opts ...concurrency.SessionOption)
 }
 
 // Lock ...
-func (mutex *Mutex) Lock(timeout time.Duration) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-	return mutex.m.Lock(ctx)
-}
-
-// TryLock ...
-func (mutex *Mutex) TryLock(timeout time.Duration) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
+func (mutex *Mutex) Lock(ctx context.Context) (err error) {
 	return mutex.m.Lock(ctx)
 }
 
 // Unlock ...
-func (mutex *Mutex) Unlock() (err error) {
-	err = mutex.m.Unlock(context.TODO())
+func (mutex *Mutex) Unlock(ctx context.Context) (err error) {
+	err = mutex.m.Unlock(ctx)
 	if err != nil {
 		return
 	}
