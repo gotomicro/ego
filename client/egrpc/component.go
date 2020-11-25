@@ -2,9 +2,10 @@ package egrpc
 
 import (
 	"context"
+	"time"
+
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
-	"time"
 
 	"google.golang.org/grpc"
 )

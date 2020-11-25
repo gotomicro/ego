@@ -1,10 +1,10 @@
 package ecron
 
 import (
-	"github.com/gotomicro/ego/client/eetcd"
+	"github.com/robfig/cron/v3"
+
 	"github.com/gotomicro/ego/core/conf"
 	"github.com/gotomicro/ego/core/elog"
-	"github.com/robfig/cron/v3"
 )
 
 type Option func(c *Container)
@@ -34,9 +34,10 @@ func Load(key string) *Container {
 	return c
 }
 
-func WithClientEtcd(etcdClient *eetcd.Component) Option {
+// WithLocker 注入分布式locker
+func WithLocker(locker Locker) Option {
 	return func(c *Container) {
-		c.config.etcdClient = etcdClient
+		c.config.locker = locker
 	}
 }
 
@@ -68,7 +69,7 @@ func (c *Container) Build(options ...Option) *Component {
 		// 默认不延迟也不跳过
 	}
 
-	if c.config.DistributedTask && c.config.etcdClient == nil {
+	if c.config.DistributedTask && c.config.locker == nil {
 		c.logger.Panic("client etcd nil", elog.FieldKey("use WithClientEtcd method"))
 	}
 

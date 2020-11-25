@@ -3,9 +3,10 @@ package trace
 import (
 	"context"
 
-	"github.com/gotomicro/ego/core/elog"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	"github.com/gotomicro/ego/core/elog"
 )
 
 var (
