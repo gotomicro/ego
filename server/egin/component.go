@@ -43,7 +43,7 @@ func (c *Component) Name() string {
 func (c *Component) Init() error {
 	listener, err := net.Listen("tcp", c.config.Address())
 	if err != nil {
-		c.logger.Panic("new xgin server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
+		c.logger.Panic("new egin server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
 	}
 	c.config.Port = listener.Addr().(*net.TCPAddr).Port
 	c.listener = listener

@@ -443,7 +443,7 @@ func (a *Application) loadConfig() error {
 		}
 		// 如果协议是file类型，并且是默认文件配置，那么判断下文件是否存在，如果不存在只告诉warning，什么都不做
 	} else {
-		a.logger.Info("no config... ", elog.FieldMod(ecode.ModConfig), elog.String("addr", configAddr))
+		a.logger.Warn("no config... ", elog.FieldMod(ecode.ModConfig), elog.String("addr", configAddr))
 	}
 	return nil
 }
