@@ -13,12 +13,12 @@ const (
 	// EnvDeployment ...
 	EnvDeployment = "EGO_DEPLOYMENT"
 
-	EnvAppLogDir     = "EGO_LOG_DIR"
-	EnvAppMode       = "EGO_MODE"
-	EnvAppRegion     = "EGO_REGION"
-	EnvAppZone       = "EGO_ZONE"
-	EnvAppHost       = "EGO_HOST"
-	EnvAppInstance   = "EGO_INSTANCE" // application unique instance id.
+	EnvAppLogDir   = "EGO_LOG_DIR"
+	EnvAppMode     = "EGO_MODE"
+	EnvAppRegion   = "EGO_REGION"
+	EnvAppZone     = "EGO_ZONE"
+	EnvAppHost     = "EGO_HOST"
+	EnvAppInstance = "EGO_INSTANCE" // application unique instance id.
 	EgoDebug       = "EGO_DEBUG"
 	EgoLoggerLevel = "EGO_LOGGER_LEVEL"
 	EgoConfigPath  = "EGO_CONFIG_PATH"

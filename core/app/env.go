@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	appLogDir       string
-	appMode         string
-	appRegion       string
-	appZone         string
-	appHost         string
-	appInstance     string
+	appLogDir     string
+	appMode       string
+	appRegion     string
+	appZone       string
+	appHost       string
+	appInstance   string
 	egoDebug      string
 	egoConfigPath string
 )

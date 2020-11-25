@@ -25,17 +25,17 @@ func init() {
 
 	HandleFunc("/build/info", func(w http.ResponseWriter, r *http.Request) {
 		serverStats := map[string]string{
-			"name":         app.Name(),
-			"appID":        app.AppID(),
-			"appMode":      app.AppMode(),
-			"appVersion":   app.AppVersion(),
+			"name":       app.Name(),
+			"appID":      app.AppID(),
+			"appMode":    app.AppMode(),
+			"appVersion": app.AppVersion(),
 			"egoVersion": app.EgoVersion(),
-			"buildUser":    app.BuildUser(),
-			"buildHost":    app.BuildHost(),
-			"buildTime":    app.BuildTime(),
-			"startTime":    app.StartTime(),
-			"hostName":     app.HostName(),
-			"goVersion":    app.GoVersion(),
+			"buildUser":  app.BuildUser(),
+			"buildHost":  app.BuildHost(),
+			"buildTime":  app.BuildTime(),
+			"startTime":  app.StartTime(),
+			"hostName":   app.HostName(),
+			"goVersion":  app.GoVersion(),
 		}
 		_ = jsoniter.NewEncoder(w).Encode(serverStats)
 	})
