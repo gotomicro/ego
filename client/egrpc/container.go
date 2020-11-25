@@ -45,44 +45,42 @@ func WithDialOption(opts ...grpc.DialOption) Option {
 
 // Build ...
 func (c *Container) Build(options ...Option) *Component {
-	for _, option := range options {
-		option(c)
+	if options == nil {
+		options = make([]Option, 0)
 	}
 
 	if c.config.Debug {
-		c.config.dialOptions = append(c.config.dialOptions,
-			grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.config.Address)),
-		)
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.config.Address))))
 	}
 
 	if !c.config.DisableAidInterceptor {
-		c.config.dialOptions = append(c.config.dialOptions,
-			grpc.WithChainUnaryInterceptor(aidUnaryClientInterceptor()),
-		)
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(aidUnaryClientInterceptor())))
 	}
 
 	if !c.config.DisableTimeoutInterceptor {
-		c.config.dialOptions = append(c.config.dialOptions,
-			grpc.WithChainUnaryInterceptor(timeoutUnaryClientInterceptor(c.logger, c.config.ReadTimeout, c.config.SlowThreshold)),
-		)
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(timeoutUnaryClientInterceptor(c.logger, c.config.ReadTimeout, c.config.SlowThreshold))))
 	}
 
 	if !c.config.DisableTraceInterceptor {
-		c.config.dialOptions = append(c.config.dialOptions,
-			grpc.WithChainUnaryInterceptor(traceUnaryClientInterceptor()),
+		options = append(options,
+			WithDialOption(grpc.WithChainUnaryInterceptor(traceUnaryClientInterceptor())),
 		)
 	}
 
 	if !c.config.DisableAccessInterceptor {
-		c.config.dialOptions = append(c.config.dialOptions,
-			grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config.Name, c.config.AccessInterceptorLevel)),
+		options = append(options,
+			WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config.Name, c.config.AccessInterceptorLevel))),
 		)
 	}
 
 	if !c.config.DisableMetricInterceptor {
-		c.config.dialOptions = append(c.config.dialOptions,
-			grpc.WithChainUnaryInterceptor(metricUnaryClientInterceptor(c.config.Name)),
+		options = append(options,
+			WithDialOption(grpc.WithChainUnaryInterceptor(metricUnaryClientInterceptor(c.config.Name))),
 		)
+	}
+
+	for _, option := range options {
+		option(c)
 	}
 
 	c.logger.With(elog.FieldAddr(c.config.Address))

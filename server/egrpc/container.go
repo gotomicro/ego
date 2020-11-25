@@ -50,13 +50,13 @@ func WithServerOption(options ...grpc.ServerOption) Option {
 }
 
 // WithStreamInterceptor inject stream interceptors to server option
-func WithStreamInterceptor(intes ...grpc.StreamServerInterceptor) Option {
+func WithStreamInterceptor(interceptors ...grpc.StreamServerInterceptor) Option {
 	return func(c *Container) {
 		if c.config.streamInterceptors == nil {
 			c.config.streamInterceptors = make([]grpc.StreamServerInterceptor, 0)
 		}
 
-		c.config.streamInterceptors = append(c.config.streamInterceptors, intes...)
+		c.config.streamInterceptors = append(c.config.streamInterceptors, interceptors...)
 	}
 }
 
@@ -72,19 +72,38 @@ func WithUnaryInterceptor(interceptors ...grpc.UnaryServerInterceptor) Option {
 
 // Build ...
 func (c *Container) Build(options ...Option) *Component {
+	if options == nil {
+		options = make([]Option, 0)
+	}
+
+	if !c.config.DisableTrace {
+		options = append(options, WithUnaryInterceptor(traceUnaryServerInterceptor))
+		options = append(options, WithStreamInterceptor(traceStreamServerInterceptor))
+	}
+
+	if !c.config.DisableMetric {
+		options = append(options, WithUnaryInterceptor(prometheusUnaryServerInterceptor))
+		options = append(options, WithStreamInterceptor(prometheusStreamServerInterceptor))
+	}
+
 	for _, option := range options {
 		option(c)
 	}
 
-	if !c.config.DisableTrace {
-		c.config.unaryInterceptors = append(c.config.unaryInterceptors, traceUnaryServerInterceptor)
-		c.config.streamInterceptors = append(c.config.streamInterceptors, traceStreamServerInterceptor)
-	}
+	var streamInterceptors = append(
+		[]grpc.StreamServerInterceptor{defaultStreamServerInterceptor(c.logger, c.config.SlowQueryThresholdInMilli)},
+		c.config.streamInterceptors...,
+	)
 
-	if !c.config.DisableMetric {
-		c.config.unaryInterceptors = append(c.config.unaryInterceptors, prometheusUnaryServerInterceptor)
-		c.config.streamInterceptors = append(c.config.streamInterceptors, prometheusStreamServerInterceptor)
-	}
+	var unaryInterceptors = append(
+		[]grpc.UnaryServerInterceptor{defaultUnaryServerInterceptor(c.logger, c.config.SlowQueryThresholdInMilli)},
+		c.config.unaryInterceptors...,
+	)
+
+	c.config.serverOptions = append(c.config.serverOptions,
+		grpc.StreamInterceptor(StreamInterceptorChain(streamInterceptors...)),
+		grpc.UnaryInterceptor(UnaryInterceptorChain(unaryInterceptors...)),
+	)
 
 	return newComponent(c.name, c.config, c.logger)
 }

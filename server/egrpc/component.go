@@ -37,20 +37,6 @@ type Component struct {
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
-	var streamInterceptors = append(
-		[]grpc.StreamServerInterceptor{defaultStreamServerInterceptor(logger, config.SlowQueryThresholdInMilli)},
-		config.streamInterceptors...,
-	)
-
-	var unaryInterceptors = append(
-		[]grpc.UnaryServerInterceptor{defaultUnaryServerInterceptor(logger, config.SlowQueryThresholdInMilli)},
-		config.unaryInterceptors...,
-	)
-
-	config.serverOptions = append(config.serverOptions,
-		grpc.StreamInterceptor(StreamInterceptorChain(streamInterceptors...)),
-		grpc.UnaryInterceptor(UnaryInterceptorChain(unaryInterceptors...)),
-	)
 
 	newServer := grpc.NewServer(config.serverOptions...)
 	reflection.Register(newServer)
