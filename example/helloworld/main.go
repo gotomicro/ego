@@ -13,7 +13,7 @@ func main() {
 	if err := ego.New().Serve(func() server.Server {
 		server := egin.Load("server.http").Build()
 		server.GET("/hello", func(ctx *gin.Context) {
-			ctx.JSON(200, "Hello Shimo")
+			ctx.JSON(200, "Hello Ego")
 			return
 		})
 		return server
