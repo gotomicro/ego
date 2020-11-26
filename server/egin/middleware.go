@@ -14,8 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/metric"
-	"github.com/gotomicro/ego/core/trace"
 	"go.uber.org/zap"
 )
 
@@ -159,15 +159,15 @@ func metricServerInterceptor() gin.HandlerFunc {
 
 func traceServerInterceptor() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		span, ctx := trace.StartSpanFromContext(
+		span, ctx := etrace.StartSpanFromContext(
 			c.Request.Context(),
 			c.Request.Method+" "+c.Request.URL.Path,
-			trace.TagComponent("http"),
-			trace.TagSpanKind("server"),
-			trace.HeaderExtractor(c.Request.Header),
-			trace.CustomTag("http.url", c.Request.URL.Path),
-			trace.CustomTag("http.method", c.Request.Method),
-			trace.CustomTag("peer.ipv4", c.ClientIP()),
+			etrace.TagComponent("http"),
+			etrace.TagSpanKind("server"),
+			etrace.HeaderExtractor(c.Request.Header),
+			etrace.CustomTag("http.url", c.Request.URL.Path),
+			etrace.CustomTag("http.method", c.Request.Method),
+			etrace.CustomTag("peer.ipv4", c.ClientIP()),
 		)
 		c.Request = c.Request.WithContext(ctx)
 		defer span.Finish()

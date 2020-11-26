@@ -10,7 +10,7 @@ import (
 
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/trace"
+	"github.com/gotomicro/ego/core/etrace"
 	"github.com/opentracing/opentracing-go/ext"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -41,12 +41,12 @@ func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, in
 }
 
 func traceUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	span, ctx := trace.StartSpanFromContext(
+	span, ctx := etrace.StartSpanFromContext(
 		ctx,
 		info.FullMethod,
-		trace.FromIncomingContext(ctx),
-		trace.TagComponent("gRPC"),
-		trace.TagSpanKind("server.unary"),
+		etrace.FromIncomingContext(ctx),
+		etrace.TagComponent("gRPC"),
+		etrace.TagSpanKind("server.unary"),
 	)
 
 	defer span.Finish()
@@ -60,7 +60,7 @@ func traceUnaryServerInterceptor(ctx context.Context, req interface{}, info *grp
 		}
 		span.SetTag("code", code)
 		ext.Error.Set(span, true)
-		span.LogFields(trace.String("event", "error"), trace.String("message", err.Error()))
+		span.LogFields(etrace.String("event", "error"), etrace.String("message", err.Error()))
 	}
 	return resp, err
 }
@@ -76,13 +76,13 @@ func (css contextedServerStream) Context() context.Context {
 }
 
 func traceStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	span, ctx := trace.StartSpanFromContext(
+	span, ctx := etrace.StartSpanFromContext(
 		ss.Context(),
 		info.FullMethod,
-		trace.FromIncomingContext(ss.Context()),
-		trace.TagComponent("gRPC"),
-		trace.TagSpanKind("server.stream"),
-		trace.CustomTag("isServerStream", info.IsServerStream),
+		etrace.FromIncomingContext(ss.Context()),
+		etrace.TagComponent("gRPC"),
+		etrace.TagSpanKind("server.stream"),
+		etrace.CustomTag("isServerStream", info.IsServerStream),
 	)
 	defer span.Finish()
 
