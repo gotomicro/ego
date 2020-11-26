@@ -1,17 +1,17 @@
-package trace_test
+package etrace_test
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"github.com/gotomicro/ego/core/trace"
+	"github.com/gotomicro/ego/core/etrace"
 )
 
 func ExampleTraceFunc() {
 	// 1. 从配置文件中初始化
 	process1 := func(ctx context.Context) {
-		span, ctx := trace.StartSpanFromContext(ctx, "process1")
+		span, ctx := etrace.StartSpanFromContext(ctx, "process1")
 		defer span.Finish()
 
 		// todo something
@@ -20,13 +20,13 @@ func ExampleTraceFunc() {
 	}
 
 	process2 := func(ctx context.Context) {
-		span, ctx := trace.StartSpanFromContext(ctx, "process2")
+		span, ctx := etrace.StartSpanFromContext(ctx, "process2")
 		defer span.Finish()
 		process1(ctx)
 	}
 
 	process3 := func(ctx context.Context) {
-		span, ctx := trace.StartSpanFromContext(ctx, "process3")
+		span, ctx := etrace.StartSpanFromContext(ctx, "process3")
 		defer span.Finish()
 		process2(ctx)
 	}

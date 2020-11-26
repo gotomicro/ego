@@ -21,13 +21,13 @@ func WithHang(flag bool) Option {
 // 设置运行前清理
 func WithBeforeStopClean(fns ...func() error) Option {
 	return func(a *ego) {
-		a.beforeStopClean = fns
+		a.beforeStopClean = append(a.beforeStopClean, fns...)
 	}
 }
 
 // 设置运行后清理
 func WithAfterStopClean(fns ...func() error) Option {
 	return func(a *ego) {
-		a.afterStopClean = fns
+		a.afterStopClean = append(a.afterStopClean, fns...)
 	}
 }

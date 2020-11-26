@@ -64,11 +64,6 @@ func New(options ...Option) *ego {
 		afterStopClean:  make([]func() error, 0),
 	}
 
-	// 设置参数
-	for _, option := range options {
-		option(e)
-	}
-
 	// 设置运行前清理函数
 	// 如果注册中心存在设置
 	if e.registerer != nil {
@@ -78,6 +73,11 @@ func New(options ...Option) *ego {
 	// 设置运行后清理函数
 	// 设置清理日志函数
 	WithAfterStopClean(elog.DefaultLogger.Flush, elog.EgoLogger.Flush)
+
+	// 设置参数
+	for _, option := range options {
+		option(e)
+	}
 
 	// 设置初始函数
 	e.inits = []func() error{
@@ -90,12 +90,7 @@ func New(options ...Option) *ego {
 	}
 
 	// 初始化系统函数
-	for _, init := range e.inits {
-		e.err = init()
-		if e.err != nil {
-			return e
-		}
-	}
+	e.err = runSerialFuncReturnError(e.inits)
 	return e
 }
 
@@ -106,13 +101,8 @@ func (e *ego) Invoker(fns ...func() error) *ego {
 
 	e.invokers = append(e.invokers, fns...)
 
-	// 启动器
-	for _, invoker := range e.invokers {
-		e.err = invoker()
-		if e.err != nil {
-			return e
-		}
-	}
+	// 初始化用户函数
+	e.err = runSerialFuncReturnError(e.invokers)
 	return e
 }
 
@@ -198,21 +188,14 @@ func (e *ego) Run() error {
 	e.logger.Info("shutdown ego, bye!", elog.FieldMod(ecode.ModApp))
 
 	// 运行停止后清理
-	for _, clean := range e.afterStopClean {
-		_ = clean()
-	}
+	runSerialFuncLogError(e.afterStopClean)
 	return nil
 }
 
 // 停止程序
 func (e *ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 	// 运行停止前清理
-	for _, clean := range e.beforeStopClean {
-		err = clean()
-		if err != nil {
-			e.logger.Error("beforeStopClean err", elog.FieldMod(ecode.ModApp), elog.FieldErr(err))
-		}
-	}
+	runSerialFuncLogError(e.beforeStopClean)
 
 	// 停止服务
 	e.smu.RLock()

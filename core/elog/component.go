@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gotomicro/ego/core/conf"
-	"github.com/gotomicro/ego/core/defers"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -39,11 +38,12 @@ type (
 	Field     = zap.Field
 	Level     = zapcore.Level
 	Component struct {
-		name    string
-		desugar *zap.Logger
-		lv      *zap.AtomicLevel
-		config  *Config
-		sugar   *zap.SugaredLogger
+		name      string
+		desugar   *zap.Logger
+		lv        *zap.AtomicLevel
+		config    *Config
+		sugar     *zap.SugaredLogger
+		asyncStop func() error
 	}
 )
 
@@ -92,12 +92,9 @@ func newLogger(name string, config *Config) *Component {
 	} else {
 		ws = zapcore.AddSync(newRotate(config))
 	}
-
+	var asyncStop CloseFunc
 	if config.Async {
-		var close CloseFunc
-		ws, close = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
-
-		defers.Register(close)
+		ws, asyncStop = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
 	}
 
 	lv := zap.NewAtomicLevelAt(zapcore.InfoLevel)
@@ -129,11 +126,12 @@ func newLogger(name string, config *Config) *Component {
 		zapOptions...,
 	)
 	return &Component{
-		desugar: zapLogger,
-		lv:      &lv,
-		config:  config,
-		sugar:   zapLogger.Sugar(),
-		name:    name,
+		desugar:   zapLogger,
+		lv:        &lv,
+		config:    config,
+		sugar:     zapLogger.Sugar(),
+		name:      name,
+		asyncStop: asyncStop,
 	}
 }
 
@@ -155,6 +153,9 @@ func (logger *Component) SetLevel(lv Level) {
 
 // Flush ...
 func (logger *Component) Flush() error {
+	if logger.asyncStop != nil {
+		logger.asyncStop()
+	}
 	return logger.desugar.Sync()
 }
 

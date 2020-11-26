@@ -1,4 +1,4 @@
-package jaeger
+package ejaeger
 
 import (
 	"github.com/gotomicro/ego/core/app"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gotomicro/ego/core/conf"
-	"github.com/gotomicro/ego/core/defers"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
@@ -23,15 +22,11 @@ type Config struct {
 	tags             []opentracing.Tag
 	options          []jconfig.Option
 	PanicOnError     bool
-}
-
-// StdConfig ...
-func StdConfig(name string) *Config {
-	return RawConfig("ego.trace.jaeger")
+	closer           func() error
 }
 
 // RawConfig ...
-func RawConfig(key string) *Config {
+func Load(key string) *Config {
 	var config = DefaultConfig()
 	if err := conf.UnmarshalKey(key, config); err != nil {
 		elog.Panic("unmarshal key", elog.Any("err", err))
@@ -105,6 +100,10 @@ func (config *Config) Build(options ...jconfig.Option) opentracing.Tracer {
 			elog.Error("new jaeger", elog.FieldMod("jaeger"), elog.FieldErr(err))
 		}
 	}
-	defers.Register(closer.Close)
+	config.closer = closer.Close
 	return tracer
+}
+
+func (config *Config) Stop() error {
+	return config.closer()
 }

@@ -9,10 +9,10 @@ import (
 	"github.com/gotomicro/ego/core/conf/manager"
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/etrace/ejaeger"
 	"github.com/gotomicro/ego/core/flag"
 	"github.com/gotomicro/ego/core/signals"
-	"github.com/gotomicro/ego/core/trace"
-	"github.com/gotomicro/ego/core/trace/jaeger"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"github.com/gotomicro/ego/core/util/xgo"
 	"go.uber.org/automaxprocs/maxprocs"
@@ -31,7 +31,6 @@ func (e *ego) waitSignals() {
 }
 
 func (e *ego) startServers() error {
-	//var eg errgroup.Group
 	// start multi servers
 	for _, s := range e.servers {
 		s := s
@@ -70,14 +69,13 @@ func (e *ego) startJobs() error {
 	var jobs = make([]func() error, 0)
 	// warp jobs
 	for name, runner := range e.jobs {
+		runner := runner
 		jobs = append(jobs, func() error {
 			e.logger.Info("job run begin", elog.FieldName(name))
 			defer e.logger.Info("job run end", elog.FieldName(name))
-			// runner.Run panic 错误在更上层抛出
 			return runner.Run()
 		})
 	}
-
 	return xgo.ParallelWithError(jobs...)()
 }
 
@@ -140,7 +138,7 @@ func loadConfig() error {
 		}
 		// 如果协议是file类型，并且是默认文件配置，那么判断下文件是否存在，如果不存在只告诉warning，什么都不做
 	} else {
-		elog.EgoLogger.Warn("no config... ", elog.FieldMod(ecode.ModConfig), elog.String("addr", configAddr))
+		elog.EgoLogger.Warn("no config... ", elog.FieldMod(ecode.ModConfig), elog.String("addr", configAddr), elog.FieldErr(err))
 	}
 	return nil
 }
@@ -159,17 +157,18 @@ func (e *ego) initLogger() error {
 
 // initTracer init
 func (e *ego) initTracer() error {
-	// init tracing component jaeger
 	if conf.Get(e.configPrefix+"trace.jaeger") != nil {
-		var config = jaeger.RawConfig(e.configPrefix + "trace.jaeger")
-		trace.SetGlobalTracer(config.Build())
+		container := ejaeger.Load(e.configPrefix + "trace.jaeger")
+		tracer := container.Build()
+		etrace.SetGlobalTracer(tracer)
+		e.afterStopClean = append(e.afterStopClean, container.Stop)
 	}
 	return nil
 }
 
 // initMaxProcs init
 func initMaxProcs() error {
-	if maxProcs := conf.GetInt("maxProc"); maxProcs != 0 {
+	if maxProcs := conf.GetInt("ego.maxProc"); maxProcs != 0 {
 		runtime.GOMAXPROCS(maxProcs)
 	} else {
 		if _, err := maxprocs.Set(); err != nil {
@@ -187,4 +186,23 @@ func printBanner() error {
 `
 	fmt.Println(xcolor.Green(banner))
 	return nil
+}
+
+func runSerialFuncReturnError(fns []func() error) error {
+	for _, clean := range fns {
+		err := clean()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func runSerialFuncLogError(fns []func() error) {
+	for _, clean := range fns {
+		err := clean()
+		if err != nil {
+			elog.EgoLogger.Error("beforeStopClean err", elog.FieldMod(ecode.ModApp), elog.FieldErr(err))
+		}
+	}
 }

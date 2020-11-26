@@ -1,4 +1,4 @@
-package trace
+package etrace
 
 import (
 	"strings"

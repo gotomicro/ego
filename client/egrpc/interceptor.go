@@ -8,8 +8,8 @@ import (
 	"github.com/gotomicro/ego/core/app"
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/metric"
-	"github.com/gotomicro/ego/core/trace"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"github.com/gotomicro/ego/core/util/xstring"
 	"time"
@@ -89,15 +89,15 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			md = md.Copy()
 		}
 
-		span, ctx := trace.StartSpanFromContext(
+		span, ctx := etrace.StartSpanFromContext(
 			ctx,
 			method,
-			trace.TagSpanKind("client"),
-			trace.TagComponent("grpc"),
+			etrace.TagSpanKind("client"),
+			etrace.TagComponent("grpc"),
 		)
 		defer span.Finish()
 
-		err := invoker(trace.MetadataInjector(ctx, md), method, req, reply, cc, opts...)
+		err := invoker(etrace.MetadataInjector(ctx, md), method, req, reply, cc, opts...)
 		if err != nil {
 			code := codes.Unknown
 			if s, ok := status.FromError(err); ok {
@@ -106,7 +106,7 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			span.SetTag("response_code", code)
 			ext.Error.Set(span, true)
 
-			span.LogFields(trace.String("event", "error"), trace.String("message", err.Error()))
+			span.LogFields(etrace.String("event", "error"), etrace.String("message", err.Error()))
 		}
 		return err
 	}

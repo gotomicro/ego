@@ -17,20 +17,18 @@ type Container struct {
 
 func DefaultContainer() *Container {
 	return &Container{
+		config: DefaultConfig(),
 		logger: elog.EgoLogger.With(elog.FieldMod("task.ecron")),
 	}
 }
 
 func Load(key string) *Container {
 	c := DefaultContainer()
-	var config = DefaultConfig()
-	if err := conf.UnmarshalKey(key, &config); err != nil {
+	if err := conf.UnmarshalKey(key, &c.config); err != nil {
 		c.logger.Panic("parse config error", elog.FieldErr(err), elog.FieldKey(key))
 		return c
 	}
-	c.config = config
 	c.name = key
-
 	return c
 }
 
