@@ -14,7 +14,7 @@
 ```bash
 git clone https://github.com/gotomicro/ego.git
 cd ego
-git remote add upstream 'git@github.com:<your github username>/beego.git'
+git remote add upstream 'git@github.com:<your github username>/ego.git'
 ```
 upstream可以替换为任何你喜欢的名字。比如说你的用户名，你的昵称，或者直接使用me。后面的命令也要执行相应的替换。
 
@@ -27,11 +27,11 @@ git fetch upstream
 
 ## 4 创建 feature 分支
 我们在创建新的 feature 分支的时候，要先考虑清楚，从哪个分支切出来。
-我们假设，现在我们希望添加的特性将会被合并到develop分支，或者说我们的新特性要在develop的基础上进行，执行：
+我们假设，现在我们希望添加的特性将会被合并到master分支，或者说我们的新特性要在master的基础上进行，执行：
 ```bash
 git checkout -b feature/my-feature origin/master
 ```
-这样我们就切出来一个分支了。该分支的代码和origin/develop上的完全一致。
+这样我们就切出来一个分支了。该分支的代码和origin/master上的完全一致。
 
 ## 5 提交 commit
 ```bash
