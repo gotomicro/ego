@@ -106,6 +106,11 @@ func (e *ego) Invoker(fns ...func() error) *ego {
 	return e
 }
 
+func (e *ego) Registry(reg registry.Registry) *ego {
+	e.registerer = reg
+	return e
+}
+
 // 服务
 func (e *ego) Serve(s ...server.Server) *ego {
 	e.smu.Lock()
