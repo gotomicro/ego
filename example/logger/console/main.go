@@ -7,7 +7,7 @@ import (
 
 //  export EGO_DEBUG=true && go run main.go
 func main() {
-	err := ego.New(func() error {
+	err := ego.New().Invoker(func() error {
 		elog.Info("logger info", elog.String("gopher", "ego"), elog.String("type", "command"))
 		return nil
 	}).Run()

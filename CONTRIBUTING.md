@@ -29,14 +29,16 @@ git fetch upstream
 我们在创建新的 feature 分支的时候，要先考虑清楚，从哪个分支切出来。
 我们假设，现在我们希望添加的特性将会被合并到develop分支，或者说我们的新特性要在develop的基础上进行，执行：
 ```bash
-git checkout -b feature/my-feature origin/develop
+git checkout -b feature/my-feature origin/master
 ```
 这样我们就切出来一个分支了。该分支的代码和origin/develop上的完全一致。
 
 ## 5 提交 commit
+```bash
 git add .
 git commit
 git push upstream my-feature
+```
 
 ## 6 提交 PR
 访问 https://github.com/gotomicro/ego, 
