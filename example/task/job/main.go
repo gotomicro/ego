@@ -30,6 +30,6 @@ func (j *JobRunner) Run() error {
 	return errors.New("i am error")
 }
 
-func (j *JobRunner) GetJobName() string {
+func (j *JobRunner) Name() string {
 	return j.JobName
 }

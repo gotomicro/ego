@@ -17,4 +17,5 @@ func init() {
 // Runner ...
 type Runner interface {
 	Run() error
+	Name() string
 }

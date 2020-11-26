@@ -141,12 +141,11 @@ func (e *ego) Job(runners ...ejob.Runner) *ego {
 	}
 
 	for _, runner := range runners {
-		namedJob, ok := runner.(interface{ GetJobName() string })
-		// job runner must implement GetJobName
-		if !ok {
+		jobName := runner.Name()
+		if jobName == "" {
+			e.logger.Error("ego job name empty")
 			return e
 		}
-		jobName := namedJob.GetJobName()
 		if flag.Bool("disable-job") {
 			e.logger.Info("ego disable job", elog.FieldName(jobName))
 			return e
