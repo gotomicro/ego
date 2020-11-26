@@ -9,7 +9,7 @@ import (
 
 //  export EGO_DEBUG=true && go run main.go --config=config.toml
 func main() {
-	if err := ego.New(func() error {
+	if err := ego.New(ego.WithHang(true)).Invoker(func() error {
 		p := People{}
 		// 初始化
 		err := conf.UnmarshalKey("people", &p)
@@ -32,7 +32,7 @@ func main() {
 			}
 		}()
 		return nil
-	}).Hang(true).Run(); err != nil {
+	}).Run(); err != nil {
 		elog.Panic("startup", elog.Any("err", err))
 	}
 }

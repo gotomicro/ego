@@ -1,4 +1,4 @@
-package job
+package ejob
 
 import (
 	"github.com/gotomicro/ego/core/flag"

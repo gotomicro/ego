@@ -8,7 +8,7 @@ import (
 
 //  export EGO_DEBUG=true && go run main.go --config=config.toml --watch=false
 func main() {
-	err := ego.New(func() error {
+	err := ego.New().Invoker(func() error {
 		p := People{}
 		err := conf.UnmarshalKey("people", &p)
 		if err != nil {

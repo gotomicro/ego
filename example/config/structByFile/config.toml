@@ -1,7 +1,6 @@
 [people]
     name = "ego"
-[ego.logger.default]
+[logger.default]
     debug = true
-    enableConsole = true
 
 

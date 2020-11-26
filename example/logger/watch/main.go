@@ -8,7 +8,7 @@ import (
 
 //  export EGO_DEBUG=true && go run main.go --config=config.toml
 func main() {
-	err := ego.New(func() error {
+	err := ego.New(ego.WithHang(true)).Invoker(func() error {
 		go func() {
 			for {
 				elog.Info("logger info", elog.String("gopher", "ego1"), elog.String("type", "file"))
@@ -17,7 +17,7 @@ func main() {
 			}
 		}()
 		return nil
-	}).Hang(true).Run()
+	}).Run()
 	if err != nil {
 		elog.Panic("startup", elog.Any("err", err))
 	}

@@ -15,22 +15,21 @@ type Container struct {
 
 func DefaultContainer() *Container {
 	return &Container{
+		config: DefaultConfig(),
 		logger: elog.EgoLogger.With(elog.FieldMod("server.egovernor")),
 	}
 }
 
 func Load(key string) *Container {
 	c := DefaultContainer()
-	var config = DefaultConfig()
-	if err := conf.UnmarshalKey(key, &config); err != nil {
+	if err := conf.UnmarshalKey(key, &c.config); err != nil {
 		c.err = err
 		return c
 	}
 	// 修改host信息
 	if flag.String("host") != "" {
-		config.Host = flag.String("host")
+		c.config.Host = flag.String("host")
 	}
-	c.config = config
 	c.name = key
 	return c
 }
