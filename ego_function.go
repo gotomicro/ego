@@ -22,7 +22,7 @@ import (
 
 // waitSignals wait signal
 func (e *ego) waitSignals() {
-	e.logger.Info("init listen signal", elog.FieldMod(ecode.ModApp), elog.FieldEvent("init"))
+	e.logger.Info("init listen signal", elog.FieldComponent(ecode.ModApp), elog.FieldEvent("init"))
 	signals.Shutdown(func(grace bool) { // when get shutdown signal
 		// todo: support timeout
 		e.Stop(context.TODO(), grace)
@@ -41,8 +41,8 @@ func (e *ego) startServers() error {
 				e.logger.Error("register service err", elog.FieldErr(err))
 			}
 			defer e.registerer.UnregisterService(context.TODO(), s.Info())
-			e.logger.Info("start server", elog.FieldMod(ecode.ModApp), elog.FieldEvent("init"), elog.FieldName(s.Info().Name), elog.FieldAddr(s.Info().Label()), elog.Any("scheme", s.Info().Scheme))
-			defer e.logger.Info("exit server", elog.FieldMod(ecode.ModApp), elog.FieldEvent("exit"), elog.FieldName(s.Info().Name), elog.FieldErr(err), elog.FieldAddr(s.Info().Label()))
+			e.logger.Info("start server", elog.FieldComponent(ecode.ModApp), elog.FieldEvent("init"), elog.FieldName(s.Info().Name), elog.FieldAddr(s.Info().Label()), elog.Any("scheme", s.Info().Scheme))
+			defer e.logger.Info("exit server", elog.FieldComponent(ecode.ModApp), elog.FieldEvent("exit"), elog.FieldName(s.Info().Name), elog.FieldErr(err), elog.FieldAddr(s.Info().Label()))
 			err = s.Start()
 			return
 		})
@@ -128,17 +128,17 @@ func loadConfig() error {
 	provider, err := manager.NewDataSource(file.DataSourceFile, configAddr, flag.Bool("watch"))
 	if err != manager.ErrDefaultConfigNotExist {
 		if err != nil {
-			elog.EgoLogger.Panic("data source: provider error", elog.FieldMod(ecode.ModConfig), elog.FieldErr(err))
+			elog.EgoLogger.Panic("data source: provider error", elog.FieldComponent(ecode.ModConfig), elog.FieldErr(err))
 		}
 
 		parser, tag := file.ExtParser(configAddr)
 		// 如果不是，就要加载文件，加载不到panic
 		if err := conf.LoadFromDataSource(provider, parser, conf.TagName(tag)); err != nil {
-			elog.EgoLogger.Panic("data source: load config", elog.FieldMod(ecode.ModConfig), elog.FieldErrKind(ecode.ErrKindUnmarshalConfigErr), elog.FieldErr(err))
+			elog.EgoLogger.Panic("data source: load config", elog.FieldComponent(ecode.ModConfig), elog.FieldErrKind(ecode.ErrKindUnmarshalConfigErr), elog.FieldErr(err))
 		}
 		// 如果协议是file类型，并且是默认文件配置，那么判断下文件是否存在，如果不存在只告诉warning，什么都不做
 	} else {
-		elog.EgoLogger.Warn("no config... ", elog.FieldMod(ecode.ModConfig), elog.String("addr", configAddr), elog.FieldErr(err))
+		elog.EgoLogger.Warn("no config... ", elog.FieldComponent(ecode.ModConfig), elog.String("addr", configAddr), elog.FieldErr(err))
 	}
 	return nil
 }
@@ -172,10 +172,10 @@ func initMaxProcs() error {
 		runtime.GOMAXPROCS(maxProcs)
 	} else {
 		if _, err := maxprocs.Set(); err != nil {
-			elog.EgoLogger.Panic("auto max procs", elog.FieldMod(ecode.ModProc), elog.FieldErrKind(ecode.ErrKindAny), elog.FieldErr(err))
+			elog.EgoLogger.Panic("auto max procs", elog.FieldComponent(ecode.ModProc), elog.FieldErrKind(ecode.ErrKindAny), elog.FieldErr(err))
 		}
 	}
-	elog.EgoLogger.Info("auto max procs", elog.FieldMod(ecode.ModProc), elog.Int64("procs", int64(runtime.GOMAXPROCS(-1))))
+	elog.EgoLogger.Info("auto max procs", elog.FieldComponent(ecode.ModProc), elog.Int64("procs", int64(runtime.GOMAXPROCS(-1))))
 	return nil
 }
 
@@ -202,7 +202,7 @@ func runSerialFuncLogError(fns []func() error) {
 	for _, clean := range fns {
 		err := clean()
 		if err != nil {
-			elog.EgoLogger.Error("beforeStopClean err", elog.FieldMod(ecode.ModApp), elog.FieldErr(err))
+			elog.EgoLogger.Error("beforeStopClean err", elog.FieldComponent(ecode.ModApp), elog.FieldErr(err))
 		}
 	}
 }

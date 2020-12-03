@@ -121,14 +121,13 @@ var (
 	BuildInfoGauge = GaugeVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "build_info",
-		Labels:    []string{"name", "aid", "mode", "region", "zone", "app_version", "ego_version", "start_time", "build_time", "go_version"},
+		Labels:    []string{"name", "mode", "region", "zone", "app_version", "ego_version", "start_time", "build_time", "go_version"},
 	}.Build()
 )
 
 func init() {
 	BuildInfoGauge.WithLabelValues(
 		app.Name(),
-		app.AppID(),
 		app.AppMode(),
 		app.AppRegion(),
 		app.AppZone(),

@@ -82,7 +82,7 @@ func (fp *fileDataSource) IsConfigChanged() <-chan struct{} {
 func (fp *fileDataSource) watch() {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
-		elog.Fatal("new file watcher", elog.FieldMod("file datasource"), elog.Any("err", err))
+		elog.Fatal("new file watcher", elog.FieldComponent("file datasource"), elog.Any("err", err))
 	}
 	defer w.Close()
 	done := make(chan bool)
@@ -91,7 +91,7 @@ func (fp *fileDataSource) watch() {
 			select {
 			case event := <-w.Events:
 				elog.Debug("read watch event",
-					elog.FieldMod("file datasource"),
+					elog.FieldComponent("file datasource"),
 					elog.String("event", filepath.Clean(event.Name)),
 					elog.String("path", filepath.Clean(fp.path)),
 				)
@@ -108,7 +108,7 @@ func (fp *fileDataSource) watch() {
 				}
 			case err := <-w.Errors:
 				// log.Println("error: ", err)
-				elog.Error("read watch error", elog.FieldMod("file datasource"), elog.Any("err", err))
+				elog.Error("read watch error", elog.FieldComponent("file datasource"), elog.Any("err", err))
 			}
 		}
 	}()

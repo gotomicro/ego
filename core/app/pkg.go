@@ -14,7 +14,7 @@ import (
 	"github.com/gotomicro/ego/core/util/xcolor"
 )
 
-const egoVersion = "0.0.1"
+const egoVersion = "0.1.0"
 
 var (
 	startTime string
@@ -22,12 +22,8 @@ var (
 )
 
 // build info
-/*
-
- */
 var (
 	appName         string
-	appID           string
 	hostName        string
 	buildAppVersion string
 	buildUser       string
@@ -60,40 +56,15 @@ func Name() string {
 	return appName
 }
 
-//SetName set app anme
-func SetName(s string) {
-	appName = s
-}
-
-//AppID get appID
-func AppID() string {
-	return appID
-}
-
-//SetAppID set appID
-func SetAppID(s string) {
-	appID = s
-}
-
 //AppVersion get buildAppVersion
 func AppVersion() string {
 	return buildAppVersion
 }
 
-//appVersion not defined
-// func SetAppVersion(s string) {
-// 	appVersion = s
-// }
-
 // EgoVersion get egoVersion
 func EgoVersion() string {
 	return egoVersion
 }
-
-// todo: egoVersion is const not be set
-// func SetegoVersion(s string) {
-// 	egoVersion = s
-// }
 
 //BuildTime get buildTime
 func BuildTime() string {
@@ -132,14 +103,15 @@ func GoVersion() string {
 
 // PrintVersion print formated version info
 func PrintVersion() {
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("name"), xcolor.Blue(appName))
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("appID"), xcolor.Blue(appID))
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("region"), xcolor.Blue(AppRegion()))
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("zone"), xcolor.Blue(AppZone()))
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("appVersion"), xcolor.Blue(buildAppVersion))
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("egoVersion"), xcolor.Blue(egoVersion))
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("buildUser"), xcolor.Blue(buildUser))
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("buildHost"), xcolor.Blue(buildHost))
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("buildTime"), xcolor.Blue(BuildTime()))
-	fmt.Printf("%-8s]> %-30s => %s\n", "ego", xcolor.Red("buildStatus"), xcolor.Blue(buildStatus))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("EGO"), xcolor.Blue("I am EGO"))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("AppName"), xcolor.Blue(appName))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("AppHost"), xcolor.Blue(HostName()))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("Region"), xcolor.Blue(AppRegion()))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("Zone"), xcolor.Blue(AppZone()))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("AppVersion"), xcolor.Blue(buildAppVersion))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("EgoVersion"), xcolor.Blue(egoVersion))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildUser"), xcolor.Blue(buildUser))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildHost"), xcolor.Blue(buildHost))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildTime"), xcolor.Blue(BuildTime()))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildStatus"), xcolor.Blue(buildStatus))
 }

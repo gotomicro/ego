@@ -26,7 +26,6 @@ func init() {
 	HandleFunc("/build/info", func(w http.ResponseWriter, r *http.Request) {
 		serverStats := map[string]string{
 			"name":       app.Name(),
-			"appID":      app.AppID(),
 			"appMode":    app.AppMode(),
 			"appVersion": app.AppVersion(),
 			"egoVersion": app.EgoVersion(),

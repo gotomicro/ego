@@ -1,7 +1,6 @@
 package xgo
 
 import (
-	"github.com/codegangsta/inject"
 	"sync"
 	"time"
 )
@@ -46,29 +45,6 @@ func RestrictParallel(restrict int, fns ...func()) func() {
 		wg.Wait()
 		close(channel)
 	}
-}
-
-// GoDirect ...
-func GoDirect(fn interface{}, args ...interface{}) {
-	var inj = inject.New()
-	for _, arg := range args {
-		inj.Map(arg)
-	}
-
-	//_, file, line, _ := runtime.Caller(1)
-	go func() {
-		//defer func() {
-		//	if err := recover(); err != nil {
-		//		_logger.err("recover", xlog.Any("err", err), xlog.String("line", fmt.Sprintf("%s:%d", file, line)))
-		//	}
-		//}()
-		// 忽略返回值, goroutine执行的返回值通常都会忽略掉
-		_, err := inj.Invoke(fn)
-		if err != nil {
-			//_logger.err("inject", xlog.Any("err", err), xlog.String("line", fmt.Sprintf("%s:%d", file, line)))
-			return
-		}
-	}()
 }
 
 // Go goroutine

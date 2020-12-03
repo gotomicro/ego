@@ -115,7 +115,7 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 func aidUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		md, ok := metadata.FromOutgoingContext(ctx)
-		clientAidMD := metadata.Pairs("aid", app.AppID())
+		clientAidMD := metadata.Pairs("app", app.Name())
 		if ok {
 			md = metadata.Join(md, clientAidMD)
 		} else {
