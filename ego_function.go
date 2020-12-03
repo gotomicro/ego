@@ -3,15 +3,14 @@ package ego
 import (
 	"context"
 	"fmt"
-	"github.com/gotomicro/ego/core/app"
-	"github.com/gotomicro/ego/core/conf"
-	"github.com/gotomicro/ego/core/conf/file"
-	"github.com/gotomicro/ego/core/conf/manager"
-	"github.com/gotomicro/ego/core/ecode"
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/econf/file"
+	"github.com/gotomicro/ego/core/econf/manager"
+	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/etrace/ejaeger"
-	"github.com/gotomicro/ego/core/flag"
 	"github.com/gotomicro/ego/core/signals"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"github.com/gotomicro/ego/core/util/xgo"
@@ -22,7 +21,6 @@ import (
 
 // waitSignals wait signal
 func (e *ego) waitSignals() {
-	e.logger.Info("init listen signal", elog.FieldMod(ecode.ModApp), elog.FieldEvent("init"))
 	signals.Shutdown(func(grace bool) { // when get shutdown signal
 		// todo: support timeout
 		e.Stop(context.TODO(), grace)
@@ -38,11 +36,11 @@ func (e *ego) startServers() error {
 			s.Init()
 			err = e.registerer.RegisterService(context.TODO(), s.Info())
 			if err != nil {
-				e.logger.Error("register service err", elog.FieldErr(err))
+				e.logger.Error("register service err", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err))
 			}
 			defer e.registerer.UnregisterService(context.TODO(), s.Info())
-			e.logger.Info("start server", elog.FieldMod(ecode.ModApp), elog.FieldEvent("init"), elog.FieldName(s.Info().Name), elog.FieldAddr(s.Info().Label()), elog.Any("scheme", s.Info().Scheme))
-			defer e.logger.Info("exit server", elog.FieldMod(ecode.ModApp), elog.FieldEvent("exit"), elog.FieldName(s.Info().Name), elog.FieldErr(err), elog.FieldAddr(s.Info().Label()))
+			e.logger.Info("start server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldAddr(s.Info().Label()), elog.Any("scheme", s.Info().Scheme))
+			defer e.logger.Info("stop server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err), elog.FieldAddr(s.Info().Label()))
 			err = s.Start()
 			return
 		})
@@ -51,11 +49,10 @@ func (e *ego) startServers() error {
 }
 
 func (e *ego) startCrons() error {
-	// start multi crons
 	for _, w := range e.crons {
 		w := w
 		e.cycle.Run(func() error {
-			return w.Run()
+			return w.Start()
 		})
 	}
 	return nil
@@ -68,12 +65,10 @@ func (e *ego) startJobs() error {
 	}
 	var jobs = make([]func() error, 0)
 	// warp jobs
-	for name, runner := range e.jobs {
+	for _, runner := range e.jobs {
 		runner := runner
 		jobs = append(jobs, func() error {
-			e.logger.Info("job run begin", elog.FieldName(name))
-			defer e.logger.Info("job run end", elog.FieldName(name))
-			return runner.Run()
+			return runner.Start()
 		})
 	}
 	return xgo.ParallelWithError(jobs...)()
@@ -81,110 +76,123 @@ func (e *ego) startJobs() error {
 
 // parseFlags init
 func parseFlags() error {
-	flag.Register(&flag.StringFlag{
+	eflag.Register(&eflag.StringFlag{
 		Name:    "config",
 		Usage:   "--config",
 		EnvVar:  "CONFIG",
 		Default: "",
-		Action:  func(name string, fs *flag.FlagSet) {},
+		Action:  func(name string, fs *eflag.FlagSet) {},
 	})
 
-	flag.Register(&flag.BoolFlag{
+	eflag.Register(&eflag.BoolFlag{
 		Name:    "watch",
 		Usage:   "--watch, watch config change event",
 		Default: true,
 		EnvVar:  "CONFIG_WATCH",
 	})
 
-	flag.Register(&flag.BoolFlag{
+	eflag.Register(&eflag.BoolFlag{
 		Name:    "version",
 		Usage:   "--version, print version",
 		Default: false,
-		Action: func(string, *flag.FlagSet) {
-			app.PrintVersion()
+		Action: func(string, *eflag.FlagSet) {
+			eapp.PrintVersion()
 			os.Exit(0)
 		},
 	})
 
-	flag.Register(&flag.StringFlag{
+	eflag.Register(&eflag.StringFlag{
 		Name:    "host",
 		Usage:   "--host, print host",
 		Default: "",
-		Action:  func(string, *flag.FlagSet) {},
+		Action:  func(string, *eflag.FlagSet) {},
 	})
-	return flag.Parse()
+	return eflag.Parse()
 }
 
 // loadConfig init
 func loadConfig() error {
-	var configAddr = flag.String("config")
+	var configAddr = eflag.String("config")
 	// 如果配置为空，那么赋值默认配置
 	if configAddr == "" {
-		configAddr = app.EgoConfigPath()
+		configAddr = eapp.EgoConfigPath()
 	}
 
 	// 暂时只支持文件
 	file.Register()
-	provider, err := manager.NewDataSource(file.DataSourceFile, configAddr, flag.Bool("watch"))
+	provider, err := manager.NewDataSource(file.DataSourceFile, configAddr, eflag.Bool("watch"))
 	if err != manager.ErrDefaultConfigNotExist {
 		if err != nil {
-			elog.EgoLogger.Panic("data source: provider error", elog.FieldMod(ecode.ModConfig), elog.FieldErr(err))
+			elog.EgoLogger.Panic("data source: provider error", elog.FieldComponent(econf.PackageName), elog.FieldErr(err))
 		}
 
 		parser, tag := file.ExtParser(configAddr)
 		// 如果不是，就要加载文件，加载不到panic
-		if err := conf.LoadFromDataSource(provider, parser, conf.TagName(tag)); err != nil {
-			elog.EgoLogger.Panic("data source: load config", elog.FieldMod(ecode.ModConfig), elog.FieldErrKind(ecode.ErrKindUnmarshalConfigErr), elog.FieldErr(err))
+		if err := econf.LoadFromDataSource(provider, parser, econf.TagName(tag)); err != nil {
+			elog.EgoLogger.Panic("data source: load config", elog.FieldComponent(econf.PackageName), elog.FieldErrKind("unmarshal config err"), elog.FieldErr(err))
 		}
+		elog.EgoLogger.Info("init config", elog.FieldComponent(econf.PackageName), elog.String("addr", configAddr))
 		// 如果协议是file类型，并且是默认文件配置，那么判断下文件是否存在，如果不存在只告诉warning，什么都不做
 	} else {
-		elog.EgoLogger.Warn("no config... ", elog.FieldMod(ecode.ModConfig), elog.String("addr", configAddr), elog.FieldErr(err))
+		elog.EgoLogger.Warn("no config... ", elog.FieldComponent(econf.PackageName), elog.String("addr", configAddr), elog.FieldErr(err))
 	}
 	return nil
 }
 
 // initLogger init
 func (e *ego) initLogger() error {
-	if conf.Get(e.configPrefix+"logger.default") != nil {
+	if econf.Get(e.configPrefix+"logger.default") != nil {
 		elog.DefaultLogger = elog.Load(e.configPrefix + "logger.default").Build()
+		elog.EgoLogger.Info("reinit default logger", elog.FieldComponent(elog.PackageName))
 	}
 
-	if conf.Get(e.configPrefix+"logger.ego") != nil {
+	if econf.Get(e.configPrefix+"logger.ego") != nil {
 		elog.EgoLogger = elog.Load(e.configPrefix + "logger.ego").Build(elog.WithFileName(elog.EgoLoggerName))
+		elog.EgoLogger.Info("reinit ego logger", elog.FieldComponent(elog.PackageName))
 	}
 	return nil
 }
 
 // initTracer init
 func (e *ego) initTracer() error {
-	if conf.Get(e.configPrefix+"trace.jaeger") != nil {
+	if econf.Get(e.configPrefix+"trace.jaeger") != nil {
 		container := ejaeger.Load(e.configPrefix + "trace.jaeger")
 		tracer := container.Build()
 		etrace.SetGlobalTracer(tracer)
 		e.afterStopClean = append(e.afterStopClean, container.Stop)
+		elog.EgoLogger.Info("init trace", elog.FieldComponent("app"))
 	}
 	return nil
 }
 
 // initMaxProcs init
 func initMaxProcs() error {
-	if maxProcs := conf.GetInt("ego.maxProc"); maxProcs != 0 {
+	if maxProcs := econf.GetInt("ego.maxProc"); maxProcs != 0 {
 		runtime.GOMAXPROCS(maxProcs)
 	} else {
 		if _, err := maxprocs.Set(); err != nil {
-			elog.EgoLogger.Panic("auto max procs", elog.FieldMod(ecode.ModProc), elog.FieldErrKind(ecode.ErrKindAny), elog.FieldErr(err))
+			elog.EgoLogger.Panic("init max procs", elog.FieldComponent("app"), elog.FieldErr(err))
 		}
 	}
-	elog.EgoLogger.Info("auto max procs", elog.FieldMod(ecode.ModProc), elog.Int64("procs", int64(runtime.GOMAXPROCS(-1))))
+	elog.EgoLogger.Info("init max procs", elog.FieldComponent("app"), elog.FieldValueAny(runtime.GOMAXPROCS(-1)))
+	return nil
+}
+
+func printLogger() error {
+	elog.EgoLogger.Info("init default logger", elog.FieldComponent(elog.PackageName))
+	elog.EgoLogger.Info("init ego logger", elog.FieldComponent(elog.PackageName))
 	return nil
 }
 
 // printBanner init
-func printBanner() error {
+func (e *ego) printBanner() error {
+	if e.disableBanner {
+		return nil
+	}
 	const banner = `
- Welcome to Ego, starting application ...
+Welcome to Ego, starting application ...
 `
-	fmt.Println(xcolor.Green(banner))
+	fmt.Println(xcolor.Blue(banner))
 	return nil
 }
 
@@ -202,7 +210,7 @@ func runSerialFuncLogError(fns []func() error) {
 	for _, clean := range fns {
 		err := clean()
 		if err != nil {
-			elog.EgoLogger.Error("beforeStopClean err", elog.FieldMod(ecode.ModApp), elog.FieldErr(err))
+			elog.EgoLogger.Error("beforeStopClean err", elog.FieldComponent("app"), elog.FieldErr(err))
 		}
 	}
 }

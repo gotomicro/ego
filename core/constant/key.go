@@ -4,9 +4,6 @@ const (
 	// KeyRouteConfig ...
 	KeyRouteConfig = "__route_config_"
 
-	// KeyRouteGroup ...
-	KeyRouteGroup = "__route_group_"
-
 	// KeyProviderConfig ...
 	KeyProviderConfig = "__provider_config_"
 

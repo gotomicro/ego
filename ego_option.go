@@ -9,6 +9,18 @@ func WithHang(flag bool) Option {
 	}
 }
 
+func WithDisableBanner(disableBanner bool) Option {
+	return func(a *ego) {
+		a.disableBanner = disableBanner
+	}
+}
+
+func WithConfigPrefix(configPrefix string) Option {
+	return func(a *ego) {
+		a.configPrefix = configPrefix
+	}
+}
+
 // 设置运行前清理
 func WithBeforeStopClean(fns ...func() error) Option {
 	return func(a *ego) {

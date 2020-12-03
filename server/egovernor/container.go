@@ -1,9 +1,9 @@
 package egovernor
 
 import (
-	"github.com/gotomicro/ego/core/conf"
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/flag"
 )
 
 type Container struct {
@@ -16,20 +16,21 @@ type Container struct {
 func DefaultContainer() *Container {
 	return &Container{
 		config: DefaultConfig(),
-		logger: elog.EgoLogger.With(elog.FieldMod("server.egovernor")),
+		logger: elog.EgoLogger.With(elog.FieldComponent(PackageName)),
 	}
 }
 
 func Load(key string) *Container {
 	c := DefaultContainer()
-	if err := conf.UnmarshalKey(key, &c.config); err != nil {
+	if err := econf.UnmarshalKey(key, &c.config); err != nil {
 		c.err = err
 		return c
 	}
 	// 修改host信息
-	if flag.String("host") != "" {
-		c.config.Host = flag.String("host")
+	if eflag.String("host") != "" {
+		c.config.Host = eflag.String("host")
 	}
+	c.logger = c.logger.With(elog.FieldComponentName(key))
 	c.name = key
 	return c
 }

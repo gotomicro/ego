@@ -1,7 +1,7 @@
 package egrpc
 
 import (
-	"github.com/gotomicro/ego/core/conf"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"google.golang.org/grpc"
 )
@@ -17,16 +17,17 @@ type Container struct {
 func DefaultContainer() *Container {
 	return &Container{
 		config: DefaultConfig(),
-		logger: elog.EgoLogger.With(elog.FieldMod("client.egrpc")),
+		logger: elog.EgoLogger.With(elog.FieldComponent(PackageName)),
 	}
 }
 
 func Load(key string) *Container {
 	c := DefaultContainer()
-	if err := conf.UnmarshalKey(key, &c.config); err != nil {
+	if err := econf.UnmarshalKey(key, &c.config); err != nil {
 		c.logger.Panic("parse config error", elog.FieldErr(err), elog.FieldKey(key))
 		return c
 	}
+	c.logger = c.logger.With(elog.FieldComponentName(key))
 	c.name = key
 	return c
 }
@@ -67,7 +68,7 @@ func (c *Container) Build(options ...Option) *Component {
 
 	if !c.config.DisableAccessInterceptor {
 		options = append(options,
-			WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config.Name, c.config.AccessInterceptorLevel))),
+			WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config.AccessInterceptorLevel))),
 		)
 	}
 

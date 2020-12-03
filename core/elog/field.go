@@ -2,21 +2,17 @@ package elog
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"go.uber.org/zap"
 )
 
-// 应用唯一标识符
-func FieldAid(value string) Field {
-	return String("aid", value)
+func FieldComponent(value string) Field {
+	return String("comp", value)
 }
 
-// 模块
-func FieldMod(value string) Field {
-	value = strings.Replace(value, " ", ".", -1)
-	return String("mod", value)
+func FieldComponentName(value string) Field {
+	return String("compName", value)
 }
 
 func FieldAddr(value string) Field {

@@ -20,11 +20,12 @@ import (
 	"net"
 
 	"github.com/gotomicro/ego/core/constant"
-	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
 	"google.golang.org/grpc"
 )
+
+const PackageName = "server.egrpc"
 
 // Component ...
 type Component struct {
@@ -37,7 +38,6 @@ type Component struct {
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
-
 	newServer := grpc.NewServer(config.serverOptions...)
 	reflection.Register(newServer)
 
@@ -55,10 +55,14 @@ func (s *Component) Name() string {
 	return s.name
 }
 
+func (c *Component) PackageName() string {
+	return PackageName
+}
+
 func (s *Component) Init() error {
 	listener, err := net.Listen(s.config.Network, s.config.Address())
 	if err != nil {
-		s.logger.Panic("new grpc server err", elog.FieldErrKind(ecode.ErrKindListenErr), elog.FieldErr(err))
+		s.logger.Panic("new grpc server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
 	}
 	s.config.Port = listener.Addr().(*net.TCPAddr).Port
 

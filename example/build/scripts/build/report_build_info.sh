@@ -21,7 +21,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 APP_NAME=${1:?"app name"}
-APP_ID=${2:?"app id"}
 
 if BUILD_GIT_REVISION=$(git rev-parse HEAD 2> /dev/null); then
   if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
@@ -51,7 +50,6 @@ GIT_DESCRIBE_TAG=$(git describe --tags)
 
 # used by scripts/build/gobuild.sh
 echo "github.com/gotomicro/ego/core/app.appName=${APP_NAME}"
-echo "github.com/gotomicro/ego/core/app.appID=${APP_ID}"
 echo "github.com/gotomicro/ego/core/app.buildVersion=${VERSION}"
 echo "github.com/gotomicro/ego/core/app.buildAppVersion=${BUILD_GIT_REVISION}"
 echo "github.com/gotomicro/ego/core/app.buildStatus=${tree_status}"

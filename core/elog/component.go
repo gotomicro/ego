@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gotomicro/ego/core/conf"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -137,7 +137,7 @@ func newLogger(name string, config *Config) *Component {
 
 // AutoLevel ...
 func (logger *Component) AutoLevel(confKey string) {
-	conf.OnChange(func(config *conf.Configuration) {
+	econf.OnChange(func(config *econf.Configuration) {
 		lvText := strings.ToLower(config.GetString(confKey))
 		if lvText != "" {
 			logger.Info("update level", String("level", lvText), String("name", logger.config.Name))

@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gotomicro/ego"
-	"github.com/gotomicro/ego/core/conf"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 )
 
@@ -10,7 +10,7 @@ import (
 func main() {
 	err := ego.New().Invoker(func() error {
 		p := People{}
-		err := conf.UnmarshalKey("people", &p)
+		err := econf.UnmarshalKey("people", &p)
 		if err != nil {
 			panic(err.Error())
 		}

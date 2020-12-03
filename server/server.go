@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/gotomicro/ego/core/app"
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/standard"
 
 	"github.com/gotomicro/ego/core/constant"
@@ -19,7 +19,6 @@ type ConfigInfo struct {
 // ServiceInfo represents service info
 type ServiceInfo struct {
 	Name       string               `json:"name"`
-	AppID      string               `json:"appId"`
 	Scheme     string               `json:"scheme"`
 	Address    string               `json:"address"`
 	Weight     float64              `json:"weight"`
@@ -102,23 +101,22 @@ func WithKind(kind constant.ServiceKind) Option {
 
 func defaultServiceInfo() ServiceInfo {
 	si := ServiceInfo{
-		Name:       app.Name(),
-		AppID:      app.AppID(),
+		Name:       eapp.Name(),
 		Weight:     100,
 		Enable:     true,
 		Healthy:    true,
 		Metadata:   make(map[string]string),
-		Region:     app.AppRegion(),
-		Zone:       app.AppZone(),
+		Region:     eapp.AppRegion(),
+		Zone:       eapp.AppZone(),
 		Kind:       0,
 		Deployment: "",
 		Group:      "",
 	}
-	si.Metadata["appMode"] = app.AppMode()
-	si.Metadata["appHost"] = app.AppHost()
-	si.Metadata["startTime"] = app.StartTime()
-	si.Metadata["buildTime"] = app.BuildTime()
-	si.Metadata["appVersion"] = app.AppVersion()
-	si.Metadata["egoVersion"] = app.EgoVersion()
+	si.Metadata["appMode"] = eapp.AppMode()
+	si.Metadata["appHost"] = eapp.AppHost()
+	si.Metadata["startTime"] = eapp.StartTime()
+	si.Metadata["buildTime"] = eapp.BuildTime()
+	si.Metadata["appVersion"] = eapp.AppVersion()
+	si.Metadata["egoVersion"] = eapp.EgoVersion()
 	return si
 }

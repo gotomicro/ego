@@ -56,13 +56,13 @@ outer:
 				break outer
 			}
 		case <-timeout:
-			t.Errorf("parallel.Run() failed, got timeout error")
+			t.Errorf("parallel.Start() failed, got timeout error")
 			break outer
 		}
 	}
 
 	if count != 2 {
-		t.Errorf("parallel.Run() failed, got '%v', expected '%v'", count, 2)
+		t.Errorf("parallel.Start() failed, got '%v', expected '%v'", count, 2)
 	}
 }
 
@@ -78,13 +78,13 @@ outer:
 				break outer
 			}
 		case <-timeout:
-			t.Errorf("parallel.Run() failed, got timeout error")
+			t.Errorf("parallel.Start() failed, got timeout error")
 			break outer
 		}
 	}
 
 	if count != 2 {
-		t.Errorf("parallel.Run() failed, got '%v', expected '%v'", count, 2)
+		t.Errorf("parallel.Start() failed, got '%v', expected '%v'", count, 2)
 	}
 }
 
@@ -100,13 +100,13 @@ outer:
 				break outer
 			}
 		case <-timeout:
-			t.Errorf("parallel.Run() failed, got timeout error")
+			t.Errorf("parallel.Start() failed, got timeout error")
 			break outer
 		}
 	}
 
 	if count != 2 {
-		t.Errorf("parallel.Run() failed, got '%v', expected '%v'", count, 2)
+		t.Errorf("parallel.Start() failed, got '%v', expected '%v'", count, 2)
 	}
 }
 
@@ -122,12 +122,12 @@ outer:
 				break outer
 			}
 		case <-timeout:
-			t.Errorf("parallel.Run() failed, got timeout error")
+			t.Errorf("parallel.Start() failed, got timeout error")
 			break outer
 		}
 	}
 
 	if count != 2 {
-		t.Errorf("parallel.Run() failed, got '%v', expected '%v'", count, 2)
+		t.Errorf("parallel.Start() failed, got '%v', expected '%v'", count, 2)
 	}
 }

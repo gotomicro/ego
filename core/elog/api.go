@@ -4,6 +4,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const PackageName = "core.elog"
+
 // DefaultLogger default logger
 // Biz Log
 // debug=true as default, will be

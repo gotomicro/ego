@@ -10,6 +10,8 @@ import (
 	"github.com/gotomicro/ego/server"
 )
 
+const PackageName = "server.egin"
+
 // Component ...
 type Component struct {
 	name   string
@@ -36,12 +38,16 @@ func (c *Component) Name() string {
 	return c.name
 }
 
-func (s *Component) Init() error {
-	var listener, err = net.Listen("tcp4", s.config.Address())
+func (c *Component) PackageName() string {
+	return PackageName
+}
+
+func (c *Component) Init() error {
+	var listener, err = net.Listen("tcp4", c.config.Address())
 	if err != nil {
 		elog.Panic("governor start error", elog.FieldErr(err))
 	}
-	s.listener = listener
+	c.listener = listener
 	return nil
 }
 

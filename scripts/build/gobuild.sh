@@ -33,8 +33,7 @@ fi
 SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 APP_NAME=${1:?"app name"}
-APP_ID=${2:?"0"}
-OUT=${3:?"output path"}
+OUT=${2:?"output path"}
 shift
 
 set -e

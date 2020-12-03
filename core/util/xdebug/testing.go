@@ -3,7 +3,7 @@ package xdebug
 import (
 	"flag"
 	"fmt"
-	"github.com/gotomicro/ego/core/app"
+	"github.com/gotomicro/ego/core/eapp"
 	"sync"
 
 	"github.com/gotomicro/ego/core/util/xcolor"
@@ -38,7 +38,7 @@ func IsTestingMode() bool {
 // IsDevelopmentMode 判断是否是生产模式
 func IsDevelopmentMode() bool {
 	//return isDevelopmentMode || isTestingMode
-	return app.IsDevelopmentMode()
+	return eapp.IsDevelopmentMode()
 }
 
 // IfPanic ...
