@@ -1,16 +1,16 @@
 gobuild:
 	@echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>making build<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-	./script/build/gobuild.sh hello 999 bin/hello
+	./scripts/build/gobuild.sh hello bin/hello
 
-version:export APP_REGION=huabei
-version:export APP_ZONE=ali-3
+version:export EGO_REGION=huabei
+version:export EGO_ZONE=ali-3
 version:
 	./bin/hello --version
 
-run:export MOCRO_MODE=dev
-run:export APP_REGION=huabei
-run:export APP_ZONE=ali-3
-run:export APP_MODE=dev
+run:export EGO_DEBUG=true
+run:export EGO_REGION=huabei
+run:export EGO_ZONE=ali-3
+run:export EGO_MODE=dev
 run:
 	./bin/hello --config=config.toml
 

@@ -95,9 +95,9 @@ func (config *Config) Build(options ...jconfig.Option) opentracing.Tracer {
 	tracer, closer, err := configuration.NewTracer(config.options...)
 	if err != nil {
 		if config.PanicOnError {
-			elog.Panic("new jaeger", elog.FieldMod("jaeger"), elog.FieldErr(err))
+			elog.Panic("new jaeger", elog.FieldComponent("jaeger"), elog.FieldErr(err))
 		} else {
-			elog.Error("new jaeger", elog.FieldMod("jaeger"), elog.FieldErr(err))
+			elog.Error("new jaeger", elog.FieldComponent("jaeger"), elog.FieldErr(err))
 		}
 	}
 	config.closer = closer.Close

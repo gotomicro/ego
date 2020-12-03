@@ -33,8 +33,7 @@ fi
 SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 APP_NAME=${1:?"app name"}
-APP_ID=${2:?"0"}
-OUT=${3:?"output path"}
+OUT=${2:?"output path"}
 shift
 
 set -e
@@ -63,7 +62,7 @@ fi
 # at the beginning of the build and used throughout
 if [[ -z ${BUILDINFO} ]];then
     BUILDINFO=$(mktemp)
-    "${SCRIPTPATH}/report_build_info.sh"  ${APP_NAME} ${APP_ID}> "${BUILDINFO}"
+    "${SCRIPTPATH}/report_build_info.sh"  ${APP_NAME}> "${BUILDINFO}"
 fi
 
 # BUILD LD_EXTRAFLAGS
@@ -91,4 +90,3 @@ echo time ${GOBINARY} build ${V} ${GOBUILDFLAGS} ${GCFLAGS:+-gcflags "${GCFLAGS}
        -pkgdir=${GOPKG}/${GOOS}_${GOARCH} -ldflags "${LDFLAGS} ${LD_EXTRAFLAGS}"
 time ${GOBINARY} build ${V} ${GOBUILDFLAGS} ${GCFLAGS:+-gcflags "${GCFLAGS}"} -o ${OUT} \
        -pkgdir=${GOPKG}/${GOOS}_${GOARCH} -ldflags "${LDFLAGS} ${LD_EXTRAFLAGS}"
-#time GOOS=${GOOS} GOARCH=${GOARCH} ${GOBINARY} build ${V} ${GOBUILDFLAGS} ${GCFLAGS:+-gcflags "${GCFLAGS}"} -o ${OUT} \

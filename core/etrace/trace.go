@@ -16,7 +16,7 @@ var (
 
 // SetGlobalTracer ...
 func SetGlobalTracer(tracer opentracing.Tracer) {
-	elog.Info("set global tracer", elog.FieldMod("trace"))
+	elog.Info("set global tracer", elog.FieldComponent("trace"))
 	opentracing.SetGlobalTracer(tracer)
 }
 

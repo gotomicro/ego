@@ -20,46 +20,46 @@ import (
 // 第三部分 可选方法：是否悬挂，注册中心，运行停止前清理，运行停止后清理
 type ego struct {
 	// 第一部分 系统数据
-	cycle        *xcycle.Cycle   // 生命周期
-	configPrefix string          // 配置前缀
-	smu          *sync.RWMutex   // 锁
-	logger       *elog.Component // 日志
-	err          error           // 错误
+	cycle  *xcycle.Cycle   // 生命周期
+	smu    *sync.RWMutex   // 锁
+	logger *elog.Component // 日志
+	err    error           // 错误
 
 	// 第二部分 运行程序
-	inits    []func() error         // 系统初始化函数
-	invokers []func() error         // 用户初始化函数
-	servers  []server.Server        // 服务
-	crons    []ecron.Cron           // 定时任务
-	jobs     map[string]ejob.Runner // 短时任务
+	inits      []func() error         // 系统初始化函数
+	invokers   []func() error         // 用户初始化函数
+	servers    []server.Server        // 服务
+	crons      []ecron.Cron           // 定时任务
+	jobs       map[string]ejob.Runner // 短时任务
+	registerer registry.Registry      // 注册中心
 
 	// 第三部分 可选方法
-	hang            bool              // 是否悬挂
-	registerer      registry.Registry // 注册中心
-	beforeStopClean []func() error    // 运行停止前清理
-	afterStopClean  []func() error    // 运行停止后清理
+	configPrefix    string         // 配置前缀
+	hang            bool           // 是否悬挂
+	beforeStopClean []func() error // 运行停止前清理
+	afterStopClean  []func() error // 运行停止后清理
 }
 
 // New new ego
 func New(options ...Option) *ego {
 	e := &ego{
 		// 第一部分 系统数据
-		cycle:        xcycle.NewCycle(),
-		smu:          &sync.RWMutex{},
-		configPrefix: "",
-		logger:       elog.EgoLogger,
-		err:          nil,
+		cycle:  xcycle.NewCycle(),
+		smu:    &sync.RWMutex{},
+		logger: elog.EgoLogger,
+		err:    nil,
 
 		// 第二部分 运行程序
-		inits:    make([]func() error, 0),
-		invokers: make([]func() error, 0),
-		servers:  make([]server.Server, 0),
-		crons:    make([]ecron.Cron, 0),
-		jobs:     make(map[string]ejob.Runner),
+		inits:      make([]func() error, 0),
+		invokers:   make([]func() error, 0),
+		servers:    make([]server.Server, 0),
+		crons:      make([]ecron.Cron, 0),
+		jobs:       make(map[string]ejob.Runner),
+		registerer: registry.Nop{},
 
 		// 第三部分 可选方法
 		hang:            false,
-		registerer:      registry.Nop{},
+		configPrefix:    "",
 		beforeStopClean: make([]func() error, 0),
 		afterStopClean:  make([]func() error, 0),
 	}
@@ -186,10 +186,10 @@ func (e *ego) Run() error {
 
 	// 阻塞，等待信号量
 	if err := <-e.cycle.Wait(e.hang); err != nil {
-		e.logger.Error("ego shutdown with error", elog.FieldMod(ecode.ModApp), elog.FieldErr(err))
+		e.logger.Error("ego shutdown with error", elog.FieldComponent(ecode.ModApp), elog.FieldErr(err))
 		return err
 	}
-	e.logger.Info("shutdown ego, bye!", elog.FieldMod(ecode.ModApp))
+	e.logger.Info("shutdown ego, bye!", elog.FieldComponent(ecode.ModApp))
 
 	// 运行停止后清理
 	runSerialFuncLogError(e.afterStopClean)

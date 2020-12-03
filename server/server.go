@@ -19,7 +19,6 @@ type ConfigInfo struct {
 // ServiceInfo represents service info
 type ServiceInfo struct {
 	Name       string               `json:"name"`
-	AppID      string               `json:"appId"`
 	Scheme     string               `json:"scheme"`
 	Address    string               `json:"address"`
 	Weight     float64              `json:"weight"`
@@ -103,7 +102,6 @@ func WithKind(kind constant.ServiceKind) Option {
 func defaultServiceInfo() ServiceInfo {
 	si := ServiceInfo{
 		Name:       app.Name(),
-		AppID:      app.AppID(),
 		Weight:     100,
 		Enable:     true,
 		Healthy:    true,

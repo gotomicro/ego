@@ -17,7 +17,7 @@ type Container struct {
 func DefaultContainer() *Container {
 	return &Container{
 		config: DefaultConfig(),
-		logger: elog.EgoLogger.With(elog.FieldMod("client.egrpc")),
+		logger: elog.EgoLogger.With(elog.FieldComponent("client.egrpc")),
 	}
 }
 
