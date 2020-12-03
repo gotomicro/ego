@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
-	"github.com/gotomicro/ego/core/metric"
+	"github.com/gotomicro/ego/core/emetric"
 	"google.golang.org/grpc"
 )
 
@@ -26,8 +26,8 @@ func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info
 	startTime := time.Now()
 	resp, err := handler(ctx, req)
 	code := ecode.ExtractCodes(err)
-	metric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), metric.TypeGRPCUnary, info.FullMethod, extractAID(ctx))
-	metric.ServerHandleCounter.Inc(metric.TypeGRPCUnary, info.FullMethod, extractAID(ctx), code.GetMessage())
+	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractAID(ctx))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractAID(ctx), code.GetMessage())
 	return resp, err
 }
 
@@ -35,8 +35,8 @@ func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, in
 	startTime := time.Now()
 	err := handler(srv, ss)
 	code := ecode.ExtractCodes(err)
-	metric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), metric.TypeGRPCStream, info.FullMethod, extractAID(ss.Context()))
-	metric.ServerHandleCounter.Inc(metric.TypeGRPCStream, info.FullMethod, extractAID(ss.Context()), code.GetMessage())
+	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, extractAID(ss.Context()))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractAID(ss.Context()), code.GetMessage())
 	return err
 }
 

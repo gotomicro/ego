@@ -2,8 +2,8 @@ package file
 
 import (
 	"encoding/json"
-	"github.com/gotomicro/ego/core/conf"
-	"github.com/gotomicro/ego/core/conf/manager"
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/econf/manager"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -31,7 +31,7 @@ func Register() {
 	manager.Register("file", &fileDataSource{})
 }
 
-func ExtParser(configAddr string) (conf.Unmarshaller, string) {
+func ExtParser(configAddr string) (econf.Unmarshaller, string) {
 	ext := filepath.Ext(configAddr)
 	switch ext {
 	case ".json":

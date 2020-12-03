@@ -1,4 +1,4 @@
-package registry
+package eregistry
 
 import (
 	"encoding/json"

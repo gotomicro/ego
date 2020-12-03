@@ -3,14 +3,14 @@ package resolver
 import (
 	"context"
 	"github.com/gotomicro/ego/core/constant"
-	"github.com/gotomicro/ego/core/registry"
+	"github.com/gotomicro/ego/core/eregistry"
 	"github.com/gotomicro/ego/core/util/xgo"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
 )
 
 // Register ...
-func Register(name string, reg registry.Registry) {
+func Register(name string, reg eregistry.Registry) {
 	resolver.Register(&baseBuilder{
 		name: name,
 		reg:  reg,
@@ -19,7 +19,7 @@ func Register(name string, reg registry.Registry) {
 
 type baseBuilder struct {
 	name string
-	reg  registry.Registry
+	reg  eregistry.Registry
 }
 
 // Build ...

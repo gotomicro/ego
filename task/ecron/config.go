@@ -6,12 +6,11 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/util/xtime"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
-
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/metric"
-	"github.com/gotomicro/ego/core/util/xtime"
 )
 
 // Config ...
@@ -97,10 +96,11 @@ func (wj wrappedJob) Run() {
 		}
 	}
 	_ = wj.run()
+	return
 }
 
 func (wj wrappedJob) run() (err error) {
-	metric.JobHandleCounter.Inc("cron", wj.Name(), "begin")
+	emetric.JobHandleCounter.Inc("cron", wj.Name(), "begin")
 	var fields = []elog.Field{zap.String("name", wj.Name())}
 	var beg = time.Now()
 	defer func() {
@@ -122,7 +122,7 @@ func (wj wrappedJob) run() (err error) {
 		} else {
 			wj.logger.Info("run", fields...)
 		}
-		metric.JobHandleHistogram.Observe(time.Since(beg).Seconds(), "cron", wj.Name())
+		emetric.JobHandleHistogram.Observe(time.Since(beg).Seconds(), "cron", wj.Name())
 	}()
 
 	return wj.NamedJob.Run()

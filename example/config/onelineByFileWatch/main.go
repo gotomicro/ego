@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gotomicro/ego"
-	"github.com/gotomicro/ego/core/conf"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"time"
 )
@@ -14,7 +14,7 @@ func main() {
 			// 循环打印配置
 			for {
 				time.Sleep(3 * time.Second)
-				peopleName := conf.GetString("people.name")
+				peopleName := econf.GetString("people.name")
 				elog.Info("people info", elog.String("name", peopleName), elog.String("type", "onelineByFileWatch"))
 			}
 		}()

@@ -3,7 +3,7 @@ package compound
 import (
 	"context"
 
-	registry2 "github.com/gotomicro/ego/core/registry"
+	registry2 "github.com/gotomicro/ego/core/eregistry"
 	"github.com/gotomicro/ego/server"
 	"golang.org/x/sync/errgroup"
 )

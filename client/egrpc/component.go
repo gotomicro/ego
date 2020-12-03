@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
-
 	"google.golang.org/grpc"
 )
+
+const PackageName = "client.egrpc"
 
 type Component struct {
 	name   string
@@ -41,9 +41,9 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 	if err != nil {
 		if config.OnDialError == "panic" {
-			logger.Panic("dial grpc server", elog.FieldErrKind(ecode.ErrKindRequestErr), elog.FieldErr(err))
+			logger.Panic("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
 		} else {
-			logger.Error("dial grpc server", elog.FieldErrKind(ecode.ErrKindRequestErr), elog.FieldErr(err))
+			logger.Error("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
 		}
 	}
 	logger.Info("start grpc client", elog.FieldName(name))

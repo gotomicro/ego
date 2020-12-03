@@ -2,8 +2,8 @@ package egovernor
 
 import (
 	"encoding/json"
-	"github.com/gotomicro/ego/core/app"
-	"github.com/gotomicro/ego/core/conf"
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
 	jsoniter "github.com/json-iterator/go"
 	"net/http"
 	"os"
@@ -15,7 +15,7 @@ func init() {
 		if r.URL.Query().Get("pretty") == "true" {
 			encoder.SetIndent("", "    ")
 		}
-		encoder.Encode(conf.Traverse("."))
+		encoder.Encode(econf.Traverse("."))
 	})
 
 	HandleFunc("/debug/env", func(w http.ResponseWriter, r *http.Request) {
@@ -25,16 +25,16 @@ func init() {
 
 	HandleFunc("/build/info", func(w http.ResponseWriter, r *http.Request) {
 		serverStats := map[string]string{
-			"name":       app.Name(),
-			"appMode":    app.AppMode(),
-			"appVersion": app.AppVersion(),
-			"egoVersion": app.EgoVersion(),
-			"buildUser":  app.BuildUser(),
-			"buildHost":  app.BuildHost(),
-			"buildTime":  app.BuildTime(),
-			"startTime":  app.StartTime(),
-			"hostName":   app.HostName(),
-			"goVersion":  app.GoVersion(),
+			"name":       eapp.Name(),
+			"appMode":    eapp.AppMode(),
+			"appVersion": eapp.AppVersion(),
+			"egoVersion": eapp.EgoVersion(),
+			"buildUser":  eapp.BuildUser(),
+			"buildHost":  eapp.BuildHost(),
+			"buildTime":  eapp.BuildTime(),
+			"startTime":  eapp.StartTime(),
+			"hostName":   eapp.HostName(),
+			"goVersion":  eapp.GoVersion(),
 		}
 		_ = jsoniter.NewEncoder(w).Encode(serverStats)
 	})

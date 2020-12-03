@@ -1,6 +1,7 @@
 package ecron
 
 import (
+	"github.com/gotomicro/ego/core/standard"
 	"sync/atomic"
 	"time"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/util/xstring"
 )
+
+const PackageName = "task.ecron"
 
 var (
 	// Every ...
@@ -98,6 +101,18 @@ func (c *Component) Schedule(schedule Schedule, job NamedJob) EntryID {
 	return c.Cron.Schedule(schedule, innnerJob)
 }
 
+func (c *Component) Name() string {
+	return c.name
+}
+
+func (c *Component) PackageName() string {
+	return PackageName
+}
+
+func (c *Component) Init() error {
+	return nil
+}
+
 // GetEntryByName ...
 func (c *Component) GetEntryByName(name string) cron.Entry {
 	// todo(gorexlv): data race
@@ -118,10 +133,9 @@ func (c *Component) AddFunc(spec string, cmd func() error) (EntryID, error) {
 	return c.AddJob(spec, FuncJob(cmd))
 }
 
-// Run ...
-func (c *Component) Run() error {
-	// xdebug.PrintKVWithPrefix("worker", "run worker", fmt.Sprintf("%d job scheduled", len(c.Component.Entries())))
-	c.logger.Info("run worker", elog.Int("number of scheduled jobs", len(c.Cron.Entries())))
+// Start ...
+func (c *Component) Start() error {
+	c.logger.Info("add cron", elog.Int("number of scheduled jobs", len(c.Cron.Entries())))
 	c.Cron.Run()
 	return nil
 }
@@ -144,4 +158,8 @@ func (is *immediatelyScheduler) Next(curr time.Time) (next time.Time) {
 	}
 
 	return is.Schedule.Next(curr)
+}
+
+type Ecron interface {
+	standard.Component
 }

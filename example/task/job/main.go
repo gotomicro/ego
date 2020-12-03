@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/task/ejob"
 	"go.uber.org/zap"
 )
 
@@ -15,21 +16,14 @@ func main() {
 	}
 }
 
-type JobRunner struct {
-	JobName string
+func NewJobRunner() *ejob.Component {
+	return ejob.DefaultContainer().Build(
+		ejob.WithName("jobrunner"),
+		ejob.WithStartFunc(runner),
+	)
 }
 
-func NewJobRunner() *JobRunner {
-	return &JobRunner{
-		JobName: "jobrunner",
-	}
-}
-
-func (j *JobRunner) Run() error {
+func runner() error {
 	fmt.Println("i am job runner")
 	return errors.New("i am error")
-}
-
-func (j *JobRunner) Name() string {
-	return j.JobName
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gotomicro/ego"
-	"github.com/gotomicro/ego/core/conf"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"time"
 )
@@ -12,12 +12,12 @@ func main() {
 	if err := ego.New(ego.WithHang(true)).Invoker(func() error {
 		p := People{}
 		// 初始化
-		err := conf.UnmarshalKey("people", &p)
+		err := econf.UnmarshalKey("people", &p)
 		if err != nil {
 			panic(err.Error())
 		}
 		// 监听
-		conf.OnChange(func(config *conf.Configuration) {
+		econf.OnChange(func(config *econf.Configuration) {
 			err := config.UnmarshalKey("people", &p)
 			if err != nil {
 				panic(err.Error())

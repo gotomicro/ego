@@ -11,7 +11,7 @@ import (
 )
 //  export EGO_DEBUG=true && go run main.go --config=config.toml
 func main() {
-   if err := ego.New().Serve(func() server.Server {
+   if err := ego.New().Serve(func() *egin.Component {
       server := egin.Load("server.http").Build()
       server.GET("/hello", func(ctx *gin.Context) {
          ctx.JSON(200, "Hello Shimo")
@@ -31,7 +31,7 @@ go run main.go --config=config.toml
 ```
 
 ### 如下所示
-![图片](https://uploader.shimo.im/f/42zob9nv1343rSIa.png)
+![图片](./docs/images/startup.png)
 
 
 这个时候我们可以发送一个指令，得到如下结果
@@ -39,3 +39,9 @@ go run main.go --config=config.toml
 ➜  helloworld git:(master) ✗ curl http://127.0.0.1:9001/hello
 "Hello Ego"%  
 ```
+
+### 更加友好的包编译
+
+使用scripts文件夹里的[包编译](./example/build)，可以看到优雅的version提示
+
+![图片](./docs/images/version.png)

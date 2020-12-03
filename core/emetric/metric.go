@@ -1,7 +1,7 @@
-package metric
+package emetric
 
 import (
-	"github.com/gotomicro/ego/core/app"
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/server/egovernor"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
@@ -127,15 +127,15 @@ var (
 
 func init() {
 	BuildInfoGauge.WithLabelValues(
-		app.Name(),
-		app.AppMode(),
-		app.AppRegion(),
-		app.AppZone(),
-		app.AppVersion(),
-		app.EgoVersion(),
-		app.StartTime(),
-		app.BuildTime(),
-		app.GoVersion(),
+		eapp.Name(),
+		eapp.AppMode(),
+		eapp.AppRegion(),
+		eapp.AppZone(),
+		eapp.AppVersion(),
+		eapp.EgoVersion(),
+		eapp.StartTime(),
+		eapp.BuildTime(),
+		eapp.GoVersion(),
 	).Set(float64(time.Now().UnixNano() / 1e6))
 
 	egovernor.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {

@@ -1,4 +1,4 @@
-package app
+package eapp
 
 import (
 	"crypto/md5"

@@ -1,8 +1,8 @@
 package elog
 
 import (
-	"github.com/gotomicro/ego/core/app"
-	"github.com/gotomicro/ego/core/conf"
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
 )
 
 type Option func(c *Container)
@@ -20,7 +20,7 @@ func DefaultContainer() *Container {
 
 func Load(key string) *Container {
 	c := DefaultContainer()
-	if err := conf.UnmarshalKey(key, &c.Config); err != nil {
+	if err := econf.UnmarshalKey(key, &c.Config); err != nil {
 		panic(err)
 		return c
 	}
@@ -33,7 +33,7 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 
-	if app.IsDevelopmentMode() {
+	if eapp.IsDevelopmentMode() {
 		c.Config.Debug = true
 		c.Config.Async = false
 		c.Config.EncoderConfig = DefaultDebugConfig()

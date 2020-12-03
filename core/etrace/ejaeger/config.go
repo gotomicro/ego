@@ -1,11 +1,11 @@
 package ejaeger
 
 import (
-	"github.com/gotomicro/ego/core/app"
+	"github.com/gotomicro/ego/core/eapp"
 	"os"
 	"time"
 
-	"github.com/gotomicro/ego/core/conf"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
@@ -28,7 +28,7 @@ type Config struct {
 // RawConfig ...
 func Load(key string) *Config {
 	var config = DefaultConfig()
-	if err := conf.UnmarshalKey(key, config); err != nil {
+	if err := econf.UnmarshalKey(key, config); err != nil {
 		elog.Panic("unmarshal key", elog.Any("err", err))
 	}
 	return config
@@ -42,7 +42,7 @@ func DefaultConfig() *Config {
 		agentAddr = addr
 	}
 	return &Config{
-		ServiceName: app.Name(),
+		ServiceName: eapp.Name(),
 		Sampler: &jconfig.SamplerConfig{
 			Type:  "const",
 			Param: 0.001,
@@ -58,7 +58,7 @@ func DefaultConfig() *Config {
 			TraceContextHeaderName:   headerName,
 		},
 		tags: []opentracing.Tag{
-			{Key: "hostname", Value: app.HostName()},
+			{Key: "hostname", Value: eapp.HostName()},
 		},
 		PanicOnError: true,
 	}

@@ -1,4 +1,4 @@
-package conf
+package econf
 
 import (
 	"fmt"
@@ -15,6 +15,8 @@ import (
 	"github.com/gotomicro/ego/core/util/xcast"
 	"github.com/gotomicro/ego/core/util/xmap"
 )
+
+const PackageName = "core.conf"
 
 // Configuration provides configuration for application.
 type Configuration struct {

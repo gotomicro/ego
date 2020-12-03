@@ -1,4 +1,4 @@
-package metric
+package emetric
 
 import (
 	"github.com/prometheus/client_golang/prometheus"

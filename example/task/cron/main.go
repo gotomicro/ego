@@ -17,7 +17,7 @@ func main() {
 	}
 }
 
-func cron1() ecron.Cron {
+func cron1() ecron.Ecron {
 	cron := ecron.Load("cron.test").Build()
 	cron.Schedule(ecron.Every(time.Second*10), ecron.FuncJob(execJob))
 	cron.Schedule(ecron.Every(time.Second*10), ecron.FuncJob(execJob2))

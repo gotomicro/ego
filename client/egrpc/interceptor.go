@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gotomicro/ego/core/app"
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
-	"github.com/gotomicro/ego/core/metric"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"github.com/gotomicro/ego/core/util/xstring"
 	"time"
@@ -37,11 +37,11 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 		// 只记录系统级别错误
 		if spbStatus.Code < ecode.EcodeNum {
 			// 只记录系统级别的详细错误码
-			metric.ClientHandleCounter.Inc(metric.TypeGRPCUnary, name, method, cc.Target(), spbStatus.GetMessage())
-			metric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), metric.TypeGRPCUnary, name, method, cc.Target())
+			emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), spbStatus.GetMessage())
+			emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, name, method, cc.Target())
 		} else {
-			metric.ClientHandleCounter.Inc(metric.TypeGRPCUnary, name, method, cc.Target(), "biz error")
-			metric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), metric.TypeGRPCUnary, name, method, cc.Target())
+			emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), "biz error")
+			emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, name, method, cc.Target())
 		}
 		return err
 	}
@@ -54,8 +54,8 @@ func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *
 
 		// 暂时用默认的grpc的默认err收敛
 		codes := ecode.ExtractCodes(err)
-		metric.ClientHandleCounter.Inc(metric.TypeGRPCStream, name, method, cc.Target(), codes.GetMessage())
-		metric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), metric.TypeGRPCStream, name, method, cc.Target())
+		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCStream, name, method, cc.Target(), codes.GetMessage())
+		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCStream, name, method, cc.Target())
 		return clientStream, err
 	}
 }
@@ -115,7 +115,7 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 func aidUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		md, ok := metadata.FromOutgoingContext(ctx)
-		clientAidMD := metadata.Pairs("app", app.Name())
+		clientAidMD := metadata.Pairs("app", eapp.Name())
 		if ok {
 			md = metadata.Join(md, clientAidMD)
 		} else {
@@ -160,7 +160,7 @@ func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duratio
 }
 
 // loggerUnaryClientInterceptor gRPC客户端日志中间件
-func loggerUnaryClientInterceptor(_logger *elog.Component, name string, accessInterceptorLevel string) grpc.UnaryClientInterceptor {
+func loggerUnaryClientInterceptor(_logger *elog.Component, accessInterceptorLevel string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, opts...)
@@ -175,7 +175,6 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, name string, accessIn
 					elog.FieldType("unary"),
 					elog.FieldCode(spbStatus.Code),
 					elog.FieldStringErr(spbStatus.Message),
-					elog.FieldName(name),
 					elog.FieldMethod(method),
 					elog.FieldCost(time.Since(beg)),
 					elog.Any("req", json.RawMessage(xstring.Json(req))),
@@ -188,7 +187,6 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, name string, accessIn
 					elog.FieldType("unary"),
 					elog.FieldCode(spbStatus.Code),
 					elog.FieldStringErr(spbStatus.Message),
-					elog.FieldName(name),
 					elog.FieldMethod(method),
 					elog.FieldCost(time.Since(beg)),
 					elog.Any("req", json.RawMessage(xstring.Json(req))),
@@ -202,7 +200,6 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, name string, accessIn
 					"access",
 					elog.FieldType("unary"),
 					elog.FieldCode(spbStatus.Code),
-					elog.FieldName(name),
 					elog.FieldMethod(method),
 					elog.FieldCost(time.Since(beg)),
 					elog.Any("req", json.RawMessage(xstring.Json(req))),

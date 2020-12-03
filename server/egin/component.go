@@ -13,6 +13,8 @@ import (
 	"github.com/gotomicro/ego/server"
 )
 
+const PackageName = "server.egin"
+
 // Component ...
 type Component struct {
 	name   string
@@ -38,6 +40,10 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 func (c *Component) Name() string {
 	return c.name
+}
+
+func (c *Component) PackageName() string {
+	return PackageName
 }
 
 func (c *Component) Init() error {
@@ -80,10 +86,8 @@ func (c *Component) Start() error {
 	}
 	err := c.Server.Serve(c.listener)
 	if err == http.ErrServerClosed {
-		c.logger.Info("close gin", elog.FieldAddr(c.config.Address()))
 		return nil
 	}
-
 	return err
 }
 
