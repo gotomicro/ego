@@ -1,3 +1,6 @@
+## 帮助文档
+[https://ego.gocn.vip](https://ego.gocn.vip)
+
 ## Quick Start
 
 ### HelloWorld
@@ -19,7 +22,7 @@ func main() {
       })
       return server
    }()).Run(); err != nil {
-      elog.Panic("startup", elog.Any("err", err))
+      elog.Panic("startup", elog.FieldErr(err))
    }
 }
 ```
