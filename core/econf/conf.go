@@ -16,7 +16,7 @@ import (
 	"github.com/gotomicro/ego/core/util/xmap"
 )
 
-const PackageName = "core.conf"
+const PackageName = "core.econf"
 
 // Configuration provides configuration for application.
 type Configuration struct {
