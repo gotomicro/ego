@@ -20,7 +20,7 @@ func main() {
 		econf.OnChange(func(config *econf.Configuration) {
 			err := config.UnmarshalKey("people", &p)
 			if err != nil {
-				panic(err.Error())
+				elog.Panic("unmarshal", elog.FieldErr(err))
 			}
 		})
 
@@ -33,7 +33,7 @@ func main() {
 		}()
 		return nil
 	}).Run(); err != nil {
-		elog.Panic("startup", elog.Any("err", err))
+		elog.Panic("startup", elog.FieldErr(err))
 	}
 }
 

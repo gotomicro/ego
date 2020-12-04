@@ -1,0 +1,5 @@
+[server.http]
+port = 9001
+[server.governor]
+host = "0.0.0.0"
+port = 9003

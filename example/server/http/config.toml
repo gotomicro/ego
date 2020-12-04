@@ -1,3 +1,2 @@
 [server.http]
-    mode = "test"
-    port = 9090
+    port = 9007

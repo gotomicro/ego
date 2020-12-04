@@ -26,6 +26,6 @@ type Greeter struct {
 
 func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
 	return &helloworld.HelloReply{
-		Message: "Hello Mocro, I'm " + g.server.Address(),
+		Message: "Hello EGO, I'm " + g.server.Address(),
 	}, nil
 }

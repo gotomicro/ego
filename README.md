@@ -1,3 +1,6 @@
+## 帮助文档
+[https://ego.gocn.vip](https://ego.gocn.vip)
+
 ## Quick Start
 
 ### HelloWorld
@@ -14,12 +17,12 @@ func main() {
    if err := ego.New().Serve(func() *egin.Component {
       server := egin.Load("server.http").Build()
       server.GET("/hello", func(ctx *gin.Context) {
-         ctx.JSON(200, "Hello Shimo")
+         ctx.JSON(200, "Hello EGO")
          return
       })
       return server
    }()).Run(); err != nil {
-      elog.Panic("startup", elog.Any("err", err))
+      elog.Panic("startup", elog.FieldErr(err))
    }
 }
 ```

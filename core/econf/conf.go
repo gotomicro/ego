@@ -18,12 +18,11 @@ import (
 
 const PackageName = "core.econf"
 
-// Configuration provides configuration for application.
 type Configuration struct {
-	mu       sync.RWMutex
-	override map[string]interface{}
-	keyDelim string
-
+	mu        sync.RWMutex
+	override  map[string]interface{}
+	keyDelim  string
+	rawConfig []byte
 	keyMap    *sync.Map
 	onChanges []func(*Configuration)
 
@@ -100,6 +99,7 @@ func (c *Configuration) LoadFromDataSource(ds DataSource, unmarshaller Unmarshal
 
 // Load ...
 func (c *Configuration) Load(content []byte, unmarshal Unmarshaller) error {
+	c.rawConfig = content
 	configuration := make(map[string]interface{})
 	if err := unmarshal(content, &configuration); err != nil {
 		return err
@@ -402,4 +402,8 @@ func (c *Configuration) traverse(sep string) map[string]interface{} {
 	data := make(map[string]interface{})
 	lookup("", c.override, data, sep)
 	return data
+}
+
+func (c *Configuration) raw() []byte {
+	return c.rawConfig
 }

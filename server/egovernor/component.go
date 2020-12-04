@@ -2,15 +2,77 @@ package egovernor
 
 import (
 	"context"
-	"net"
-	"net/http"
-
+	"encoding/json"
 	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
+	jsoniter "github.com/json-iterator/go"
+	"net"
+	"net/http"
+	"net/http/pprof"
+	"os"
+	"runtime/debug"
+)
+
+var (
+	// DefaultServeMux ...
+	DefaultServeMux = http.NewServeMux()
+	routes          = []string{}
 )
 
 const PackageName = "server.egin"
+
+func init() {
+	// 获取全部治理路由
+	HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
+		json.NewEncoder(resp).Encode(routes)
+	})
+	HandleFunc("/debug/pprof/", pprof.Index)
+	HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	HandleFunc("/debug/pprof/profile", pprof.Profile)
+	HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	HandleFunc("/debug/pprof/trace", pprof.Trace)
+	if info, ok := debug.ReadBuildInfo(); ok {
+		HandleFunc("/module/info", func(w http.ResponseWriter, r *http.Request) {
+			encoder := json.NewEncoder(w)
+			if r.URL.Query().Get("pretty") == "true" {
+				encoder.SetIndent("", "    ")
+			}
+			_ = encoder.Encode(info)
+		})
+	}
+	HandleFunc("/config/json", func(w http.ResponseWriter, r *http.Request) {
+		encoder := json.NewEncoder(w)
+		if r.URL.Query().Get("pretty") == "true" {
+			encoder.SetIndent("", "    ")
+		}
+		encoder.Encode(econf.Traverse("."))
+	})
+	HandleFunc("/config/raw", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(econf.RawConfig())
+	})
+	HandleFunc("/env/info", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		_ = jsoniter.NewEncoder(w).Encode(os.Environ())
+	})
+	HandleFunc("/build/info", func(w http.ResponseWriter, r *http.Request) {
+		serverStats := map[string]string{
+			"name":       eapp.Name(),
+			"appMode":    eapp.AppMode(),
+			"appVersion": eapp.AppVersion(),
+			"egoVersion": eapp.EgoVersion(),
+			"buildUser":  eapp.BuildUser(),
+			"buildHost":  eapp.BuildHost(),
+			"buildTime":  eapp.BuildTime(),
+			"startTime":  eapp.StartTime(),
+			"hostName":   eapp.HostName(),
+			"goVersion":  eapp.GoVersion(),
+		}
+		_ = jsoniter.NewEncoder(w).Encode(serverStats)
+	})
+}
 
 // Component ...
 type Component struct {
@@ -80,4 +142,11 @@ func (s *Component) Info() *server.ServiceInfo {
 	)
 	// info.Name = info.Name + "." + ModName
 	return &info
+}
+
+// HandleFunc ...
+func HandleFunc(pattern string, handler http.HandlerFunc) {
+	// todo: 增加安全管控
+	DefaultServeMux.HandleFunc(pattern, handler)
+	routes = append(routes, pattern)
 }
