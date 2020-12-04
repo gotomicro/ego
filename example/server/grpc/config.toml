@@ -1,2 +1,2 @@
 [server.grpc]
-    port = 9090
+    port = 9002

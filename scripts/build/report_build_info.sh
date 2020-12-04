@@ -49,13 +49,13 @@ fi
 GIT_DESCRIBE_TAG=$(git describe --tags)
 
 # used by scripts/build/gobuild.sh
-echo "github.com/gotomicro/ego/core/app.appName=${APP_NAME}"
-echo "github.com/gotomicro/ego/core/app.buildVersion=${VERSION}"
-echo "github.com/gotomicro/ego/core/app.buildAppVersion=${BUILD_GIT_REVISION}"
-echo "github.com/gotomicro/ego/core/app.buildStatus=${tree_status}"
-echo "github.com/gotomicro/ego/core/app.buildTag=${GIT_DESCRIBE_TAG}"
-echo "github.com/gotomicro/ego/core/app.buildUser=$(whoami)"
-echo "github.com/gotomicro/ego/core/app.buildHost=$(hostname -f)"
-echo "github.com/gotomicro/ego/core/app.buildTime=$(date '+%Y-%m-%d--%T')"
+echo "github.com/gotomicro/ego/core/eapp.appName=${APP_NAME}"
+echo "github.com/gotomicro/ego/core/eapp.buildVersion=${VERSION}"
+echo "github.com/gotomicro/ego/core/eapp.buildAppVersion=${BUILD_GIT_REVISION}"
+echo "github.com/gotomicro/ego/core/eapp.buildStatus=${tree_status}"
+echo "github.com/gotomicro/ego/core/eapp.buildTag=${GIT_DESCRIBE_TAG}"
+echo "github.com/gotomicro/ego/core/eapp.buildUser=$(whoami)"
+echo "github.com/gotomicro/ego/core/eapp.buildHost=$(hostname -f)"
+echo "github.com/gotomicro/ego/core/eapp.buildTime=$(date '+%Y-%m-%d--%T')"
 
 

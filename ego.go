@@ -81,9 +81,9 @@ func New(options ...Option) *ego {
 
 	// 设置初始函数
 	e.inits = []func() error{
+		parseFlags,
 		e.printBanner,
 		printLogger,
-		parseFlags,
 		loadConfig,
 		initMaxProcs,
 		e.initLogger,

@@ -1,6 +1,6 @@
 [people]
     name = "ego"
 [logger.default]
-    debug = true
+    level = "info"
 
 

@@ -15,17 +15,20 @@ import (
 
 // Config ...
 type Config struct {
-	WithSeconds     bool
-	ConcurrentDelay int
-	ImmediatelyRun  bool
-	TTL             int // 单位：s
-	DistributedTask bool
-	WaitLockTime    time.Duration
-	WaitUnlockTime  time.Duration
-	WorkerLockDir   string
-	wrappers        []JobWrapper
-	parser          cron.Parser
-	locker          Locker
+	WithSeconds      bool          // 是否使用秒作解析器，默认否
+	ConcurrentDelay  int           // 并发延迟，默认是执行超过定时时间后，下次执行的任务会跳过
+	ImmediatelyRun   bool          // 是否立刻执行，默认否
+	DistributedTask  bool          // 是否分布式任务，默认否，如果存在分布式任务，则会解析嵌入的etcd配置
+	WaitLockTime     time.Duration // 抢锁等待时间，默认0s
+	Endpoints        []string      // etcd地址
+	ConnectTimeout   time.Duration // 连接超时时间，默认5s
+	Secure           bool          // 是否安全通信，默认false
+	AutoSyncInterval time.Duration // 自动同步member list的间隔
+	TTL              int           // 过期时间，单位：s，默认失效时间为0s
+	WorkerLockDir    string        // 定时任务锁目录
+	wrappers         []JobWrapper
+	parser           cron.Parser
+	locker           Locker
 }
 
 // DefaultConfig ...
@@ -37,7 +40,6 @@ func DefaultConfig() *Config {
 		TTL:             60,
 		DistributedTask: false,
 		WaitLockTime:    xtime.Duration("1000ms"),
-		WaitUnlockTime:  xtime.Duration("1000ms"),
 		WorkerLockDir:   "/ecron/lock/",
 		wrappers:        []JobWrapper{},
 		parser:          cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),

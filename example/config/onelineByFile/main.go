@@ -13,6 +13,6 @@ func main() {
 		elog.Info("people info", elog.String("name", peopleName), elog.String("type", "onelineByFile"))
 		return nil
 	}).Run(); err != nil {
-		elog.Panic("startup", elog.Any("err", err))
+		elog.Panic("startup", elog.FieldErr(err))
 	}
 }

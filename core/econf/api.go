@@ -51,6 +51,10 @@ func Traverse(sep string) map[string]interface{} {
 	return defaultConfiguration.traverse(sep)
 }
 
+func RawConfig() []byte {
+	return defaultConfiguration.raw()
+}
+
 // Debug ...
 func Debug(sep string) {
 	spew.Dump("Debug", Traverse(sep))

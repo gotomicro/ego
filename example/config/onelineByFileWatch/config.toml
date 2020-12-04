@@ -1,6 +1,5 @@
 [people]
     name = "haha"
 [logger.default]
-    debug = true
     level = "info"
 
