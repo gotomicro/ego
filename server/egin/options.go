@@ -30,19 +30,30 @@ func extractAID(ctx *gin.Context) string {
 	return ctx.Request.Header.Get("AID")
 }
 
-func recoverMiddleware(logger *elog.Component, slowQueryThresholdInMilli int64) gin.HandlerFunc {
+func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var beg = time.Now()
 		var fields = make([]elog.Field, 0, 8)
 		var brokenPipe bool
+		var event = "normal"
 		defer func() {
-			//Latency
-			fields = append(fields, zap.Int64("cost", time.Since(beg).Milliseconds()))
-			if slowQueryThresholdInMilli > 0 {
-				if cost := int64(time.Since(beg)) / 1e6; cost > slowQueryThresholdInMilli {
-					fields = append(fields, zap.Int64("slow", cost))
-				}
+			cost := time.Since(beg)
+
+			// slow log
+			if slowLogThreshold > time.Duration(0) && slowLogThreshold < cost {
+				event = "slow"
 			}
+
+			fields = append(fields,
+				elog.FieldCost(cost),
+				zap.String("method", c.Request.Method),
+				zap.Int("code", c.Writer.Status()),
+				zap.Int("size", c.Writer.Size()),
+				zap.String("host", c.Request.Host),
+				zap.String("path", c.Request.URL.Path),
+				zap.String("ip", c.ClientIP()),
+			)
+
 			if rec := recover(); rec != nil {
 				if ne, ok := rec.(*net.OpError); ok {
 					if se, ok := ne.Err.(*os.SyscallError); ok {
@@ -51,9 +62,13 @@ func recoverMiddleware(logger *elog.Component, slowQueryThresholdInMilli int64) 
 						}
 					}
 				}
+				event = "recover"
 				var err = rec.(error)
-				fields = append(fields, zap.ByteString("stack", stack(3)))
-				fields = append(fields, zap.String("err", err.Error()))
+				fields = append(fields,
+					elog.FieldEvent(event),
+					zap.ByteString("stack", stack(3)),
+					elog.FieldErr(err),
+				)
 				logger.Error("access", fields...)
 				// If the connection is dead, we can't write a status to it.
 				if brokenPipe {
@@ -67,15 +82,15 @@ func recoverMiddleware(logger *elog.Component, slowQueryThresholdInMilli int64) 
 			// httpRequest, _ := httputil.DumpRequest(c.Request, false)
 			// fields = append(fields, zap.ByteString("request", httpRequest))
 			fields = append(fields,
-				zap.String("method", c.Request.Method),
-				zap.Int("code", c.Writer.Status()),
-				zap.Int("size", c.Writer.Size()),
-				zap.String("host", c.Request.Host),
-				zap.String("path", c.Request.URL.Path),
-				zap.String("ip", c.ClientIP()),
+				elog.FieldEvent(event),
 				zap.String("err", c.Errors.ByType(gin.ErrorTypePrivate).String()),
 			)
-			logger.Info("access", fields...)
+
+			if event == "slow" {
+				logger.Warn("access", fields...)
+			} else {
+				logger.Info("access", fields...)
+			}
 		}()
 		c.Next()
 	}
@@ -140,11 +155,6 @@ func function(pc uintptr) []byte {
 	}
 	name = bytes.Replace(name, centerDot, dot, -1)
 	return name
-}
-
-func timeFormat(t time.Time) string {
-	timeString := t.Format("2006/01/02 - 15:04:05")
-	return timeString
 }
 
 func metricServerInterceptor() gin.HandlerFunc {

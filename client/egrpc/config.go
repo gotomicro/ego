@@ -11,17 +11,17 @@ import (
 
 // Config ...
 type Config struct {
-	Name          string // config's name
-	BalancerName  string
-	Address       string
-	Block         bool
-	DialTimeout   time.Duration
-	ReadTimeout   time.Duration
-	Direct        bool
-	OnDialError   string // panic | error
-	KeepAlive     *keepalive.ClientParameters
-	dialOptions   []grpc.DialOption
-	SlowThreshold time.Duration
+	Name             string // config's name
+	BalancerName     string
+	Address          string
+	Block            bool
+	DialTimeout      time.Duration
+	ReadTimeout      time.Duration
+	Direct           bool
+	OnDialError      string // panic | error
+	KeepAlive        *keepalive.ClientParameters
+	dialOptions      []grpc.DialOption
+	SlowLogThreshold time.Duration
 
 	Debug                     bool
 	DisableTraceInterceptor   bool
@@ -41,7 +41,7 @@ func DefaultConfig() *Config {
 		BalancerName:           roundrobin.Name, // round robin by default
 		DialTimeout:            time.Second * 3,
 		ReadTimeout:            xtime.Duration("1s"),
-		SlowThreshold:          xtime.Duration("600ms"),
+		SlowLogThreshold:       xtime.Duration("600ms"),
 		OnDialError:            "panic",
 		AccessInterceptorLevel: "info",
 		Block:                  true,

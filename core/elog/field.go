@@ -40,7 +40,7 @@ func FieldCode(value int32) Field {
 
 // 耗时时间
 func FieldCost(value time.Duration) Field {
-	return zap.Float64("cost", float64(value.Round(time.Microsecond))/float64(time.Millisecond))
+	return zap.Int64("cost", value.Microseconds())
 }
 
 // FieldKey ...

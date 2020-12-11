@@ -41,7 +41,7 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 	server := newComponent(c.name, c.config, c.logger)
-	server.Use(recoverMiddleware(c.logger, c.config.SlowLogThresholdInMilli))
+	server.Use(recoverMiddleware(c.logger, c.config.SlowLogThreshold))
 
 	if !c.config.DisableMetric {
 		server.Use(metricServerInterceptor())
