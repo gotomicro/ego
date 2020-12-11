@@ -147,7 +147,8 @@ func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duratio
 		}
 
 		if slowThreshold > time.Duration(0) && du > slowThreshold {
-			_logger.Error("slow",
+			_logger.Warn("access",
+				elog.FieldEvent("slow"),
 				elog.FieldErr(errSlowCommand),
 				elog.FieldMethod(method),
 				elog.FieldName(cc.Target()),

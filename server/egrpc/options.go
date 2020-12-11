@@ -12,7 +12,6 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/opentracing/opentracing-go/ext"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -26,8 +25,8 @@ func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info
 	startTime := time.Now()
 	resp, err := handler(ctx, req)
 	code := ecode.ExtractCodes(err)
-	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractAID(ctx))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractAID(ctx), code.GetMessage())
+	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), code.GetMessage())
 	return resp, err
 }
 
@@ -35,8 +34,8 @@ func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, in
 	startTime := time.Now()
 	err := handler(srv, ss)
 	code := ecode.ExtractCodes(err)
-	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, extractAID(ss.Context()))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractAID(ss.Context()), code.GetMessage())
+	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()), code.GetMessage())
 	return err
 }
 
@@ -92,23 +91,23 @@ func traceStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *g
 	})
 }
 
-func extractAID(ctx context.Context) string {
+func extractApp(ctx context.Context) string {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		return strings.Join(md.Get("aid"), ",")
+		return strings.Join(md.Get("app"), ",")
 	}
 	return "unknown"
 }
 
-func defaultStreamServerInterceptor(logger *elog.Component, slowQueryThresholdInMilli int64) grpc.StreamServerInterceptor {
+func defaultStreamServerInterceptor(logger *elog.Component, slowLogThreshold time.Duration) grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		var beg = time.Now()
 		var fields = make([]elog.Field, 0, 8)
 		var event = "normal"
 		defer func() {
-			if slowQueryThresholdInMilli > 0 {
-				if int64(time.Since(beg))/1e6 > slowQueryThresholdInMilli {
-					event = "slow"
-				}
+			cost := time.Since(beg)
+
+			if slowLogThreshold > time.Duration(0) && slowLogThreshold < cost {
+				event = "slow"
 			}
 
 			if rec := recover(); rec != nil {
@@ -125,10 +124,9 @@ func defaultStreamServerInterceptor(logger *elog.Component, slowQueryThresholdIn
 			}
 
 			fields = append(fields,
-				elog.Any("grpc interceptor type", "unary"),
+				elog.Any("grpc interceptor type", "stream"),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
-				elog.FieldEvent(event),
 			)
 
 			for key, val := range getPeer(stream.Context()) {
@@ -136,27 +134,31 @@ func defaultStreamServerInterceptor(logger *elog.Component, slowQueryThresholdIn
 			}
 
 			if err != nil {
-				fields = append(fields, zap.String("err", err.Error()))
+				fields = append(fields, elog.FieldErr(err))
 				logger.Error("access", fields...)
 				return
 			}
-			logger.Info("access", fields...)
+			if event == "slow" {
+				logger.Warn("access", fields...)
+			} else {
+				logger.Info("access", fields...)
+			}
 		}()
 		return handler(srv, stream)
 	}
 }
 
-func defaultUnaryServerInterceptor(logger *elog.Component, slowQueryThresholdInMilli int64) grpc.UnaryServerInterceptor {
+func defaultUnaryServerInterceptor(logger *elog.Component, slowLogThreshold time.Duration) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		var beg = time.Now()
 		var fields = make([]elog.Field, 0, 8)
 		var event = "normal"
 		defer func() {
-			if slowQueryThresholdInMilli > 0 {
-				if int64(time.Since(beg))/1e6 > slowQueryThresholdInMilli {
-					event = "slow"
-				}
+			cost := time.Since(beg)
+			if slowLogThreshold > time.Duration(0) && slowLogThreshold < cost {
+				event = "slow"
 			}
+
 			if rec := recover(); rec != nil {
 				switch rec := rec.(type) {
 				case error:
@@ -173,9 +175,9 @@ func defaultUnaryServerInterceptor(logger *elog.Component, slowQueryThresholdInM
 
 			fields = append(fields,
 				elog.Any("grpc interceptor type", "unary"),
+				elog.FieldEvent(event),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
-				elog.FieldEvent(event),
 			)
 
 			for key, val := range getPeer(ctx) {
@@ -183,11 +185,15 @@ func defaultUnaryServerInterceptor(logger *elog.Component, slowQueryThresholdInM
 			}
 
 			if err != nil {
-				fields = append(fields, zap.String("err", err.Error()))
+				fields = append(fields, elog.FieldErr(err))
 				logger.Error("access", fields...)
 				return
 			}
-			logger.Info("access", fields...)
+			if event == "slow" {
+				logger.Warn("access", fields...)
+			} else {
+				logger.Info("access", fields...)
+			}
 		}()
 		return handler(ctx, req)
 	}

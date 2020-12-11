@@ -57,7 +57,7 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 
 	if !c.config.DisableTimeoutInterceptor {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(timeoutUnaryClientInterceptor(c.logger, c.config.ReadTimeout, c.config.SlowThreshold))))
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(timeoutUnaryClientInterceptor(c.logger, c.config.ReadTimeout, c.config.SlowLogThreshold))))
 	}
 
 	if !c.config.DisableTraceInterceptor {

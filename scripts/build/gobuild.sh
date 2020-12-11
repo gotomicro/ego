@@ -62,7 +62,7 @@ fi
 # at the beginning of the build and used throughout
 if [[ -z ${BUILDINFO} ]];then
     BUILDINFO=$(mktemp)
-    "${SCRIPTPATH}/report_build_info.sh"  ${APP_NAME} ${APP_ID}> "${BUILDINFO}"
+    "${SCRIPTPATH}/report_build_info.sh"  ${APP_NAME} > "${BUILDINFO}"
 fi
 
 # BUILD LD_EXTRAFLAGS
