@@ -14,7 +14,7 @@ import (
 	"github.com/gotomicro/ego/core/util/xcolor"
 )
 
-const egoVersion = "1.0.0"
+const egoVersion = "v0.2.0"
 
 var (
 	startTime string
