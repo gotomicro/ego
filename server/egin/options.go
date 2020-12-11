@@ -37,7 +37,7 @@ func recoverMiddleware(logger *elog.Component, slowQueryThresholdInMilli int64) 
 		var brokenPipe bool
 		defer func() {
 			//Latency
-			fields = append(fields, zap.Float64("cost", time.Since(beg).Seconds()))
+			fields = append(fields, zap.Int64("cost", time.Since(beg).Milliseconds()))
 			if slowQueryThresholdInMilli > 0 {
 				if cost := int64(time.Since(beg)) / 1e6; cost > slowQueryThresholdInMilli {
 					fields = append(fields, zap.Int64("slow", cost))
