@@ -1,6 +1,6 @@
 // +build !windows
 
-package signals
+package ego
 
 import (
 	"os"
