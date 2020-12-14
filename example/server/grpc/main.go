@@ -13,7 +13,7 @@ import (
 func main() {
 	if err := ego.New().Serve(func() server.Server {
 		server := egrpc.Load("server.grpc").Build()
-		helloworld.RegisterGreeterServer(server.Server, &Greeter{})
+		helloworld.RegisterGreeterServer(server.Server, &Greeter{server: server})
 		return server
 	}()).Run(); err != nil {
 		elog.Panic("startup", elog.Any("err", err))
