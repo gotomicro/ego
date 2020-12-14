@@ -16,13 +16,12 @@ package egrpc
 
 import (
 	"context"
-	"google.golang.org/grpc/reflection"
-	"net"
-
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"net"
 )
 
 const PackageName = "server.egrpc"
@@ -35,6 +34,7 @@ type Component struct {
 	*grpc.Server
 	listener   net.Listener
 	serverInfo *server.ServiceInfo
+	quit       chan error
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
@@ -48,6 +48,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		Server:     newServer,
 		listener:   nil,
 		serverInfo: nil,
+		quit:       make(chan error),
 	}
 }
 
@@ -92,7 +93,19 @@ func (s *Component) Stop() error {
 // GracefulStop implements server.Component interface
 // it will stop echo server gracefully
 func (s *Component) GracefulStop(ctx context.Context) error {
-	s.Server.GracefulStop()
+	go func() {
+		s.Server.GracefulStop()
+		close(s.quit)
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-s.quit:
+			return nil
+		}
+	}
 	return nil
 }
 

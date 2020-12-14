@@ -11,21 +11,33 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/etrace/ejaeger"
-	"github.com/gotomicro/ego/core/signals"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"github.com/gotomicro/ego/core/util/xgo"
 	"go.uber.org/automaxprocs/maxprocs"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 )
 
 // waitSignals wait signal
 func (e *ego) waitSignals() {
-	signals.Shutdown(func(grace bool) { // when get shutdown signal
-		// todo: support timeout
-		e.Stop(context.TODO(), grace)
-
-	})
+	sig := make(chan os.Signal, 2)
+	signal.Notify(
+		sig,
+		e.shutdownSignals...,
+	)
+	go func() {
+		s := <-sig
+		grace := s != syscall.SIGQUIT
+		go func() {
+			stopCtx, cancel := context.WithTimeout(context.Background(), e.stopTimeout)
+			defer cancel()
+			e.Stop(stopCtx, grace)
+		}()
+		<-sig
+		os.Exit(128 + int(s.(syscall.Signal))) // second signal. Exit directly.
+	}()
 }
 
 func (e *ego) startServers() error {
