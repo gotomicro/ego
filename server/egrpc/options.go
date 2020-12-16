@@ -214,8 +214,8 @@ func getClientIP(ctx context.Context) (string, error) {
 func getPeer(ctx context.Context) map[string]string {
 	var peerMeta = make(map[string]string)
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		if val, ok := md["aid"]; ok {
-			peerMeta["aid"] = strings.Join(val, ";")
+		if val, ok := md["app"]; ok {
+			peerMeta["app"] = strings.Join(val, ";")
 		}
 		var clientIP string
 		if val, ok := md["client-ip"]; ok {

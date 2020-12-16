@@ -2,10 +2,9 @@ package egrpc
 
 import (
 	"context"
-	"time"
-
 	"github.com/gotomicro/ego/core/elog"
 	"google.golang.org/grpc"
+	"time"
 )
 
 const PackageName = "client.egrpc"
@@ -40,7 +39,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	cc, err := grpc.DialContext(ctx, config.Address, dialOptions...)
 
 	if err != nil {
-		if config.OnDialError == "panic" {
+		if config.OnFail == "panic" {
 			logger.Panic("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
 		} else {
 			logger.Error("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
