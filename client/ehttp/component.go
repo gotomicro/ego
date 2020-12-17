@@ -24,7 +24,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}).OnAfterResponse(func(client *resty.Client, response *resty.Response) error {
 		rr := response.Request.RawRequest
 		if eapp.IsDevelopmentMode() {
-			xdebug.Info(name, config.Address, response.Time(), response.Request.Method+"."+rr.URL.RequestURI(), string(response.Body()))
+			xdebug.Info(name, config.Addr, response.Time(), response.Request.Method+"."+rr.URL.RequestURI(), string(response.Body()))
 		}
 
 		isSlowLog := false
@@ -60,7 +60,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		}
 
 		return nil
-	}).SetHostURL(config.Address)
+	}).SetHostURL(config.Addr)
 	return &Component{
 		name:   name,
 		config: config,

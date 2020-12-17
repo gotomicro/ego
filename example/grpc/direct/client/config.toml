@@ -1,5 +1,5 @@
 [grpc.test]
-address = "127.0.0.1:9002"
+addr = "127.0.0.1:9002"
 debug = true
 enableAccessInterceptor = true
 enableAccessInterceptorReply = true

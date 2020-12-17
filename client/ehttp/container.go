@@ -41,6 +41,6 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 
-	c.logger.With(elog.FieldAddr(c.config.Address))
+	c.logger.With(elog.FieldAddr(c.config.Addr))
 	return newComponent(c.name, c.config, c.logger)
 }
