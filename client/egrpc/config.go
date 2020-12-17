@@ -12,7 +12,7 @@ import (
 // Config ...
 type Config struct {
 	BalancerName     string
-	Address          string
+	Addr             string
 	Block            bool
 	DialTimeout      time.Duration
 	ReadTimeout      time.Duration

@@ -36,7 +36,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 	dialOptions = append(dialOptions, grpc.WithBalancerName(config.BalancerName))
 
-	cc, err := grpc.DialContext(ctx, config.Address, dialOptions...)
+	cc, err := grpc.DialContext(ctx, config.Addr, dialOptions...)
 
 	if err != nil {
 		if config.OnFail == "panic" {

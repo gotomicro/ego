@@ -28,7 +28,7 @@ func Load(key string) *Container {
 		return c
 	}
 	c.logger = c.logger.With(elog.FieldComponentName(key))
-	c.logger = c.logger.With(elog.FieldAddr(c.config.Address))
+	c.logger = c.logger.With(elog.FieldAddr(c.config.Addr))
 	c.name = key
 	return c
 }
@@ -50,7 +50,7 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 
 	if c.config.Debug {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.name, c.config.Address))))
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.name, c.config.Addr))))
 	}
 
 	if !c.config.DisableAppNameInterceptor {

@@ -8,7 +8,7 @@ import (
 type Config struct {
 	Debug                        bool
 	RawDebug                     bool
-	Address                      string
+	Addr                         string
 	ReadTimeout                  time.Duration
 	SlowLogThreshold             time.Duration
 	EnableAccessInterceptor      bool
