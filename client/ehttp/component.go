@@ -28,19 +28,24 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		}
 
 		isSlowLog := false
-		var fields = make([]elog.Field, 0, 8)
+		// todo can't log error
+		var fields = make([]elog.Field, 0, 15)
+
+		fields = append(fields,
+			elog.FieldMethod(response.Request.Method+"."+rr.URL.RequestURI()), // GET./hello
+			elog.FieldName(name),
+			elog.FieldCost(response.Time()),
+			elog.FieldAddr(rr.URL.Host),
+		)
+
+		if config.EnableAccessInterceptorReply {
+			fields = append(fields, elog.FieldValueAny(string(response.Body())))
+		}
 
 		if config.SlowLogThreshold > time.Duration(0) && response.Time() > config.SlowLogThreshold {
 			fields = append(fields,
 				elog.FieldEvent("slow"),
-				elog.FieldMethod(response.Request.Method+"."+rr.URL.RequestURI()), // GET./hello
-				elog.FieldName(name),
-				elog.FieldCost(response.Time()),
-				elog.FieldAddr(rr.URL.Host),
 			)
-			if config.EnableAccessInterceptorReply {
-				fields = append(fields, elog.FieldValueAny(string(response.Body())))
-			}
 			logger.Warn("access", fields...)
 			isSlowLog = true
 		}
@@ -48,17 +53,9 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		if config.EnableAccessInterceptor && !isSlowLog {
 			fields = append(fields,
 				elog.FieldEvent("normal"),
-				elog.FieldMethod(response.Request.Method+"."+rr.URL.RequestURI()), // GET./hello
-				elog.FieldName(name),
-				elog.FieldCost(response.Time()),
-				elog.FieldAddr(rr.URL.Host),
 			)
-			if config.EnableAccessInterceptorReply {
-				fields = append(fields, elog.FieldValueAny(string(response.Body())))
-			}
 			logger.Info("access", fields...)
 		}
-
 		return nil
 	}).SetHostURL(config.Addr)
 	return &Component{
