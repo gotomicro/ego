@@ -76,12 +76,12 @@ func (c *Container) Build(options ...Option) *Component {
 		options = make([]Option, 0)
 	}
 
-	if !c.config.DisableTraceInterceptor {
+	if c.config.EnableTraceInterceptor {
 		options = append(options, WithUnaryInterceptor(traceUnaryServerInterceptor))
 		options = append(options, WithStreamInterceptor(traceStreamServerInterceptor))
 	}
 
-	if !c.config.DisableMetricInterceptor {
+	if c.config.EnableMetricInterceptor {
 		options = append(options, WithUnaryInterceptor(prometheusUnaryServerInterceptor))
 		options = append(options, WithStreamInterceptor(prometheusStreamServerInterceptor))
 	}
