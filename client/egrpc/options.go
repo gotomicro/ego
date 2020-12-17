@@ -149,7 +149,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		isErrLog := false
 		isSlowLog := false
 		spbStatus := ecode.ExtractCodes(err)
-		var fields = make([]elog.Field, 0, 10)
+		var fields = make([]elog.Field, 0, 15)
 		fields = append(fields,
 			elog.FieldType("unary"),
 			elog.FieldCode(spbStatus.Code),
@@ -157,46 +157,39 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 			elog.FieldMethod(method),
 			elog.FieldCost(cost),
 			elog.FieldName(cc.Target()),
-			elog.Any("req", json.RawMessage(xstring.Json(req))),
 		)
+
+		if config.EnableAccessInterceptorReq {
+			fields = append(fields, elog.Any("req", json.RawMessage(xstring.Json(req))))
+		}
+
+		if config.EnableAccessInterceptorReply {
+			fields = append(fields, elog.Any("reply", json.RawMessage(xstring.Json(reply))))
+		}
 
 		if err != nil {
 			// 只记录系统级别错误
 			if spbStatus.Code < ecode.EcodeNum {
-				if config.EnableAccessInterceptorReply {
-					fields = append(fields, elog.Any("reply", json.RawMessage(xstring.Json(reply))))
-				}
-
+				fields = append(fields, elog.FieldEvent("error"))
 				// 只记录系统级别错误
 				_logger.Error("access", fields...)
-				isErrLog = true
 			} else {
 				// 业务报错只做warning
-
-				if config.EnableAccessInterceptorReply {
-					fields = append(fields, elog.Any("reply", json.RawMessage(xstring.Json(reply))))
-				}
 				_logger.Warn("access", fields...)
-				isErrLog = true
 			}
+			isErrLog = true
 			return err
 		}
 
 		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
 			fields = append(fields, elog.FieldEvent("slow"))
-			if config.EnableAccessInterceptorReply {
-				fields = append(fields, elog.Any("reply", json.RawMessage(xstring.Json(reply))))
-			}
 			isSlowLog = true
+			_logger.Warn("access", fields...)
 		}
 
-		if config.EnableAccessInterceptor && !isErrLog || config.EnableAccessInterceptor && !isSlowLog {
+		if config.EnableAccessInterceptor && !isErrLog && !isSlowLog {
 			fields = append(fields, elog.FieldEvent("normal"))
-			if config.EnableAccessInterceptorReply {
-				fields = append(fields, elog.Any("reply", json.RawMessage(xstring.Json(reply))))
-			}
 			_logger.Info("access", fields...)
-
 		}
 		return nil
 	}

@@ -27,8 +27,9 @@ type Config struct {
 	DisableAppNameInterceptor    bool
 	DisableTimeoutInterceptor    bool
 	DisableMetricInterceptor     bool
-	EnableAccessInterceptor      bool
-	EnableAccessInterceptorReply bool
+	EnableAccessInterceptor      bool // 是否开启，记录请求数据
+	EnableAccessInterceptorReply bool // 是否开启记录响应参数
+	EnableAccessInterceptorReq   bool // 是否开启记录请求参数
 }
 
 // DefaultConfig ...
