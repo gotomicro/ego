@@ -67,12 +67,12 @@ func New(options ...Option) *ego {
 	// 设置运行前清理函数
 	// 如果注册中心存在设置
 	if e.registerer != nil {
-		WithBeforeStopClean(e.registerer.Close)
+		options = append(options, WithBeforeStopClean(e.registerer.Close))
 	}
 
 	// 设置运行后清理函数
 	// 设置清理日志函数
-	WithAfterStopClean(elog.DefaultLogger.Flush, elog.EgoLogger.Flush)
+	options = append(options, WithAfterStopClean(elog.DefaultLogger.Flush, elog.EgoLogger.Flush))
 
 	// 设置参数
 	for _, option := range options {
