@@ -43,11 +43,11 @@ func (c *Container) Build(options ...Option) *Component {
 	server := newComponent(c.name, c.config, c.logger)
 	server.Use(recoverMiddleware(c.logger, c.config.SlowLogThreshold))
 
-	if !c.config.DisableMetricInterceptor {
+	if c.config.EnableMetricInterceptor {
 		server.Use(metricServerInterceptor())
 	}
 
-	if !c.config.DisableTraceInterceptor {
+	if c.config.EnableTraceInterceptor {
 		server.Use(traceServerInterceptor())
 	}
 	return server

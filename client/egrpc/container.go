@@ -53,15 +53,15 @@ func (c *Container) Build(options ...Option) *Component {
 		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.name, c.config.Addr))))
 	}
 
-	if !c.config.DisableAppNameInterceptor {
+	if c.config.EnableAppNameInterceptor {
 		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(appNameUnaryClientInterceptor())))
 	}
 
-	if !c.config.DisableTimeoutInterceptor {
+	if c.config.EnableTimeoutInterceptor {
 		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(timeoutUnaryClientInterceptor(c.logger, c.config.ReadTimeout, c.config.SlowLogThreshold))))
 	}
 
-	if !c.config.DisableTraceInterceptor {
+	if c.config.EnableTraceInterceptor {
 		options = append(options,
 			WithDialOption(grpc.WithChainUnaryInterceptor(traceUnaryClientInterceptor())),
 		)
@@ -71,7 +71,7 @@ func (c *Container) Build(options ...Option) *Component {
 		WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config))),
 	)
 
-	if !c.config.DisableMetricInterceptor {
+	if c.config.EnableMetricInterceptor {
 		options = append(options,
 			WithDialOption(grpc.WithChainUnaryInterceptor(metricUnaryClientInterceptor(c.name))),
 		)

@@ -53,6 +53,6 @@ go run main.go --config=config.toml
 
 ### 更加友好的包编译
 
-使用scripts文件夹里的[包编译](./example/build)，可以看到优雅的version提示
+使用scripts文件夹里的[包编译](examples/build)，可以看到优雅的version提示
 
 ![图片](./docs/images/version.png)

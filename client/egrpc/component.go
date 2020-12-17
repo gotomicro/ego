@@ -20,7 +20,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	var ctx = context.Background()
 	var dialOptions = config.dialOptions
 	// 默认配置使用block
-	if config.Block {
+	if config.EnableBlock {
 		if config.DialTimeout > time.Duration(0) {
 			var cancel context.CancelFunc
 			ctx, cancel = context.WithTimeout(ctx, config.DialTimeout)
@@ -30,8 +30,12 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		dialOptions = append(dialOptions, grpc.WithBlock())
 	}
 
-	if config.KeepAlive != nil {
-		dialOptions = append(dialOptions, grpc.WithKeepaliveParams(*config.KeepAlive))
+	if config.EnableWithInsecure {
+		dialOptions = append(dialOptions, grpc.WithInsecure())
+	}
+
+	if config.keepAlive != nil {
+		dialOptions = append(dialOptions, grpc.WithKeepaliveParams(*config.keepAlive))
 	}
 
 	dialOptions = append(dialOptions, grpc.WithBalancerName(config.BalancerName))
