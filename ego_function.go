@@ -209,8 +209,8 @@ Welcome to Ego, starting application ...
 }
 
 func runSerialFuncReturnError(fns []func() error) error {
-	for _, clean := range fns {
-		err := clean()
+	for _, fn := range fns {
+		err := fn()
 		if err != nil {
 			return err
 		}

@@ -1,8 +1,7 @@
-package egin
+package ehttp
 
 import (
 	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
 )
 
@@ -27,28 +26,21 @@ func Load(key string) *Container {
 		c.logger.Panic("parse config error", elog.FieldErr(err), elog.FieldKey(key))
 		return c
 	}
-	// 修改host信息
-	if eflag.String("host") != "" {
-		c.config.Host = eflag.String("host")
-	}
 	c.logger = c.logger.With(elog.FieldComponentName(key))
 	c.name = key
 	return c
 }
 
+// Build ...
 func (c *Container) Build(options ...Option) *Component {
+	if options == nil {
+		options = make([]Option, 0)
+	}
+
 	for _, option := range options {
 		option(c)
 	}
-	server := newComponent(c.name, c.config, c.logger)
-	server.Use(recoverMiddleware(c.logger, c.config.SlowLogThreshold))
 
-	if !c.config.DisableMetricInterceptor {
-		server.Use(metricServerInterceptor())
-	}
-
-	if !c.config.DisableTraceInterceptor {
-		server.Use(traceServerInterceptor())
-	}
-	return server
+	c.logger.With(elog.FieldAddr(c.config.Address))
+	return newComponent(c.name, c.config, c.logger)
 }

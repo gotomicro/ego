@@ -18,11 +18,6 @@ func FieldAddr(value string) Field {
 	return String("addr", value)
 }
 
-// FieldAddrAny ...
-func FieldAddrAny(value interface{}) Field {
-	return Any("addr", value)
-}
-
 // FieldName ...
 func FieldName(value string) Field {
 	return String("name", value)
@@ -46,11 +41,6 @@ func FieldCost(value time.Duration) Field {
 // FieldKey ...
 func FieldKey(value string) Field {
 	return String("key", value)
-}
-
-// 耗时时间
-func FieldKeyAny(value interface{}) Field {
-	return Any("key", value)
 }
 
 // FieldValue ...

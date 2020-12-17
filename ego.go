@@ -214,6 +214,7 @@ func (e *ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 	if isGraceful {
 		for _, s := range e.servers {
 			func(s server.Server) {
+				// todo
 				e.cycle.Run(func() error {
 					return s.GracefulStop(ctx)
 				})

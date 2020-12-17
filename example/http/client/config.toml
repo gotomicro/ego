@@ -1,0 +1,5 @@
+[http.test]
+address = "http://127.0.0.1:9007"
+debug = true
+enableAccessInterceptor = true
+enableAccessInterceptorReply = true
