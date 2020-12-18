@@ -13,7 +13,7 @@ import (
 	"github.com/gotomicro/ego/core/util/xtime"
 )
 
-const egoVersion = "v0.3.2"
+const egoVersion = "v0.3.3"
 
 var (
 	startTime string
