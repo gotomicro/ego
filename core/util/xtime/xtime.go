@@ -9,6 +9,13 @@ func Duration(str string) time.Duration {
 	if err != nil {
 		panic(err)
 	}
-
 	return dur
+}
+
+var TS TimeFormat = "2006-01-02 15:04:05"
+
+type TimeFormat string
+
+func (ts TimeFormat) Format(t time.Time) string {
+	return t.Format(string(ts))
 }
