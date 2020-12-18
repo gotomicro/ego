@@ -38,12 +38,12 @@ type (
 	Field     = zap.Field
 	Level     = zapcore.Level
 	Component struct {
-		name      string
-		desugar   *zap.Logger
-		lv        *zap.AtomicLevel
-		config    *Config
-		sugar     *zap.SugaredLogger
-		asyncStop func() error
+		name          string
+		desugar       *zap.Logger
+		lv            *zap.AtomicLevel
+		config        *Config
+		sugar         *zap.SugaredLogger
+		asyncStopFunc func() error
 	}
 )
 
@@ -86,15 +86,18 @@ func newLogger(name string, config *Config) *Component {
 		zapOptions = append(zapOptions, zap.Fields(config.Fields...))
 	}
 
+	// Debug output to console and file by default
 	var ws zapcore.WriteSyncer
+	ws = zapcore.AddSync(newRotate(config))
 	if config.Debug {
-		ws = os.Stdout
-	} else {
-		ws = zapcore.AddSync(newRotate(config))
+		ws1 := os.Stdout
+		ws2 := zapcore.AddSync(newRotate(config))
+		ws = zap.CombineWriteSyncers(ws1, ws2)
 	}
-	var asyncStop CloseFunc
+
+	var asyncStopFunc CloseFunc
 	if config.Async {
-		ws, asyncStop = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
+		ws, asyncStopFunc = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
 	}
 
 	lv := zap.NewAtomicLevelAt(zapcore.InfoLevel)
@@ -102,10 +105,6 @@ func newLogger(name string, config *Config) *Component {
 		panic(err)
 	}
 
-	// encoderConfig := defaultZapConfig()
-	// if Config.Debug {
-	// 	encoderConfig = defaultDebugConfig()
-	// }
 	encoderConfig := *config.EncoderConfig
 	core := config.Core
 	if core == nil {
@@ -126,12 +125,12 @@ func newLogger(name string, config *Config) *Component {
 		zapOptions...,
 	)
 	return &Component{
-		desugar:   zapLogger,
-		lv:        &lv,
-		config:    config,
-		sugar:     zapLogger.Sugar(),
-		name:      name,
-		asyncStop: asyncStop,
+		desugar:       zapLogger,
+		lv:            &lv,
+		config:        config,
+		sugar:         zapLogger.Sugar(),
+		name:          name,
+		asyncStopFunc: asyncStopFunc,
 	}
 }
 
@@ -159,8 +158,8 @@ func (logger *Component) SetLevel(lv Level) {
 // About issues: https://github.com/uber-go/zap/issues/328
 // About 'fsync': https://man7.org/linux/man-pages/man2/fsync.2.html
 func (logger *Component) Flush() error {
-	if logger.asyncStop != nil {
-		if err := logger.asyncStop(); err != nil {
+	if logger.asyncStopFunc != nil {
+		if err := logger.asyncStopFunc(); err != nil {
 			return err
 		}
 	}
