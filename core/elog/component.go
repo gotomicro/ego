@@ -152,11 +152,21 @@ func (logger *Component) SetLevel(lv Level) {
 }
 
 // Flush ...
+// When use os.Stdout or os.Stderr as zapcore.WriteSyncer
+// logger.desugar.Sync() maybe return an error like this: 'sync /dev/stdout: The handle is invalid.'
+// Because os.Stdout and os.Stderr is a non-normal file, maybe not support 'fsync' in different os platform
+// So ignored Sync() return value
+// About issues: https://github.com/uber-go/zap/issues/328
+// About 'fsync': https://man7.org/linux/man-pages/man2/fsync.2.html
 func (logger *Component) Flush() error {
 	if logger.asyncStop != nil {
-		logger.asyncStop()
+		if err := logger.asyncStop(); err != nil {
+			return err
+		}
 	}
-	return logger.desugar.Sync()
+
+	logger.desugar.Sync()
+	return nil
 }
 
 // DefaultZapConfig ...
