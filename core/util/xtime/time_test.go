@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Time(t *testing.T) {
@@ -411,6 +413,39 @@ func TestTime_EndOfMinute(t *testing.T) {
 			}
 			if got := ti.EndOfMinute(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Time.EndOfMinute() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParse(t *testing.T) {
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	assert.NoError(t, err)
+	type args struct {
+		layout string
+		value  string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    time.Time
+		wantErr bool
+	}{
+		{
+			name: "parse time succ",
+			args: args{layout: "2006-01-02 15:04:05", value: "2019-12-31 00:00:00"},
+			want: time.Date(2019, 12, 31, 0, 0, 0, 0, loc),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Parse(tt.args.layout, tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parse() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

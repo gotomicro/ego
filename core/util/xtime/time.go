@@ -1,7 +1,10 @@
 package xtime
 
 import (
+	"os"
 	"time"
+
+	"github.com/gotomicro/ego/core/constant"
 )
 
 // Time time
@@ -136,4 +139,18 @@ func CurrentTimeMillis() uint64 {
 // Returns the current Unix timestamp in nanoseconds.
 func CurrentTimeNano() uint64 {
 	return uint64(time.Now().UnixNano())
+}
+
+// Parse time with timezone which set in env "EGO_TIMEZONE", if "EGO_TIMEZONE" hasn't been set then we use
+// "Asia/Shanghai" by default.
+func Parse(layout, value string) (time.Time, error) {
+	tz := os.Getenv(constant.EgoTimezone)
+	if tz == "" {
+		tz = "Asia/Shanghai"
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.ParseInLocation(layout, value, loc)
 }
