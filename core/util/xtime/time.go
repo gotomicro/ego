@@ -139,7 +139,7 @@ func CurrentTimeNano() uint64 {
 	return uint64(time.Now().UnixNano())
 }
 
-// ParseInLocation parse time with location from env "TZ", if "EGO_TIMEZONE" hasn't been set then we use UTC by default.
+// ParseInLocation parse time with location from env "TZ", if "TZ" hasn't been set then we use UTC by default.
 func ParseInLocation(layout, value string) (time.Time, error) {
 	loc, err := time.LoadLocation(os.Getenv("TZ"))
 	if err != nil {
