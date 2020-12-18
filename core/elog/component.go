@@ -88,12 +88,11 @@ func newLogger(name string, config *Config) *Component {
 
 	// Debug output to console and file by default
 	var ws zapcore.WriteSyncer
+	ws = zapcore.AddSync(newRotate(config))
 	if config.Debug {
 		ws1 := os.Stdout
 		ws2 := zapcore.AddSync(newRotate(config))
 		ws = zap.CombineWriteSyncers(ws1, ws2)
-	} else {
-		ws = zapcore.AddSync(newRotate(config))
 	}
 
 	var asyncStopFunc CloseFunc
