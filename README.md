@@ -1,3 +1,11 @@
+## EGO
+[![Go](https://github.com/gotomicro/ego/workflows/Go/badge.svg?branch=master)](https://github.com/gotomicro/ego/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gotomicro/ego)](https://goreportcard.com/report/github.com/gotomicro/ego)
+[![codecov](https://codecov.io/gh/gotomicro/ego/branch/master/graph/badge.svg)](https://codecov.io/gh/gotomicro/ego)
+[![goproxy.cn](https://goproxy.cn/stats/github.com/gotomicro/ego/badges/download-count.svg)](https://goproxy.cn/stats/github.com/gotomicro/ego)
+[![Release](https://img.shields.io/github/v/release/gotomicro/ego.svg?style=flat-square)](https://github.com/gotomicro/ego)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ## 帮助文档
 [https://ego.gocn.vip](https://ego.gocn.vip)
 
@@ -45,6 +53,6 @@ go run main.go --config=config.toml
 
 ### 更加友好的包编译
 
-使用scripts文件夹里的[包编译](./example/build)，可以看到优雅的version提示
+使用scripts文件夹里的[包编译](examples/build)，可以看到优雅的version提示
 
 ![图片](./docs/images/version.png)

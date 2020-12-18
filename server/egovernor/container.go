@@ -6,6 +6,8 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 )
 
+type Option func(c *Container)
+
 type Container struct {
 	config *Config
 	name   string
@@ -35,6 +37,21 @@ func Load(key string) *Container {
 	return c
 }
 
-func (c *Container) Build() *Component {
+func WithHost(host string) Option {
+	return func(c *Container) {
+		c.config.Host = host
+	}
+}
+
+func WithPort(port int) Option {
+	return func(c *Container) {
+		c.config.Port = port
+	}
+}
+
+func (c *Container) Build(options ...Option) *Component {
+	for _, option := range options {
+		option(c)
+	}
 	return newComponent(c.name, c.config, c.logger)
 }

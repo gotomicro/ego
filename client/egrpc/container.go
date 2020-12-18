@@ -28,6 +28,7 @@ func Load(key string) *Container {
 		return c
 	}
 	c.logger = c.logger.With(elog.FieldComponentName(key))
+	c.logger = c.logger.With(elog.FieldAddr(c.config.Addr))
 	c.name = key
 	return c
 }
@@ -49,32 +50,30 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 
 	if c.config.Debug {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.config.Address))))
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.name, c.config.Addr))))
 	}
 
-	if !c.config.DisableAidInterceptor {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(aidUnaryClientInterceptor())))
+	if c.config.EnableAppNameInterceptor {
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(appNameUnaryClientInterceptor())))
 	}
 
-	if !c.config.DisableTimeoutInterceptor {
+	if c.config.EnableTimeoutInterceptor {
 		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(timeoutUnaryClientInterceptor(c.logger, c.config.ReadTimeout, c.config.SlowLogThreshold))))
 	}
 
-	if !c.config.DisableTraceInterceptor {
+	if c.config.EnableTraceInterceptor {
 		options = append(options,
 			WithDialOption(grpc.WithChainUnaryInterceptor(traceUnaryClientInterceptor())),
 		)
 	}
 
-	if !c.config.DisableAccessInterceptor {
-		options = append(options,
-			WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config.AccessInterceptorLevel))),
-		)
-	}
+	options = append(options,
+		WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config))),
+	)
 
-	if !c.config.DisableMetricInterceptor {
+	if c.config.EnableMetricInterceptor {
 		options = append(options,
-			WithDialOption(grpc.WithChainUnaryInterceptor(metricUnaryClientInterceptor(c.config.Name))),
+			WithDialOption(grpc.WithChainUnaryInterceptor(metricUnaryClientInterceptor(c.name))),
 		)
 	}
 
@@ -82,6 +81,5 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 
-	c.logger.With(elog.FieldAddr(c.config.Address))
 	return newComponent(c.name, c.config, c.logger)
 }

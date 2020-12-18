@@ -1,5 +1,10 @@
 package ego
 
+import (
+	"os"
+	"time"
+)
+
 type Option func(a *ego)
 
 // 是否允许系统悬挂起来，0 表示不悬挂， 1 表示悬挂。目的是一些脚本操作的时候，不想主线程停止
@@ -32,5 +37,17 @@ func WithBeforeStopClean(fns ...func() error) Option {
 func WithAfterStopClean(fns ...func() error) Option {
 	return func(a *ego) {
 		a.afterStopClean = append(a.afterStopClean, fns...)
+	}
+}
+
+func WithStopTimeout(timeout time.Duration) Option {
+	return func(e *ego) {
+		e.stopTimeout = timeout
+	}
+}
+
+func WithShutdownSignal(signals ...os.Signal) Option {
+	return func(e *ego) {
+		e.shutdownSignals = append(e.shutdownSignals, signals...)
 	}
 }

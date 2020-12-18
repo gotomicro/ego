@@ -6,11 +6,14 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/eregistry"
 	"github.com/gotomicro/ego/core/util/xcycle"
+	"github.com/gotomicro/ego/core/util/xtime"
 	"github.com/gotomicro/ego/server"
 	"github.com/gotomicro/ego/task/ecron"
 	"github.com/gotomicro/ego/task/ejob"
+	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Ego分为三大部分
@@ -38,6 +41,8 @@ type ego struct {
 	disableBanner   bool           // 禁用banner
 	beforeStopClean []func() error // 运行停止前清理
 	afterStopClean  []func() error // 运行停止后清理
+	stopTimeout     time.Duration  // 运行停止超时时间
+	shutdownSignals []os.Signal
 }
 
 // New new ego
@@ -62,6 +67,8 @@ func New(options ...Option) *ego {
 		configPrefix:    "",
 		beforeStopClean: make([]func() error, 0),
 		afterStopClean:  make([]func() error, 0),
+		stopTimeout:     xtime.Duration("5s"),
+		shutdownSignals: shutdownSignals,
 	}
 
 	// 设置运行前清理函数
@@ -207,6 +214,7 @@ func (e *ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 	if isGraceful {
 		for _, s := range e.servers {
 			func(s server.Server) {
+				// todo
 				e.cycle.Run(func() error {
 					return s.GracefulStop(ctx)
 				})

@@ -47,7 +47,6 @@ func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) g
 			fields = append(fields,
 				elog.FieldCost(cost),
 				zap.String("method", c.Request.Method),
-				zap.Int("code", c.Writer.Status()),
 				zap.Int("size", c.Writer.Size()),
 				zap.String("host", c.Request.Host),
 				zap.String("path", c.Request.URL.Path),
@@ -68,6 +67,7 @@ func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) g
 					elog.FieldEvent(event),
 					zap.ByteString("stack", stack(3)),
 					elog.FieldErr(err),
+					zap.Int("code", http.StatusInternalServerError),
 				)
 				logger.Error("access", fields...)
 				// If the connection is dead, we can't write a status to it.
@@ -84,6 +84,7 @@ func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) g
 			fields = append(fields,
 				elog.FieldEvent(event),
 				zap.String("err", c.Errors.ByType(gin.ErrorTypePrivate).String()),
+				zap.Int("code", c.Writer.Status()),
 			)
 
 			if event == "slow" {

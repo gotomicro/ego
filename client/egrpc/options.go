@@ -3,27 +3,21 @@ package egrpc
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
-	"github.com/gotomicro/ego/core/util/xcolor"
+	"github.com/gotomicro/ego/core/util/xdebug"
 	"github.com/gotomicro/ego/core/util/xstring"
-	"time"
-
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
-)
-
-var (
-	errSlowCommand = errors.New("grpc unary slow command")
+	"time"
 )
 
 // metric统计
@@ -60,7 +54,7 @@ func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *
 	}
 }
 
-func debugUnaryClientInterceptor(addr string) grpc.UnaryClientInterceptor {
+func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		var p peer.Peer
 		prefix := fmt.Sprintf("[%s]", addr)
@@ -68,12 +62,17 @@ func debugUnaryClientInterceptor(addr string) grpc.UnaryClientInterceptor {
 			prefix = prefix + "(" + remote.Addr.String() + ")"
 		}
 
-		fmt.Printf("%-50s[%s] => %s\n", xcolor.Green(prefix), time.Now().Format("04:05.000"), xcolor.Green("Send: "+method+" | "+xstring.Json(req)))
+		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, append(opts, grpc.Peer(&p))...)
-		if err != nil {
-			fmt.Printf("%-50s[%s] => %s\n", xcolor.Red(prefix), time.Now().Format("04:05.000"), xcolor.Red("Erro: "+err.Error()))
+		cost := time.Since(beg)
+		if eapp.IsDevelopmentMode() {
+			if err != nil {
+				xdebug.Error(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error())
+			} else {
+				xdebug.Info(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply)
+			}
 		} else {
-			fmt.Printf("%-50s[%s] => %s\n", xcolor.Green(prefix), time.Now().Format("04:05.000"), xcolor.Green("Recv: "+xstring.Json(reply)))
+			// todo log
 		}
 
 		return err
@@ -112,17 +111,17 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	}
 }
 
-func aidUnaryClientInterceptor() grpc.UnaryClientInterceptor {
+// Set AppName
+func appNameUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		md, ok := metadata.FromOutgoingContext(ctx)
-		clientAidMD := metadata.Pairs("app", eapp.Name())
+		clientAppName := metadata.Pairs("app", eapp.Name())
 		if ok {
-			md = metadata.Join(md, clientAidMD)
+			md = metadata.Join(md, clientAppName)
 		} else {
-			md = clientAidMD
+			md = clientAppName
 		}
 		ctx = metadata.NewOutgoingContext(ctx, md)
-
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
@@ -130,7 +129,6 @@ func aidUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 // timeoutUnaryClientInterceptor gRPC客户端超时拦截器
 func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duration, slowThreshold time.Duration) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		now := time.Now()
 		// 若无自定义超时设置，默认设置超时
 		_, ok := ctx.Deadline()
 		if !ok {
@@ -138,77 +136,61 @@ func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duratio
 			ctx, cancel = context.WithTimeout(ctx, timeout)
 			defer cancel()
 		}
-
-		err := invoker(ctx, method, req, reply, cc, opts...)
-		du := time.Since(now)
-		remoteIP := "unknown"
-		if remote, ok := peer.FromContext(ctx); ok && remote.Addr != nil {
-			remoteIP = remote.Addr.String()
-		}
-
-		if slowThreshold > time.Duration(0) && du > slowThreshold {
-			_logger.Warn("access",
-				elog.FieldEvent("slow"),
-				elog.FieldErr(errSlowCommand),
-				elog.FieldMethod(method),
-				elog.FieldName(cc.Target()),
-				elog.FieldCost(du),
-				elog.FieldAddr(remoteIP),
-			)
-		}
-		return err
+		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
 
 // loggerUnaryClientInterceptor gRPC客户端日志中间件
-func loggerUnaryClientInterceptor(_logger *elog.Component, accessInterceptorLevel string) grpc.UnaryClientInterceptor {
+func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, opts...)
-
+		cost := time.Since(beg)
+		isErrLog := false
+		isSlowLog := false
 		spbStatus := ecode.ExtractCodes(err)
+		var fields = make([]elog.Field, 0, 15)
+		fields = append(fields,
+			elog.FieldType("unary"),
+			elog.FieldCode(spbStatus.Code),
+			elog.FieldStringErr(spbStatus.Message),
+			elog.FieldMethod(method),
+			elog.FieldCost(cost),
+			elog.FieldName(cc.Target()),
+		)
+
+		if config.EnableAccessInterceptorReq {
+			fields = append(fields, elog.Any("req", json.RawMessage(xstring.Json(req))))
+		}
+
+		if config.EnableAccessInterceptorReply {
+			fields = append(fields, elog.Any("reply", json.RawMessage(xstring.Json(reply))))
+		}
+
 		if err != nil {
 			// 只记录系统级别错误
 			if spbStatus.Code < ecode.EcodeNum {
+				fields = append(fields, elog.FieldEvent("error"))
 				// 只记录系统级别错误
-				_logger.Error(
-					"access",
-					elog.FieldType("unary"),
-					elog.FieldCode(spbStatus.Code),
-					elog.FieldStringErr(spbStatus.Message),
-					elog.FieldMethod(method),
-					elog.FieldCost(time.Since(beg)),
-					elog.Any("req", json.RawMessage(xstring.Json(req))),
-					elog.Any("reply", json.RawMessage(xstring.Json(reply))),
-				)
+				_logger.Error("access", fields...)
 			} else {
 				// 业务报错只做warning
-				_logger.Warn(
-					"access",
-					elog.FieldType("unary"),
-					elog.FieldCode(spbStatus.Code),
-					elog.FieldStringErr(spbStatus.Message),
-					elog.FieldMethod(method),
-					elog.FieldCost(time.Since(beg)),
-					elog.Any("req", json.RawMessage(xstring.Json(req))),
-					elog.Any("reply", json.RawMessage(xstring.Json(reply))),
-				)
+				_logger.Warn("access", fields...)
 			}
+			isErrLog = true
 			return err
-		} else {
-			if accessInterceptorLevel == "info" {
-				_logger.Info(
-					"access",
-					elog.FieldType("unary"),
-					elog.FieldCode(spbStatus.Code),
-					elog.FieldMethod(method),
-					elog.FieldCost(time.Since(beg)),
-					elog.Any("req", json.RawMessage(xstring.Json(req))),
-					elog.Any("reply", json.RawMessage(xstring.Json(reply))),
-				)
-			}
 		}
 
+		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
+			fields = append(fields, elog.FieldEvent("slow"))
+			isSlowLog = true
+			_logger.Warn("access", fields...)
+		}
+
+		if config.EnableAccessInterceptor && !isErrLog && !isSlowLog {
+			fields = append(fields, elog.FieldEvent("normal"))
+			_logger.Info("access", fields...)
+		}
 		return nil
 	}
 }
