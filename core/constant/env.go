@@ -9,7 +9,6 @@ const (
 	EnvAppInstance = "EGO_INSTANCE" // application unique instance id.
 	EgoDebug       = "EGO_DEBUG"
 	EgoConfigPath  = "EGO_CONFIG_PATH"
-	EgoTimezone    = "EGO_TIMEZONE"
 )
 
 const (
