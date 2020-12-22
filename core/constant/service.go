@@ -1,16 +1,16 @@
 package constant
 
-//ServiceKind service kind
+// ServiceKind service kind
 type ServiceKind uint8
 
 const (
-	//ServiceUnknown service non-name
+	// ServiceUnknown service non-name
 	ServiceUnknown ServiceKind = iota
-	//ServiceProvider service provider
+	// ServiceProvider service provider
 	ServiceProvider
-	//ServiceGovernor service governor
+	// ServiceGovernor service governor
 	ServiceGovernor
-	//ServiceConsumer service consumer
+	// ServiceConsumer service consumer
 	ServiceConsumer
 )
 
