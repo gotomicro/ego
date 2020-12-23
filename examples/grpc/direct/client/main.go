@@ -5,7 +5,7 @@ import (
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/client/egrpc"
 	"github.com/gotomicro/ego/core/elog"
-	"google.golang.org/grpc/examples/helloworld/helloworld"
+	"github.com/gotomicro/ego/examples/grpc/direct/helloworld"
 )
 
 func main() {

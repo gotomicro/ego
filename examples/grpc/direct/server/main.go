@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/examples/grpc/direct/helloworld"
 	"github.com/gotomicro/ego/server"
 	"github.com/gotomicro/ego/server/egrpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/examples/helloworld/helloworld"
 	"google.golang.org/grpc/status"
 )
 
@@ -18,7 +18,7 @@ func main() {
 		helloworld.RegisterGreeterServer(server.Server, &Greeter{server: server})
 		return server
 	}()).Run(); err != nil {
-		elog.Panic("startup", elog.Any("err", err))
+		elog.Panic("startup", elog.FieldErr(err))
 	}
 }
 

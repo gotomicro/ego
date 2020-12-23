@@ -101,8 +101,8 @@ func (c *Container) Build(options ...Option) *Component {
 	)
 
 	c.config.serverOptions = append(c.config.serverOptions,
-		grpc.StreamInterceptor(StreamInterceptorChain(streamInterceptors...)),
-		grpc.UnaryInterceptor(UnaryInterceptorChain(unaryInterceptors...)),
+		grpc.ChainStreamInterceptor(streamInterceptors...),
+		grpc.ChainUnaryInterceptor(unaryInterceptors...),
 	)
 
 	return newComponent(c.name, c.config, c.logger)
