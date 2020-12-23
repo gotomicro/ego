@@ -1,6 +1,9 @@
 package xtime
 
-import "time"
+import (
+	"os"
+	"time"
+)
 
 // Duration ...
 // panic if parse duration failed
@@ -18,4 +21,13 @@ type TimeFormat string
 
 func (ts TimeFormat) Format(t time.Time) string {
 	return t.Format(string(ts))
+}
+
+// ParseInLocation parse time with location from env "TZ", if "TZ" hasn't been set then we use UTC by default.
+func ParseInLocation(layout, value string) (time.Time, error) {
+	loc, err := time.LoadLocation(os.Getenv("TZ"))
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.ParseInLocation(layout, value, loc)
 }
