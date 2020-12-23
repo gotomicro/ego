@@ -46,11 +46,12 @@ func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) g
 
 			fields = append(fields,
 				elog.FieldCost(cost),
-				zap.String("method", c.Request.Method),
-				zap.Int("size", c.Writer.Size()),
-				zap.String("host", c.Request.Host),
-				zap.String("path", c.Request.URL.Path),
-				zap.String("ip", c.ClientIP()),
+				elog.FieldType(c.Request.Method), // GET, POST
+				elog.FieldMethod(c.Request.URL.Path),
+
+				elog.FieldIp(c.ClientIP()),
+				elog.FieldSize(int32(c.Writer.Size())),
+				elog.FieldPeerIP(getPeerIP(c.Request.RemoteAddr)),
 			)
 
 			if rec := recover(); rec != nil {
@@ -67,7 +68,7 @@ func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) g
 					elog.FieldEvent(event),
 					zap.ByteString("stack", stack(3)),
 					elog.FieldErr(err),
-					zap.Int("code", http.StatusInternalServerError),
+					elog.FieldCode(int32(http.StatusInternalServerError)),
 				)
 				logger.Error("access", fields...)
 				// If the connection is dead, we can't write a status to it.
@@ -84,7 +85,7 @@ func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) g
 			fields = append(fields,
 				elog.FieldEvent(event),
 				zap.String("err", c.Errors.ByType(gin.ErrorTypePrivate).String()),
-				zap.Int("code", c.Writer.Status()),
+				elog.FieldCode(int32(c.Writer.Status())),
 			)
 
 			if event == "slow" {
@@ -184,4 +185,13 @@ func traceServerInterceptor() gin.HandlerFunc {
 		defer span.Finish()
 		c.Next()
 	}
+}
+
+// 获取对端ip
+func getPeerIP(addr string) string {
+	addSlice := strings.Split(addr, ":")
+	if len(addSlice) > 1 {
+		return addSlice[0]
+	}
+	return ""
 }

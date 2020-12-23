@@ -153,7 +153,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		fields = append(fields,
 			elog.FieldType("unary"),
 			elog.FieldCode(spbStatus.Code),
-			elog.FieldStringErr(spbStatus.Message),
+			elog.FieldDescription(spbStatus.Message),
 			elog.FieldMethod(method),
 			elog.FieldCost(cost),
 			elog.FieldName(cc.Target()),

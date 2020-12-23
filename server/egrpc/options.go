@@ -124,14 +124,12 @@ func defaultStreamServerInterceptor(logger *elog.Component, slowLogThreshold tim
 			}
 
 			fields = append(fields,
-				elog.Any("grpc interceptor type", "stream"),
+				elog.FieldType("stream"),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
+				elog.FieldPeerName(getPeerName(stream.Context())),
+				elog.FieldPeerIP(getPeerIP(stream.Context())),
 			)
-
-			for key, val := range getPeer(stream.Context()) {
-				fields = append(fields, elog.Any(key, val))
-			}
 
 			if err != nil {
 				fields = append(fields, elog.FieldErr(err))
@@ -174,15 +172,13 @@ func defaultUnaryServerInterceptor(logger *elog.Component, slowLogThreshold time
 			}
 
 			fields = append(fields,
-				elog.Any("grpc interceptor type", "unary"),
+				elog.FieldType("unary"),
 				elog.FieldEvent(event),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
+				elog.FieldPeerName(getPeerName(ctx)),
+				elog.FieldPeerIP(getPeerIP(ctx)),
 			)
-
-			for key, val := range getPeer(ctx) {
-				fields = append(fields, elog.Any(key, val))
-			}
 
 			if err != nil {
 				fields = append(fields, elog.FieldErr(err))
@@ -199,40 +195,42 @@ func defaultUnaryServerInterceptor(logger *elog.Component, slowLogThreshold time
 	}
 }
 
-func getClientIP(ctx context.Context) (string, error) {
-	pr, ok := peer.FromContext(ctx)
+// 获取对端应用名称
+func getPeerName(ctx context.Context) string {
+	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return "", fmt.Errorf("[getClinetIP] invoke FromContext() failed")
+		return ""
 	}
-	if pr.Addr == net.Addr(nil) {
-		return "", fmt.Errorf("[getClientIP] peer.Addr is nil")
+	val, ok2 := md["app"]
+	if !ok2 {
+		return ""
 	}
-	addSlice := strings.Split(pr.Addr.String(), ":")
-	return addSlice[0], nil
+	return strings.Join(val, ";")
 }
 
-func getPeer(ctx context.Context) map[string]string {
-	var peerMeta = make(map[string]string)
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		if val, ok := md["app"]; ok {
-			peerMeta["app"] = strings.Join(val, ";")
-		}
-		var clientIP string
-		if val, ok := md["client-ip"]; ok {
-			clientIP = strings.Join(val, ";")
-		} else {
-			ip, err := getClientIP(ctx)
-			if err == nil {
-				clientIP = ip
-			}
-		}
-		peerMeta["clientIP"] = clientIP
-		if val, ok := md["client-host"]; ok {
-			peerMeta["host"] = strings.Join(val, ";")
-		}
+// 获取对端ip
+func getPeerIP(ctx context.Context) string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ""
 	}
-	return peerMeta
-
+	// 从metadata里取对端ip
+	if val, ok := md["client-ip"]; ok {
+		return strings.Join(val, ";")
+	}
+	// 从grpc里取对端ip
+	pr, ok2 := peer.FromContext(ctx)
+	if !ok2 {
+		return ""
+	}
+	if pr.Addr == net.Addr(nil) {
+		return ""
+	}
+	addSlice := strings.Split(pr.Addr.String(), ":")
+	if len(addSlice) > 1 {
+		return addSlice[0]
+	}
+	return ""
 }
 
 // StreamInterceptorChain returns stream interceptors chain.

@@ -79,7 +79,7 @@ var (
 func newLogger(name string, config *Config) *Component {
 	zapOptions := make([]zap.Option, 0)
 	zapOptions = append(zapOptions, zap.AddStacktrace(zap.DPanicLevel))
-	if config.AddCaller {
+	if config.EnableAddCaller {
 		zapOptions = append(zapOptions, zap.AddCaller(), zap.AddCallerSkip(config.CallerSkip))
 	}
 	if len(config.Fields) > 0 {
@@ -96,7 +96,7 @@ func newLogger(name string, config *Config) *Component {
 	}
 
 	var asyncStopFunc CloseFunc
-	if config.Async {
+	if config.EnableAsync {
 		ws, asyncStopFunc = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
 	}
 
