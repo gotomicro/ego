@@ -79,7 +79,7 @@ var (
 func newLogger(name string, config *Config) *Component {
 	zapOptions := make([]zap.Option, 0)
 	zapOptions = append(zapOptions, zap.AddStacktrace(zap.DPanicLevel))
-	if config.AddCaller {
+	if config.EnableAddCaller {
 		zapOptions = append(zapOptions, zap.AddCaller(), zap.AddCallerSkip(config.CallerSkip))
 	}
 	if len(config.Fields) > 0 {
@@ -93,7 +93,7 @@ func newLogger(name string, config *Config) *Component {
 		ws = zapcore.AddSync(newRotate(config))
 	}
 	var asyncStop CloseFunc
-	if config.Async {
+	if config.EnableAsync {
 		ws, asyncStop = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
 	}
 
@@ -156,7 +156,9 @@ func (logger *Component) Flush() error {
 	if logger.asyncStop != nil {
 		logger.asyncStop()
 	}
-	return logger.desugar.Sync()
+	// todo error
+	logger.desugar.Sync()
+	return nil
 }
 
 // DefaultZapConfig ...

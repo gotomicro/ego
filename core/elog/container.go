@@ -35,7 +35,7 @@ func (c *Container) Build(options ...Option) *Component {
 
 	if eapp.IsDevelopmentMode() {
 		c.Config.Debug = true
-		c.Config.Async = false
+		c.Config.EnableAsync = false
 		c.Config.EncoderConfig = DefaultDebugConfig()
 	}
 

@@ -46,12 +46,12 @@ func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) g
 
 			fields = append(fields,
 				elog.FieldCost(cost),
-				zap.String("method", c.Request.Method),
-				zap.Int("code", c.Writer.Status()),
-				zap.Int("size", c.Writer.Size()),
-				zap.String("host", c.Request.Host),
-				zap.String("path", c.Request.URL.Path),
-				zap.String("ip", c.ClientIP()),
+				elog.FieldType(c.Request.Method), // GET, POST
+				elog.FieldMethod(c.Request.URL.Path),
+				elog.FieldCode(int32(c.Writer.Status())),
+				elog.FieldIp(c.ClientIP()),
+				elog.FieldSize(int32(c.Writer.Size())),
+				elog.FieldPeerIP(getPeerIP(c.Request.RemoteAddr)),
 			)
 
 			if rec := recover(); rec != nil {
@@ -183,4 +183,13 @@ func traceServerInterceptor() gin.HandlerFunc {
 		defer span.Finish()
 		c.Next()
 	}
+}
+
+// 获取对端ip
+func getPeerIP(addr string) string {
+	addSlice := strings.Split(addr, ":")
+	if len(addSlice) > 1 {
+		return addSlice[0]
+	}
+	return ""
 }

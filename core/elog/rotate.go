@@ -12,7 +12,7 @@ func newRotate(config *Config) io.Writer {
 	rotateLog.MaxSize = config.MaxSize // MB
 	rotateLog.MaxAge = config.MaxAge   // days
 	rotateLog.MaxBackups = config.MaxBackup
-	rotateLog.Interval = config.Interval
+	rotateLog.Interval = config.RotateInterval
 	rotateLog.LocalTime = true
 	rotateLog.Compress = false
 	return rotateLog
