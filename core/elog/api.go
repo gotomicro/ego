@@ -1,9 +1,5 @@
 package elog
 
-import (
-	"go.uber.org/zap"
-)
-
 const PackageName = "core.elog"
 
 // DefaultLogger default logger
@@ -27,7 +23,7 @@ const (
 // Auto ...
 func Auto(err error) Func {
 	if err != nil {
-		return DefaultLogger.With(zap.Any("err", err.Error())).Error
+		return DefaultLogger.With(FieldErr(err)).Error
 	}
 	return DefaultLogger.Info
 }

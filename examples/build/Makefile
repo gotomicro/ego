@@ -8,6 +8,7 @@ version:
 	./bin/hello --version
 
 run:export EGO_DEBUG=true
+run:export EGO_LOG_ADD_APP=true
 run:export EGO_REGION=huabei
 run:export EGO_ZONE=ali-3
 run:export EGO_MODE=dev

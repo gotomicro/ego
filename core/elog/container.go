@@ -42,15 +42,22 @@ func (c *Container) Build(options ...Option) *Component {
 	if c.Config.EncoderConfig == nil {
 		c.Config.EncoderConfig = DefaultZapConfig()
 	}
+
 	if c.Config.Debug {
 		c.Config.EncoderConfig.EncodeLevel = DebugEncodeLevel
 	}
+
+	if eapp.EnableLoggerAddApp() {
+		c.Config.Fields = append(c.Config.Fields, FieldApp(eapp.Name()))
+	}
+
 	logger := newLogger(c.name, c.Config)
 	// 如果名字不为空，加载动态配置
 	if c.name != "" {
 		// c.name 为配置name
 		logger.AutoLevel(c.name + ".level")
 	}
+
 	return logger
 }
 

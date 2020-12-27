@@ -25,13 +25,13 @@ func (e *ego) waitSignals() {
 	sig := make(chan os.Signal, 2)
 	signal.Notify(
 		sig,
-		e.shutdownSignals...,
+		e.opts.shutdownSignals...,
 	)
 	go func() {
 		s := <-sig
 		grace := s != syscall.SIGQUIT
 		go func() {
-			stopCtx, cancel := context.WithTimeout(context.Background(), e.stopTimeout)
+			stopCtx, cancel := context.WithTimeout(context.Background(), e.opts.stopTimeout)
 			defer cancel()
 			e.Stop(stopCtx, grace)
 		}()
@@ -153,13 +153,13 @@ func loadConfig() error {
 
 // initLogger init
 func (e *ego) initLogger() error {
-	if econf.Get(e.configPrefix+"logger.default") != nil {
-		elog.DefaultLogger = elog.Load(e.configPrefix + "logger.default").Build()
+	if econf.Get(e.opts.configPrefix+"logger.default") != nil {
+		elog.DefaultLogger = elog.Load(e.opts.configPrefix + "logger.default").Build()
 		elog.EgoLogger.Info("reinit default logger", elog.FieldComponent(elog.PackageName))
 	}
 
-	if econf.Get(e.configPrefix+"logger.ego") != nil {
-		elog.EgoLogger = elog.Load(e.configPrefix + "logger.ego").Build(elog.WithFileName(elog.EgoLoggerName))
+	if econf.Get(e.opts.configPrefix+"logger.ego") != nil {
+		elog.EgoLogger = elog.Load(e.opts.configPrefix + "logger.ego").Build(elog.WithFileName(elog.EgoLoggerName))
 		elog.EgoLogger.Info("reinit ego logger", elog.FieldComponent(elog.PackageName))
 	}
 	return nil
@@ -167,11 +167,11 @@ func (e *ego) initLogger() error {
 
 // initTracer init
 func (e *ego) initTracer() error {
-	if econf.Get(e.configPrefix+"trace.jaeger") != nil {
-		container := ejaeger.Load(e.configPrefix + "trace.jaeger")
+	if econf.Get(e.opts.configPrefix+"trace.jaeger") != nil {
+		container := ejaeger.Load(e.opts.configPrefix + "trace.jaeger")
 		tracer := container.Build()
 		etrace.SetGlobalTracer(tracer)
-		e.afterStopClean = append(e.afterStopClean, container.Stop)
+		e.opts.afterStopClean = append(e.opts.afterStopClean, container.Stop)
 		elog.EgoLogger.Info("init trace", elog.FieldComponent("app"))
 	}
 	return nil
@@ -198,7 +198,7 @@ func printLogger() error {
 
 // printBanner init
 func (e *ego) printBanner() error {
-	if e.disableBanner {
+	if e.opts.disableBanner {
 		return nil
 	}
 	const banner = `

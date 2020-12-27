@@ -10,44 +10,44 @@ type Option func(a *ego)
 // 是否允许系统悬挂起来，0 表示不悬挂， 1 表示悬挂。目的是一些脚本操作的时候，不想主线程停止
 func WithHang(flag bool) Option {
 	return func(a *ego) {
-		a.hang = flag
+		a.opts.hang = flag
 	}
 }
 
 func WithDisableBanner(disableBanner bool) Option {
 	return func(a *ego) {
-		a.disableBanner = disableBanner
+		a.opts.disableBanner = disableBanner
 	}
 }
 
 func WithConfigPrefix(configPrefix string) Option {
 	return func(a *ego) {
-		a.configPrefix = configPrefix
+		a.opts.configPrefix = configPrefix
 	}
 }
 
 // 设置运行前清理
 func WithBeforeStopClean(fns ...func() error) Option {
 	return func(a *ego) {
-		a.beforeStopClean = append(a.beforeStopClean, fns...)
+		a.opts.beforeStopClean = append(a.opts.beforeStopClean, fns...)
 	}
 }
 
 // 设置运行后清理
 func WithAfterStopClean(fns ...func() error) Option {
 	return func(a *ego) {
-		a.afterStopClean = append(a.afterStopClean, fns...)
+		a.opts.afterStopClean = append(a.opts.afterStopClean, fns...)
 	}
 }
 
 func WithStopTimeout(timeout time.Duration) Option {
 	return func(e *ego) {
-		e.stopTimeout = timeout
+		e.opts.stopTimeout = timeout
 	}
 }
 
 func WithShutdownSignal(signals ...os.Signal) Option {
 	return func(e *ego) {
-		e.shutdownSignals = append(e.shutdownSignals, signals...)
+		e.opts.shutdownSignals = append(e.opts.shutdownSignals, signals...)
 	}
 }

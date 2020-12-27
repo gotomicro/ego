@@ -14,6 +14,11 @@ func FieldComponentName(value string) Field {
 	return String("compName", value)
 }
 
+// FieldApp ...
+func FieldApp(value string) Field {
+	return String("app", value)
+}
+
 func FieldAddr(value string) Field {
 	return String("addr", value)
 }

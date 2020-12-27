@@ -45,10 +45,6 @@ func WithDialOption(opts ...grpc.DialOption) Option {
 
 // Build ...
 func (c *Container) Build(options ...Option) *Component {
-	if options == nil {
-		options = make([]Option, 0)
-	}
-
 	if c.config.Debug {
 		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.name, c.config.Addr))))
 	}
