@@ -4,82 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-
 	"github.com/gotomicro/ego/server"
+	"io"
 )
-
-// Event ...
-type Event uint8
-
-const (
-	// EventUnknown ...
-	EventUnknown Event = iota
-	// EventUpdate ...
-	EventUpdate
-	// EventDelete ...
-	EventDelete
-)
-
-// Kind ...
-type Kind uint8
-
-const (
-	// KindUnknown ...
-	KindUnknown Kind = iota
-	// KindProvider ...
-	KindProvider
-	// KindConfigurator ...
-	KindConfigurator
-	// KindConsumer ...
-	KindConsumer
-)
-
-// String ...
-func (kind Kind) String() string {
-	switch kind {
-	case KindProvider:
-		return "providers"
-	case KindConfigurator:
-		return "configurators"
-	case KindConsumer:
-		return "consumers"
-	default:
-		return "unknown"
-	}
-}
-
-// ToKind ...
-func ToKind(kindStr string) Kind {
-	switch kindStr {
-	case "providers":
-		return KindProvider
-	case "configurators":
-		return KindConfigurator
-	case "consumers":
-		return KindConsumer
-	default:
-		return KindUnknown
-	}
-}
-
-// ServerInstance ...
-type ServerInstance struct {
-	Scheme string
-	IP     string
-	Port   int
-	Labels map[string]string
-}
-
-// EventMessage ...
-type EventMessage struct {
-	Event
-	Kind
-	Name    string
-	Scheme  string
-	Address string
-	Message interface{}
-}
 
 // Registry register/unregister service
 // registry impl should control rpc timeout

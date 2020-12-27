@@ -10,6 +10,7 @@ const (
 	EgoDebug       = "EGO_DEBUG"
 	EgoConfigPath  = "EGO_CONFIG_PATH"
 	EgoLogPath     = "EGO_LOG_PATH"
+	EgoLogAddApp   = "EGO_LOG_ADD_APP"
 )
 
 const (

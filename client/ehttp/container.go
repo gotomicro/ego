@@ -33,10 +33,6 @@ func Load(key string) *Container {
 
 // Build ...
 func (c *Container) Build(options ...Option) *Component {
-	if options == nil {
-		options = make([]Option, 0)
-	}
-
 	for _, option := range options {
 		option(c)
 	}

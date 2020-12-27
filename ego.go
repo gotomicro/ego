@@ -36,6 +36,10 @@ type ego struct {
 	registerer eregistry.Registry   // 注册中心
 
 	// 第三部分 可选方法
+	opts opts
+}
+
+type opts struct {
 	configPrefix    string         // 配置前缀
 	hang            bool           // 是否悬挂
 	disableBanner   bool           // 禁用banner
@@ -63,12 +67,14 @@ func New(options ...Option) *ego {
 		registerer: eregistry.Nop{},
 
 		// 第三部分 可选方法
-		hang:            false,
-		configPrefix:    "",
-		beforeStopClean: make([]func() error, 0),
-		afterStopClean:  make([]func() error, 0),
-		stopTimeout:     xtime.Duration("5s"),
-		shutdownSignals: shutdownSignals,
+		opts: opts{
+			hang:            false,
+			configPrefix:    "",
+			beforeStopClean: make([]func() error, 0),
+			afterStopClean:  make([]func() error, 0),
+			stopTimeout:     xtime.Duration("5s"),
+			shutdownSignals: shutdownSignals,
+		},
 	}
 
 	// 设置运行前清理函数
@@ -193,21 +199,21 @@ func (e *ego) Run() error {
 	e.startCrons()
 
 	// 阻塞，等待信号量
-	if err := <-e.cycle.Wait(e.hang); err != nil {
+	if err := <-e.cycle.Wait(e.opts.hang); err != nil {
 		e.logger.Error("ego shutdown with error", elog.FieldComponent("app"), elog.FieldErr(err))
 		return err
 	}
 	e.logger.Info("stop ego, bye!", elog.FieldComponent("app"))
 
 	// 运行停止后清理
-	runSerialFuncLogError(e.afterStopClean)
+	runSerialFuncLogError(e.opts.afterStopClean)
 	return nil
 }
 
 // 停止程序
 func (e *ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 	// 运行停止前清理
-	runSerialFuncLogError(e.beforeStopClean)
+	runSerialFuncLogError(e.opts.beforeStopClean)
 
 	// 停止服务
 	e.smu.RLock()

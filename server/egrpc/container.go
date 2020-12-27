@@ -72,10 +72,6 @@ func WithUnaryInterceptor(interceptors ...grpc.UnaryServerInterceptor) Option {
 
 // Build ...
 func (c *Container) Build(options ...Option) *Component {
-	if options == nil {
-		options = make([]Option, 0)
-	}
-
 	if c.config.EnableTraceInterceptor {
 		options = append(options, WithUnaryInterceptor(traceUnaryServerInterceptor))
 		options = append(options, WithStreamInterceptor(traceStreamServerInterceptor))
