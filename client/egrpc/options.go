@@ -54,7 +54,7 @@ func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *
 	}
 }
 
-func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientInterceptor {
+func debugUnaryClientInterceptor(logger *elog.Component, compName, addr string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		var p peer.Peer
 		prefix := fmt.Sprintf("[%s]", addr)
@@ -67,9 +67,11 @@ func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientIntercep
 		cost := time.Since(beg)
 		if eapp.IsDevelopmentMode() {
 			if err != nil {
-				xdebug.Error(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error())
+				logger.Error("grpc.reply", elog.String("msg",
+					xdebug.MakeReqRspError(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error())))
 			} else {
-				xdebug.Info(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply)
+				logger.Info("grpc.reply", elog.String("msg",
+					xdebug.MakeReqRspInfo(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply)))
 			}
 		} else {
 			// todo log
