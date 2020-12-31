@@ -1,2 +1,4 @@
 [server.grpc]
     port = 9002
+    enableAccessInterceptorReq = true
+    enableAccessInterceptorRes = true

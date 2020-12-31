@@ -149,12 +149,12 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 }
 
 func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
 		var beg = time.Now()
 		var fields = make([]elog.Field, 0, 8)
 		var event = "normal"
-		var res interface{}
-		res, err = handler(ctx, req)
+
+		// 此处必须使用defer来recover handler内部可能出现的panic
 		defer func() {
 			cost := time.Since(beg)
 			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
@@ -202,7 +202,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			}
 		}()
 
-		return res, err
+		return handler(ctx, req)
 	}
 }
 
