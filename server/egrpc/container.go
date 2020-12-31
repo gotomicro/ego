@@ -87,12 +87,12 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 
 	var streamInterceptors = append(
-		[]grpc.StreamServerInterceptor{defaultStreamServerInterceptor(c.logger, c.config.SlowLogThreshold)},
+		[]grpc.StreamServerInterceptor{defaultStreamServerInterceptor(c.logger, c.config)},
 		c.config.streamInterceptors...,
 	)
 
 	var unaryInterceptors = append(
-		[]grpc.UnaryServerInterceptor{defaultUnaryServerInterceptor(c.logger, c.config.SlowLogThreshold)},
+		[]grpc.UnaryServerInterceptor{defaultUnaryServerInterceptor(c.logger, c.config)},
 		c.config.unaryInterceptors...,
 	)
 

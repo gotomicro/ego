@@ -4,6 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
+	"github.com/opentracing/opentracing-go/ext"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
+
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
@@ -11,16 +20,9 @@ import (
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/util/xdebug"
 	"github.com/gotomicro/ego/core/util/xstring"
-	"github.com/opentracing/opentracing-go/ext"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
-	"google.golang.org/grpc/status"
-	"time"
 )
 
-// metric统计
+// metricUnaryClientInterceptor returns grpc unary request metrics collector interceptor
 func metricUnaryClientInterceptor(name string) func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
@@ -41,6 +43,7 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 	}
 }
 
+// metricStreamClientInterceptor returns grpc stream request metrics collector interceptor
 func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 		beg := time.Now()
@@ -54,6 +57,7 @@ func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *
 	}
 }
 
+// debugUnaryClientInterceptor returns grpc unary request request and response details interceptor
 func debugUnaryClientInterceptor(logger *elog.Component, compName, addr string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		var p peer.Peer
@@ -68,10 +72,10 @@ func debugUnaryClientInterceptor(logger *elog.Component, compName, addr string) 
 		if eapp.IsDevelopmentMode() {
 			if err != nil {
 				logger.Error("grpc.reply", elog.String("msg",
-					xdebug.MakeReqRspError(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error())))
+					xdebug.MakeReqResError(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error())))
 			} else {
 				logger.Info("grpc.reply", elog.String("msg",
-					xdebug.MakeReqRspInfo(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply)))
+					xdebug.MakeReqResInfo(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply)))
 			}
 		} else {
 			// todo log
@@ -81,6 +85,7 @@ func debugUnaryClientInterceptor(logger *elog.Component, compName, addr string) 
 	}
 }
 
+// traceUnaryClientInterceptor returns grpc unary opentracing interceptor
 func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		md, ok := metadata.FromOutgoingContext(ctx)
@@ -113,7 +118,7 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	}
 }
 
-// Set AppName
+// appNameUnaryClientInterceptor returns interceptor inject app name
 func appNameUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		md, ok := metadata.FromOutgoingContext(ctx)
@@ -128,7 +133,7 @@ func appNameUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	}
 }
 
-// timeoutUnaryClientInterceptor gRPC客户端超时拦截器
+// timeoutUnaryClientInterceptor settings timeout
 func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duration, slowThreshold time.Duration) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// 若无自定义超时设置，默认设置超时
@@ -142,11 +147,11 @@ func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duratio
 	}
 }
 
-// loggerUnaryClientInterceptor gRPC客户端日志中间件
+// loggerUnaryClientInterceptor returns log interceptor for logging
 func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
-		err := invoker(ctx, method, req, reply, cc, opts...)
+		err := invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
 		isErrLog := false
 		isSlowLog := false
@@ -164,9 +169,8 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		if config.EnableAccessInterceptorReq {
 			fields = append(fields, elog.Any("req", json.RawMessage(xstring.Json(req))))
 		}
-
-		if config.EnableAccessInterceptorReply {
-			fields = append(fields, elog.Any("reply", json.RawMessage(xstring.Json(reply))))
+		if config.EnableAccessInterceptorRes {
+			fields = append(fields, elog.Any("res", json.RawMessage(xstring.Json(res))))
 		}
 
 		if err != nil {
