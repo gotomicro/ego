@@ -33,16 +33,6 @@ func Load(key string) *Container {
 	return c
 }
 
-// WithDialOption ...
-func WithDialOption(opts ...grpc.DialOption) Option {
-	return func(c *Container) {
-		if c.config.dialOptions == nil {
-			c.config.dialOptions = make([]grpc.DialOption, 0)
-		}
-		c.config.dialOptions = append(c.config.dialOptions, opts...)
-	}
-}
-
 // Build ...
 func (c *Container) Build(options ...Option) *Component {
 	if c.config.Debug {

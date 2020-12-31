@@ -2,15 +2,17 @@ package xdebug
 
 import (
 	"fmt"
-	"github.com/gotomicro/ego/core/util/xcolor"
 	"time"
+
+	"github.com/gotomicro/ego/core/util/xcolor"
 )
 
-// 配置名、目标地址、耗时、请求参数、响应数据
-func MakeReqRspInfo(compName string, addr string, cost time.Duration, req interface{}, reply interface{}) string {
+// MakeReqResInfo 以info级别打印配置名、目标地址、耗时、请求数据、响应数据
+func MakeReqResInfo(compName string, addr string, cost time.Duration, req interface{}, reply interface{}) string {
 	return fmt.Sprintf("%s %s %s %s %s => %s\n", time.Now().Format("2006-01-02 15:04:05.000"), xcolor.Green(compName), xcolor.Green(addr), xcolor.Yellow(fmt.Sprintf("[%vms]", float64(cost.Microseconds())/1000)), xcolor.Blue(fmt.Sprintf("%v", req)), xcolor.Blue(fmt.Sprintf("%v", reply)))
 }
 
-func MakeReqRspError(compName string, addr string, cost time.Duration, req string, err string) string {
+// MakeReqResInfo 以error级别打印配置名、目标地址、耗时、请求数据、响应数据
+func MakeReqResError(compName string, addr string, cost time.Duration, req string, err string) string {
 	return fmt.Sprintf("%s %s %s %s %s => %s\n", time.Now().Format("2006-01-02 15:04:05.000"), xcolor.Red(compName), xcolor.Red(addr), xcolor.Yellow(fmt.Sprintf("[%vms]", float64(cost.Microseconds())/1000)), xcolor.Blue(fmt.Sprintf("%v", req)), xcolor.Red(err))
 }

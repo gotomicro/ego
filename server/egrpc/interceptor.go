@@ -2,23 +2,25 @@ package egrpc
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"runtime"
 	"strings"
 	"time"
 
-	"github.com/gotomicro/ego/core/ecode"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/etrace"
 	"github.com/opentracing/opentracing-go/ext"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
+	"github.com/gotomicro/ego/core/ecode"
+	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
-	"google.golang.org/grpc"
+	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/util/xstring"
 )
 
 func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -98,7 +100,7 @@ func extractApp(ctx context.Context) string {
 	return "unknown"
 }
 
-func defaultStreamServerInterceptor(logger *elog.Component, slowLogThreshold time.Duration) grpc.StreamServerInterceptor {
+func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		var beg = time.Now()
 		var fields = make([]elog.Field, 0, 8)
@@ -106,7 +108,7 @@ func defaultStreamServerInterceptor(logger *elog.Component, slowLogThreshold tim
 		defer func() {
 			cost := time.Since(beg)
 
-			if slowLogThreshold > time.Duration(0) && slowLogThreshold < cost {
+			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
 				event = "slow"
 			}
 
@@ -146,14 +148,16 @@ func defaultStreamServerInterceptor(logger *elog.Component, slowLogThreshold tim
 	}
 }
 
-func defaultUnaryServerInterceptor(logger *elog.Component, slowLogThreshold time.Duration) grpc.UnaryServerInterceptor {
+func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		var beg = time.Now()
 		var fields = make([]elog.Field, 0, 8)
 		var event = "normal"
+		var res interface{}
+		res, err = handler(ctx, req)
 		defer func() {
 			cost := time.Since(beg)
-			if slowLogThreshold > time.Duration(0) && slowLogThreshold < cost {
+			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
 				event = "slow"
 			}
 
@@ -179,6 +183,12 @@ func defaultUnaryServerInterceptor(logger *elog.Component, slowLogThreshold time
 				elog.FieldPeerName(getPeerName(ctx)),
 				elog.FieldPeerIP(getPeerIP(ctx)),
 			)
+			if config.EnableAccessInterceptorReq {
+				fields = append(fields, elog.Any("req", json.RawMessage(xstring.Json(req))))
+			}
+			if config.EnableAccessInterceptorRes {
+				fields = append(fields, elog.Any("res", json.RawMessage(xstring.Json(res))))
+			}
 
 			if err != nil {
 				fields = append(fields, elog.FieldErr(err))
@@ -191,11 +201,12 @@ func defaultUnaryServerInterceptor(logger *elog.Component, slowLogThreshold time
 				logger.Info("access", fields...)
 			}
 		}()
-		return handler(ctx, req)
+
+		return res, err
 	}
 }
 
-// 获取对端应用名称
+// getPeerName 获取对端应用名称
 func getPeerName(ctx context.Context) string {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -208,7 +219,7 @@ func getPeerName(ctx context.Context) string {
 	return strings.Join(val, ";")
 }
 
-// 获取对端ip
+// getPeerIP 获取对端ip
 func getPeerIP(ctx context.Context) string {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
