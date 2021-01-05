@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/opentracing/opentracing-go/ext"
@@ -71,11 +72,9 @@ func debugUnaryClientInterceptor(logger *elog.Component, compName, addr string) 
 		cost := time.Since(beg)
 		if eapp.IsDevelopmentMode() {
 			if err != nil {
-				logger.Error("grpc.reply", elog.String("msg",
-					xdebug.MakeReqResError(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error())))
+				log.Println("grpc.response", xdebug.MakeReqResError(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error()))
 			} else {
-				logger.Info("grpc.reply", elog.String("msg",
-					xdebug.MakeReqResInfo(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply)))
+				log.Println("grpc.response", xdebug.MakeReqResInfo(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
 			}
 		} else {
 			// todo log
