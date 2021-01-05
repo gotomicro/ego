@@ -1,6 +1,7 @@
 package ehttp
 
 import (
+	"log"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -26,8 +27,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}).OnAfterResponse(func(client *resty.Client, response *resty.Response) error {
 		rr := response.Request.RawRequest
 		if eapp.IsDevelopmentMode() {
-			logger.Info("http.reply", elog.String("msg",
-				xdebug.MakeReqResInfo(name, config.Addr, response.Time(), response.Request.Method+"."+rr.URL.RequestURI(), string(response.Body()))))
+			log.Println("http.response", xdebug.MakeReqResInfo(name, config.Addr, response.Time(), response.Request.Method+"."+rr.URL.RequestURI(), string(response.Body())))
 		}
 
 		isSlowLog := false
