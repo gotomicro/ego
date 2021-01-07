@@ -4,6 +4,7 @@ import (
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/opentracing/opentracing-go"
 )
 
 type Option func(c *Container)
@@ -41,13 +42,13 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 	server := newComponent(c.name, c.config, c.logger)
-	server.Use(recoverMiddleware(c.logger, c.config.SlowLogThreshold))
+	server.Use(recoverMiddleware(c.logger, c.config))
 
 	if c.config.EnableMetricInterceptor {
 		server.Use(metricServerInterceptor())
 	}
 
-	if c.config.EnableTraceInterceptor {
+	if c.config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
 		server.Use(traceServerInterceptor())
 	}
 	return server

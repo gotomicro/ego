@@ -37,7 +37,7 @@ func Load(key string) *Config {
 // DefaultConfig ...
 func DefaultConfig() *Config {
 	agentAddr := "127.0.0.1:6831"
-	headerName := "x-trace-id"
+	headerName := eapp.EgoTrace()
 	if addr := os.Getenv("JAEGER_AGENT_ADDR"); addr != "" {
 		agentAddr = addr
 	}
