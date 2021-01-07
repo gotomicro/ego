@@ -18,6 +18,7 @@ var (
 	egoConfigPath string
 	egoLogPath    string
 	egoLogAddApp  string
+	egoTrace      string
 )
 
 func InitEnv() {
@@ -36,6 +37,10 @@ func InitEnv() {
 	}
 	egoLogPath = os.Getenv(constant.EgoLogPath)
 	egoLogAddApp = os.Getenv(constant.EgoLogAddApp)
+	egoTrace = os.Getenv(constant.EgoTrace)
+	if egoTrace == "" {
+		egoTrace = "x-trace-id"
+	}
 }
 
 func AppMode() string {
@@ -69,4 +74,8 @@ func EgoLogPath() string {
 
 func EnableLoggerAddApp() bool {
 	return egoLogAddApp == "true"
+}
+
+func EgoTrace() string {
+	return egoTrace
 }

@@ -173,6 +173,8 @@ func (e *ego) initTracer() error {
 		etrace.SetGlobalTracer(tracer)
 		e.opts.afterStopClean = append(e.opts.afterStopClean, container.Stop)
 		elog.EgoLogger.Info("init trace", elog.FieldComponent("app"))
+	} else {
+		elog.EgoLogger.Warn("not init trace", elog.FieldValue("need trace config: [trace.jaeger] in config"), elog.FieldComponent("app"))
 	}
 	return nil
 }

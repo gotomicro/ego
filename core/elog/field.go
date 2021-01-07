@@ -43,6 +43,10 @@ func FieldCode(value int32) Field {
 	return Int32("code", value)
 }
 
+func FieldTid(value string) Field {
+	return String("tid", value)
+}
+
 func FieldSize(value int32) Field {
 	return Int32("size", value)
 }

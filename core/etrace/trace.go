@@ -2,6 +2,7 @@ package etrace
 
 import (
 	"context"
+	"github.com/uber/jaeger-client-go"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -28,4 +29,13 @@ func StartSpanFromContext(ctx context.Context, op string, opts ...opentracing.St
 // SpanFromContext ...
 func SpanFromContext(ctx context.Context) opentracing.Span {
 	return opentracing.SpanFromContext(ctx)
+}
+
+// ExtractTraceID HTTP使用request.Context，不要使用错了
+func ExtractTraceID(ctx context.Context) string {
+	span := opentracing.SpanFromContext(ctx)
+	if span == nil {
+		return ""
+	}
+	return span.(*jaeger.Span).Context().(jaeger.SpanContext).TraceID().String()
 }

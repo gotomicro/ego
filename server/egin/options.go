@@ -3,6 +3,9 @@ package egin
 import (
 	"bytes"
 	"fmt"
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -30,7 +33,7 @@ func extractAID(ctx *gin.Context) string {
 	return ctx.Request.Header.Get("AID")
 }
 
-func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) gin.HandlerFunc {
+func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var beg = time.Now()
 		var fields = make([]elog.Field, 0, 8)
@@ -40,7 +43,7 @@ func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) g
 			cost := time.Since(beg)
 
 			// slow log
-			if slowLogThreshold > time.Duration(0) && slowLogThreshold < cost {
+			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
 				event = "slow"
 			}
 
@@ -48,11 +51,14 @@ func recoverMiddleware(logger *elog.Component, slowLogThreshold time.Duration) g
 				elog.FieldCost(cost),
 				elog.FieldType(c.Request.Method), // GET, POST
 				elog.FieldMethod(c.Request.URL.Path),
-
 				elog.FieldIp(c.ClientIP()),
 				elog.FieldSize(int32(c.Writer.Size())),
 				elog.FieldPeerIP(getPeerIP(c.Request.RemoteAddr)),
 			)
+
+			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(c.Request.Context())))
+			}
 
 			if rec := recover(); rec != nil {
 				if ne, ok := rec.(*net.OpError); ok {
@@ -183,6 +189,8 @@ func traceServerInterceptor() gin.HandlerFunc {
 		)
 		c.Request = c.Request.WithContext(ctx)
 		defer span.Finish()
+		// 判断了全局jaeger的设置，所以这里一定能够断言为jaeger
+		c.Header(eapp.EgoTrace(), span.(*jaeger.Span).Context().(jaeger.SpanContext).TraceID().String())
 		c.Next()
 	}
 }

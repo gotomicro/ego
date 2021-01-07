@@ -11,6 +11,7 @@ const (
 	EgoConfigPath  = "EGO_CONFIG_PATH"
 	EgoLogPath     = "EGO_LOG_PATH"
 	EgoLogAddApp   = "EGO_LOG_ADD_APP"
+	EgoTrace       = "EGO_TRACE"
 )
 
 const (
