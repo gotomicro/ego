@@ -190,7 +190,7 @@ func traceServerInterceptor() gin.HandlerFunc {
 		c.Request = c.Request.WithContext(ctx)
 		defer span.Finish()
 		// 判断了全局jaeger的设置，所以这里一定能够断言为jaeger
-		c.Header(eapp.EgoTraceHeaderName(), span.(*jaeger.Span).Context().(jaeger.SpanContext).TraceID().String())
+		c.Header(eapp.EgoTraceIDName(), span.(*jaeger.Span).Context().(jaeger.SpanContext).TraceID().String())
 		c.Next()
 	}
 }
