@@ -9,16 +9,16 @@ import (
 )
 
 var (
-	appMode            string
-	appRegion          string
-	appZone            string
-	appHost            string
-	appInstance        string
-	egoDebug           string
-	egoConfigPath      string
-	egoLogPath         string
-	egoLogAddApp       string
-	egoTraceHeaderName string
+	appMode        string
+	appRegion      string
+	appZone        string
+	appHost        string
+	appInstance    string
+	egoDebug       string
+	egoConfigPath  string
+	egoLogPath     string
+	egoLogAddApp   string
+	egoTraceIDName string
 )
 
 func InitEnv() {
@@ -37,9 +37,9 @@ func InitEnv() {
 	}
 	egoLogPath = os.Getenv(constant.EgoLogPath)
 	egoLogAddApp = os.Getenv(constant.EgoLogAddApp)
-	egoTraceHeaderName = os.Getenv(constant.EgoTraceHeaderName)
-	if egoTraceHeaderName == "" {
-		egoTraceHeaderName = "x-trace-id"
+	egoTraceIDName = os.Getenv(constant.EgoTraceIDName)
+	if egoTraceIDName == "" {
+		egoTraceIDName = "x-trace-id"
 	}
 }
 
@@ -76,6 +76,6 @@ func EnableLoggerAddApp() bool {
 	return egoLogAddApp == "true"
 }
 
-func EgoTraceHeaderName() string {
-	return egoTraceHeaderName
+func EgoTraceIDName() string {
+	return egoTraceIDName
 }
