@@ -4,6 +4,7 @@ import (
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/util/xnet"
 	"google.golang.org/grpc"
 )
 
@@ -28,6 +29,19 @@ func Load(key string) *Container {
 		c.logger.Panic("parse config error", elog.FieldErr(err), elog.FieldKey(key))
 		return c
 	}
+	var (
+		host string
+		err  error
+	)
+	// 获取网卡ip
+	if c.config.EnableLocalMainIP {
+		host, _, err = xnet.GetLocalMainIP()
+		if err != nil {
+			host = ""
+		}
+		c.config.Host = host
+	}
+
 	// 修改host信息
 	if eflag.String("host") != "" {
 		c.config.Host = eflag.String("host")

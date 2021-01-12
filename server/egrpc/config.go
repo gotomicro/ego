@@ -2,6 +2,7 @@ package egrpc
 
 import (
 	"fmt"
+	"github.com/gotomicro/ego/core/eapp"
 	"time"
 
 	"google.golang.org/grpc"
@@ -21,18 +22,24 @@ type Config struct {
 	SlowLogThreshold           time.Duration // 服务慢日志，默认500ms
 	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
-
-	serverOptions      []grpc.ServerOption
-	streamInterceptors []grpc.StreamServerInterceptor
-	unaryInterceptors  []grpc.UnaryServerInterceptor
+	EnableLocalMainIP          bool          // 自动获取ip地址
+	serverOptions              []grpc.ServerOption
+	streamInterceptors         []grpc.StreamServerInterceptor
+	unaryInterceptors          []grpc.UnaryServerInterceptor
 }
 
 // DefaultConfig represents default config
 // User should construct config base on DefaultConfig
 func DefaultConfig() *Config {
+	host := "0.0.0.0"
+	// 如果存在环境变量IP，就使用环境变量IP
+	if eapp.AppHost() != "" {
+		host = eapp.AppHost()
+	}
+
 	return &Config{
 		Network:                    "tcp4",
-		Host:                       "0.0.0.0",
+		Host:                       host,
 		Port:                       9002,
 		Deployment:                 constant.DefaultDeployment,
 		EnableMetricInterceptor:    true,
