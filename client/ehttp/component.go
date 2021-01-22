@@ -21,10 +21,7 @@ type Component struct {
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
-	restyClient := resty.New().SetDebug(config.RawDebug).SetTimeout(config.ReadTimeout).OnBeforeRequest(func(client *resty.Client, request *resty.Request) error {
-		client.Header.Set("app", eapp.Name())
-		return nil
-	}).OnAfterResponse(func(client *resty.Client, response *resty.Response) error {
+	restyClient := resty.New().SetDebug(config.RawDebug).SetTimeout(config.ReadTimeout).SetHeader("app", eapp.Name()).OnAfterResponse(func(client *resty.Client, response *resty.Response) error {
 		rr := response.Request.RawRequest
 		if eapp.IsDevelopmentMode() {
 			log.Println("http.response", xdebug.MakeReqResInfo(name, config.Addr, response.Time(), response.Request.Method+"."+rr.URL.RequestURI(), string(response.Body())))
