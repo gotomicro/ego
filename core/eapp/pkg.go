@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -13,11 +14,10 @@ import (
 	"github.com/gotomicro/ego/core/util/xtime"
 )
 
-const egoVersion = "v0.3.4"
-
 var (
-	startTime string
-	goVersion string
+	startTime  string
+	goVersion  string
+	egoVersion string
 )
 
 // build info
@@ -48,6 +48,17 @@ func init() {
 	SetBuildTime(buildTime)
 	goVersion = runtime.Version()
 	InitEnv()
+
+	// ego version
+	egoVersion = "unknown version"
+	info, ok := debug.ReadBuildInfo()
+	if ok {
+		for _, value := range info.Deps {
+			if value.Path == "github.com/gotomicro/ego" {
+				egoVersion = value.Version
+			}
+		}
+	}
 }
 
 // Name gets application name.

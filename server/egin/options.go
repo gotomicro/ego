@@ -29,8 +29,8 @@ var (
 	slash     = []byte("/")
 )
 
-func extractAID(ctx *gin.Context) string {
-	return ctx.Request.Header.Get("AID")
+func extractAPP(ctx *gin.Context) string {
+	return ctx.Request.Header.Get("app")
 }
 
 func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
@@ -86,8 +86,7 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 				c.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}
-			// httpRequest, _ := httputil.DumpRequest(c.Request, false)
-			// fields = append(fields, zap.ByteString("request", httpRequest))
+
 			fields = append(fields,
 				elog.FieldEvent(event),
 				zap.String("err", c.Errors.ByType(gin.ErrorTypePrivate).String()),
@@ -169,8 +168,8 @@ func metricServerInterceptor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		beg := time.Now()
 		c.Next()
-		emetric.ServerHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeHTTP, c.Request.Method+"."+c.Request.URL.Path, extractAID(c))
-		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.Request.URL.Path, extractAID(c), http.StatusText(c.Writer.Status()))
+		emetric.ServerHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeHTTP, c.Request.Method+"."+c.Request.URL.Path, extractAPP(c))
+		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.Request.URL.Path, extractAPP(c), http.StatusText(c.Writer.Status()))
 		return
 	}
 }

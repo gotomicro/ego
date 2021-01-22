@@ -27,8 +27,17 @@ func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info
 	startTime := time.Now()
 	resp, err := handler(ctx, req)
 	code := ecode.ExtractCodes(err)
-	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), code.GetMessage())
+	// 收敛err错误，将err过滤后，可以知道err是否为系统错误码
+	// 只记录系统级别错误
+	if code.Code < ecode.EcodeNum {
+		// 只记录系统级别的详细错误码
+		emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
+		emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), code.GetMessage())
+	} else {
+		emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
+		emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), "biz error")
+	}
+
 	return resp, err
 }
 
