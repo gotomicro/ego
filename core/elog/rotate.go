@@ -8,7 +8,7 @@ import (
 
 func newRotate(config *Config) io.Writer {
 	rotateLog := rotate.NewLogger()
-	rotateLog.Filename = config.Filename()
+	rotateLog.Filename = config.filename()
 	rotateLog.MaxSize = config.MaxSize // MB
 	rotateLog.MaxAge = config.MaxAge   // days
 	rotateLog.MaxBackups = config.MaxBackup
