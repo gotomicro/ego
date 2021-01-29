@@ -80,6 +80,7 @@ func newCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 	core := config.core
 	var asyncStopFunc CloseFunc
 
+	encoderConfig := *config.encoderConfig
 	if config.Writer == writerRotateFile {
 		// Debug output to console and file by default
 		var ws = zapcore.AddSync(newRotate(config))
@@ -90,7 +91,6 @@ func newCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 			ws, asyncStopFunc = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
 		}
 
-		encoderConfig := *config.encoderConfig
 		if core == nil {
 			core = zapcore.NewCore(
 				func() zapcore.Encoder {
@@ -108,6 +108,7 @@ func newCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 
 	if config.Writer == writerAliSLS {
 		core, asyncStopFunc = ali.NewCore(
+			ali.WithEncoder(ali.NewMapObjEncoder(encoderConfig)),
 			ali.WithEndpoint(config.AliEndpoint),
 			ali.WithAccessKeyID(config.AliAccessKeyID),
 			ali.WithAccessKeySecret(config.AliAccessKeySecret),
@@ -116,6 +117,11 @@ func newCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 			ali.WithLevelEnabler(lv),
 			ali.WithFlushBufferSize(config.FlushBufferSize),
 			ali.WithFlushBufferInterval(config.FlushBufferInterval),
+			ali.WithApiBulkSize(config.AliApiBulkSize),
+			ali.WithApiTimeout(config.AliApiTimeout),
+			ali.WithApiRetryCount(config.AliApiRetryCount),
+			ali.WithApiRetryWaitTime(config.AliApiRetryWaitTime),
+			ali.WithApiRetryMaxWaitTime(config.AliApiRetryMaxWaitTime),
 		)
 		return core, nil
 	}

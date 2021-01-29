@@ -25,6 +25,7 @@ type LogContent = pb.Log_Content
 
 // config is the config for Ali Log
 type config struct {
+	encoder             zapcore.Encoder
 	project             string
 	endpoint            string
 	accessKeyID         string
@@ -33,10 +34,14 @@ type config struct {
 	topics              []string
 	source              string
 	flushSize           int
-	formatter           string
 	flushBufferSize     int32
 	flushBufferInterval time.Duration
 	levelEnabler        zapcore.LevelEnabler
+	apiBulkSize         int
+	apiTimeout          time.Duration
+	apiRetryCount       int
+	apiRetryWaitTime    time.Duration
+	apiRetryMaxWaitTime time.Duration
 }
 
 // writer implements LoggerInterface.
@@ -61,10 +66,7 @@ func retryCondition(r *resty.Response, err error) bool {
 
 // newWriter creates a new ali writer
 func newWriter(c config) (*writer, error) {
-	if c.flushSize == 0 {
-		c.flushSize = flushSize
-	}
-	w := &writer{config: c, ch: make(chan *pb.Log, c.flushSize), curBufSize: new(int32)}
+	w := &writer{config: c, ch: make(chan *pb.Log, c.apiBulkSize), curBufSize: new(int32)}
 	p := &LogProject{
 		name:            w.project,
 		endpoint:        w.endpoint,
@@ -75,11 +77,10 @@ func newWriter(c config) (*writer, error) {
 	p.cli = resty.New().
 		SetDebug(eapp.IsDevelopmentMode()).
 		SetHostURL(p.host).
-		SetTimeout(5*time.Second).
-		SetHeader("app", eapp.Name()).
-		SetRetryCount(3).
-		SetRetryWaitTime(1 * time.Second).
-		SetRetryMaxWaitTime(2 * time.Second).
+		SetTimeout(c.apiTimeout).
+		SetRetryCount(c.apiRetryCount).
+		SetRetryWaitTime(c.apiRetryWaitTime).
+		SetRetryMaxWaitTime(c.apiRetryMaxWaitTime).
 		AddRetryCondition(retryCondition)
 	store, err := p.GetLogStore(w.logstore)
 	if err != nil {
@@ -91,7 +92,7 @@ func newWriter(c config) (*writer, error) {
 	w.group = append(w.group, &pb.LogGroup{
 		Topic:  proto.String(""),
 		Source: proto.String(w.source),
-		Logs:   make([]*pb.Log, 0, w.flushSize),
+		Logs:   make([]*pb.Log, 0, w.apiBulkSize),
 	})
 
 	// Create other Log Group
@@ -99,7 +100,7 @@ func newWriter(c config) (*writer, error) {
 		lg := &pb.LogGroup{
 			Topic:  proto.String(topic),
 			Source: proto.String(w.source),
-			Logs:   make([]*pb.Log, 0, w.flushSize),
+			Logs:   make([]*pb.Log, 0, w.apiBulkSize),
 		}
 		w.group = append(w.group, lg)
 	}
@@ -111,7 +112,7 @@ func newWriter(c config) (*writer, error) {
 func genLog(fields map[string]interface{}) *pb.Log {
 	l := &pb.Log{
 		Time:     proto.Uint32(uint32(time.Now().Unix())),
-		Contents: []*LogContent{},
+		Contents: make([]*LogContent, 0, len(fields)),
 	}
 	for k, v := range fields {
 		l.Contents = append(l.Contents, &LogContent{

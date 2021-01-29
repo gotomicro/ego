@@ -1,7 +1,6 @@
 package ali
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
@@ -25,11 +24,30 @@ func putEncoder(enc *mapObjEncoder) {
 }
 
 type mapObjEncoder struct {
+	*zapcore.EncoderConfig
+	parentFields []zapcore.Field
 	*zapcore.MapObjectEncoder
 }
 
+func NewMapObjEncoder(cfg zapcore.EncoderConfig) *mapObjEncoder {
+	return &mapObjEncoder{
+		EncoderConfig:    &cfg,
+		MapObjectEncoder: zapcore.NewMapObjectEncoder(),
+	}
+}
+
 func (e *mapObjEncoder) Clone() zapcore.Encoder {
+	return e.clone()
+}
+
+func (e *mapObjEncoder) clone() *mapObjEncoder {
 	clone := getEncoder()
+	clone.EncoderConfig = e.EncoderConfig
+	// copy parentFields
+	clone.parentFields = make([]zapcore.Field, 0, len(e.parentFields))
+	for _, v := range e.parentFields {
+		clone.parentFields = append(clone.parentFields, v)
+	}
 	// copy fields
 	for k, v := range e.MapObjectEncoder.Fields {
 		clone.MapObjectEncoder.Fields[k] = v
@@ -37,9 +55,33 @@ func (e *mapObjEncoder) Clone() zapcore.Encoder {
 	return clone
 }
 
-func (e *mapObjEncoder) EncodeEntry(zapcore.Entry, []zapcore.Field) (*buffer.Buffer, error) {
+func (e *mapObjEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
 	// do nothing, just implement zapcore.Encoder.EncodeEntry()
 	return nil, nil
+}
+
+func (e *mapObjEncoder) encodeEntry(ent zapcore.Entry, fields []zapcore.Field) *mapObjEncoder {
+	final := e.clone()
+	if final.LevelKey != "" {
+		final.AddString(final.LevelKey, ent.Level.String())
+	}
+	if final.TimeKey != "" {
+		final.AddInt64(final.TimeKey, ent.Time.Unix())
+	}
+	if ent.LoggerName != "" && final.NameKey != "" {
+		final.AddString(final.NameKey, ent.LoggerName)
+	}
+	if ent.Caller.Defined && final.CallerKey != "" {
+		final.AddString(final.CallerKey, ent.Caller.String())
+	}
+	if final.MessageKey != "" {
+		final.AddString(final.MessageKey, ent.Message)
+	}
+	if ent.Stack != "" && final.StacktraceKey != "" {
+		final.AddString(final.StacktraceKey, ent.Stack)
+	}
+	addFields(final, fields)
+	return final
 }
 
 // NewCore creates a Core that writes logs to a WriteSyncer.
@@ -55,7 +97,7 @@ func NewCore(ops ...Option) (zapcore.Core, func() error) {
 
 	core := &ioCore{
 		LevelEnabler: c.levelEnabler,
-		enc:          &mapObjEncoder{MapObjectEncoder: zapcore.NewMapObjectEncoder()},
+		enc:          c.encoder,
 		writer:       aliLs,
 	}
 	closeFunc := func() error {
@@ -78,8 +120,11 @@ type ioCore struct {
 }
 
 func (c *ioCore) With(fields []zapcore.Field) zapcore.Core {
-	addFields(c.enc, fields)
-	return c.clone()
+	c.enc.(*mapObjEncoder).parentFields = fields
+	clone := c.clone()
+	// NOTICE: we must reset parentFields otherwise parent logger with also print parent fields
+	c.enc.(*mapObjEncoder).parentFields = nil
+	return clone
 }
 
 func (c *ioCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
@@ -90,18 +135,15 @@ func (c *ioCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.Che
 }
 
 func (c *ioCore) Write(ent zapcore.Entry, fields []zapcore.Field) (err error) {
-	enc, ok := c.enc.(*mapObjEncoder)
-	if !ok {
-		return errors.New("type assertion fail")
-	}
-	addFields(c.enc, fields)
-	if err := c.writer.write(enc.Fields); err != nil {
+	clone := c.enc.(*mapObjEncoder).encodeEntry(ent, fields)
+	addFields(clone, append(fields, clone.parentFields...))
+	if err := c.writer.write(clone.Fields); err != nil {
 		return err
 	}
 	if ent.Level > zapcore.ErrorLevel {
 		err = c.Sync()
 	}
-	putEncoder(enc)
+	putEncoder(clone)
 	return
 }
 

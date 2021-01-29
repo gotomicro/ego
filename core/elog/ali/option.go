@@ -8,6 +8,12 @@ import (
 
 type Option func(c *config)
 
+func WithEncoder(enc zapcore.Encoder) Option {
+	return func(c *config) {
+		c.encoder = enc
+	}
+}
+
 func WithEndpoint(endpoint string) Option {
 	return func(c *config) {
 		c.endpoint = endpoint
@@ -53,5 +59,35 @@ func WithFlushBufferSize(flushBufferSize int) Option {
 func WithFlushBufferInterval(flushBufferInterval time.Duration) Option {
 	return func(c *config) {
 		c.flushBufferInterval = flushBufferInterval
+	}
+}
+
+func WithApiBulkSize(apiBulkSize int) Option {
+	return func(c *config) {
+		c.apiBulkSize = apiBulkSize
+	}
+}
+
+func WithApiTimeout(apiTimeout time.Duration) Option {
+	return func(c *config) {
+		c.apiTimeout = apiTimeout
+	}
+}
+
+func WithApiRetryCount(apiRetryCount int) Option {
+	return func(c *config) {
+		c.apiRetryCount = apiRetryCount
+	}
+}
+
+func WithApiRetryWaitTime(apiRetryWaitTime time.Duration) Option {
+	return func(c *config) {
+		c.apiRetryWaitTime = apiRetryWaitTime
+	}
+}
+
+func WithApiRetryMaxWaitTime(apiRetryMaxWaitTime time.Duration) Option {
+	return func(c *config) {
+		c.apiRetryMaxWaitTime = apiRetryMaxWaitTime
 	}
 }
