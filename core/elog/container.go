@@ -36,19 +36,19 @@ func (c *Container) Build(options ...Option) *Component {
 	if eapp.IsDevelopmentMode() {
 		c.Config.Debug = true
 		c.Config.EnableAsync = false
-		c.Config.EncoderConfig = DefaultDebugConfig()
+		c.Config.encoderConfig = DefaultDebugConfig()
 	}
 
-	if c.Config.EncoderConfig == nil {
-		c.Config.EncoderConfig = DefaultZapConfig()
+	if c.Config.encoderConfig == nil {
+		c.Config.encoderConfig = DefaultZapConfig()
 	}
 
 	if c.Config.Debug {
-		c.Config.EncoderConfig.EncodeLevel = DebugEncodeLevel
+		c.Config.encoderConfig.EncodeLevel = DebugEncodeLevel
 	}
 
 	if eapp.EnableLoggerAddApp() {
-		c.Config.Fields = append(c.Config.Fields, FieldApp(eapp.Name()))
+		c.Config.fields = append(c.Config.fields, FieldApp(eapp.Name()))
 	}
 
 	logger := newLogger(c.name, c.Config)

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/elog/ali"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -32,7 +33,6 @@ const (
 	FatalLevel = zap.FatalLevel
 )
 
-// Func ...
 type (
 	Func      func(string, ...zap.Field)
 	Field     = zap.Field
@@ -48,82 +48,103 @@ type (
 )
 
 var (
-	// String ...
+	// String alias for zap.String
 	String = zap.String
-	// Any ...
+	// Any alias for zap.Any
 	Any = zap.Any
-	// Int64 ...
+	// Int64 alias for zap.Int64
 	Int64 = zap.Int64
-	// Int ...
+	// Int alias for zap.Int
 	Int = zap.Int
-	// Int32 ...
+	// Int32 alias for zap.Int32
 	Int32 = zap.Int32
-	// Uint ...
+	// Uint alias for zap.Uint
 	Uint = zap.Uint
-	// Duration ...
+	// Duration alias for zap.Duration
 	Duration = zap.Duration
-	// Durationp ...
+	// Durationp alias for zap.Duration
 	Durationp = zap.Durationp
-	// Object ...
+	// Object alias for zap.Object
 	Object = zap.Object
-	// Namespace ...
+	// Namespace alias for zap.Namespace
 	Namespace = zap.Namespace
-	// Reflect ...
+	// Reflect alias for zap.Reflect
 	Reflect = zap.Reflect
-	// Skip ...
+	// Skip alias for zap.Skip()
 	Skip = zap.Skip()
-	// ByteString ...
+	// ByteString alias for zap.ByteString
 	ByteString = zap.ByteString
 )
+
+func newCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
+	core := config.core
+	var asyncStopFunc CloseFunc
+
+	encoderConfig := *config.encoderConfig
+	if config.Writer == writerRotateFile {
+		// Debug output to console and file by default
+		var ws = zapcore.AddSync(newRotate(config))
+		if config.Debug {
+			ws = zap.CombineWriteSyncers(os.Stdout, ws)
+		}
+		if config.EnableAsync {
+			ws, asyncStopFunc = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
+		}
+
+		if core == nil {
+			core = zapcore.NewCore(
+				func() zapcore.Encoder {
+					if config.Debug {
+						return zapcore.NewConsoleEncoder(encoderConfig)
+					}
+					return zapcore.NewJSONEncoder(encoderConfig)
+				}(),
+				ws,
+				lv,
+			)
+		}
+		return core, asyncStopFunc
+	}
+
+	if config.Writer == writerAliSLS {
+		core, asyncStopFunc = ali.NewCore(
+			ali.WithEncoder(ali.NewMapObjEncoder(encoderConfig)),
+			ali.WithEndpoint(config.AliEndpoint),
+			ali.WithAccessKeyID(config.AliAccessKeyID),
+			ali.WithAccessKeySecret(config.AliAccessKeySecret),
+			ali.WithProject(config.AliProject),
+			ali.WithLogstore(config.AliLogstore),
+			ali.WithLevelEnabler(lv),
+			ali.WithFlushBufferSize(config.FlushBufferSize),
+			ali.WithFlushBufferInterval(config.FlushBufferInterval),
+			ali.WithApiBulkSize(config.AliApiBulkSize),
+			ali.WithApiTimeout(config.AliApiTimeout),
+			ali.WithApiRetryCount(config.AliApiRetryCount),
+			ali.WithApiRetryWaitTime(config.AliApiRetryWaitTime),
+			ali.WithApiRetryMaxWaitTime(config.AliApiRetryMaxWaitTime),
+		)
+		return core, nil
+	}
+
+	return nil, nil
+}
 
 func newLogger(name string, config *Config) *Component {
 	zapOptions := make([]zap.Option, 0)
 	zapOptions = append(zapOptions, zap.AddStacktrace(zap.DPanicLevel))
 	if config.EnableAddCaller {
-		zapOptions = append(zapOptions, zap.AddCaller(), zap.AddCallerSkip(config.CallerSkip))
+		zapOptions = append(zapOptions, zap.AddCaller(), zap.AddCallerSkip(config.callerSkip))
 	}
-	if len(config.Fields) > 0 {
-		zapOptions = append(zapOptions, zap.Fields(config.Fields...))
-	}
-
-	// Debug output to console and file by default
-	var ws zapcore.WriteSyncer
-	ws = zapcore.AddSync(newRotate(config))
-	if config.Debug {
-		ws1 := os.Stdout
-		ws2 := zapcore.AddSync(newRotate(config))
-		ws = zap.CombineWriteSyncers(ws1, ws2)
-	}
-
-	var asyncStopFunc CloseFunc
-	if config.EnableAsync {
-		ws, asyncStopFunc = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
+	if len(config.fields) > 0 {
+		zapOptions = append(zapOptions, zap.Fields(config.fields...))
 	}
 
 	lv := zap.NewAtomicLevelAt(zapcore.InfoLevel)
 	if err := lv.UnmarshalText([]byte(config.Level)); err != nil {
 		panic(err)
 	}
-
-	encoderConfig := *config.EncoderConfig
-	core := config.Core
-	if core == nil {
-		core = zapcore.NewCore(
-			func() zapcore.Encoder {
-				if config.Debug {
-					return zapcore.NewConsoleEncoder(encoderConfig)
-				}
-				return zapcore.NewJSONEncoder(encoderConfig)
-			}(),
-			ws,
-			lv,
-		)
-	}
-
-	zapLogger := zap.New(
-		core,
-		zapOptions...,
-	)
+	core, asyncStopFunc := newCore(config, lv)
+	zapLogger := zap.New(core, zapOptions...)
 	return &Component{
 		desugar:       zapLogger,
 		lv:            &lv,
