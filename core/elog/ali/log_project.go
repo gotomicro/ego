@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	lz4 "github.com/cloudflare/golz4"
 	"github.com/go-resty/resty/v2"
 	"github.com/golang/protobuf/proto"
+	"github.com/pierrec/lz4"
 
 	"github.com/gotomicro/ego/core/elog/ali/pb"
 )
@@ -143,8 +143,8 @@ func (s *LogStore) PutLogs(lg *pb.LogGroup) (err error) {
 	}
 
 	// Compresse body with lz4
-	out := make([]byte, lz4.CompressBound(body))
-	n, err := lz4.Compress(body, out)
+	out := make([]byte, lz4.CompressBlockBound(len(body)))
+	n, err := lz4.CompressBlock(body, out, nil)
 	if err != nil {
 		return
 	}
