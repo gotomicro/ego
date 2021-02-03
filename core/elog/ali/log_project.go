@@ -2,12 +2,10 @@ package ali
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/golang/protobuf/proto"
@@ -126,9 +124,6 @@ func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
 // PutLogs puts logs into logstore.
 // The callers should transform user logs into LogGroup.
 func (s *LogStore) PutLogs(lg *pb.LogGroup) (err error) {
-	time.Sleep(50 * time.Millisecond)
-	return errors.New("mock")
-
 	body, err := proto.Marshal(lg)
 	if err != nil {
 		return
