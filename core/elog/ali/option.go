@@ -91,3 +91,9 @@ func WithApiRetryMaxWaitTime(apiRetryMaxWaitTime time.Duration) Option {
 		c.apiRetryMaxWaitTime = apiRetryMaxWaitTime
 	}
 }
+
+func WithFallbackCore(core zapcore.Core) Option {
+	return func(c *config) {
+		c.fallbackCore = core
+	}
+}

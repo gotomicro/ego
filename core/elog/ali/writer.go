@@ -4,21 +4,26 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"sync/atomic"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/golang/protobuf/proto"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog/ali/pb"
+	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/util/xcast"
 )
 
 const (
-	// flushSize sets the flush size
-	flushSize int = 128
+	// entryChanSize sets the logs size
+	entryChanSize int = 4096
+	// observe interval
+	observeInterval = 5 * time.Second
 )
 
 type LogContent = pb.Log_Content
@@ -42,17 +47,17 @@ type config struct {
 	apiRetryCount       int
 	apiRetryWaitTime    time.Duration
 	apiRetryMaxWaitTime time.Duration
+	fallbackCore        zapcore.Core
 }
 
 // writer implements LoggerInterface.
 // Writes messages in keep-live tcp connection.
 type writer struct {
-	store      *LogStore
-	group      []*pb.LogGroup
-	withMap    bool
-	ch         chan *pb.Log
-	curBufSize *int32
-	cancel     context.CancelFunc
+	fallbackCore zapcore.Core
+	store        *LogStore
+	ch           chan *pb.Log
+	curBufSize   *int32
+	cancel       context.CancelFunc
 	config
 }
 
@@ -66,14 +71,18 @@ func retryCondition(r *resty.Response, err error) bool {
 
 // newWriter creates a new ali writer
 func newWriter(c config) (*writer, error) {
-	w := &writer{config: c, ch: make(chan *pb.Log, c.apiBulkSize), curBufSize: new(int32)}
+	entryChanSize := entryChanSize
+	if c.apiBulkSize >= entryChanSize {
+		c.apiBulkSize = entryChanSize
+	}
+	w := &writer{config: c, ch: make(chan *pb.Log, entryChanSize), curBufSize: new(int32)}
 	p := &LogProject{
 		name:            w.project,
 		endpoint:        w.endpoint,
 		accessKeyID:     w.accessKeyID,
 		accessKeySecret: w.accessKeySecret,
 	}
-	p.parseEndpoint()
+	p.initHost()
 	p.cli = resty.New().
 		SetDebug(eapp.IsDevelopmentMode()).
 		SetHostURL(p.host).
@@ -87,25 +96,9 @@ func newWriter(c config) (*writer, error) {
 		return nil, fmt.Errorf("getlogstroe fail,%w", err)
 	}
 	w.store = store
-
-	// Create default Log Group
-	w.group = append(w.group, &pb.LogGroup{
-		Topic:  proto.String(""),
-		Source: proto.String(w.source),
-		Logs:   make([]*pb.Log, 0, w.apiBulkSize),
-	})
-
-	// Create other Log Group
-	for _, topic := range w.topics {
-		lg := &pb.LogGroup{
-			Topic:  proto.String(topic),
-			Source: proto.String(w.source),
-			Logs:   make([]*pb.Log, 0, w.apiBulkSize),
-		}
-		w.group = append(w.group, lg)
-	}
-
-	w.Sync()
+	w.fallbackCore = c.fallbackCore
+	w.sync()
+	w.observe()
 	return w, nil
 }
 
@@ -135,28 +128,50 @@ func (w *writer) write(fields map[string]interface{}) (err error) {
 }
 
 func (w *writer) flush() error {
-	// TODO sync pool
-	var lg = *w.group[0]
-	chlen := len(w.ch)
-	if chlen == 0 {
+	entriesChLen := len(w.ch)
+	if entriesChLen == 0 {
 		return nil
 	}
-	var logs = make([]*pb.Log, 0, chlen)
-	logs = append(logs, <-w.ch)
+
+	var waitedEntries = make([]*pb.Log, 0, entriesChLen)
+	waitedEntries = append(waitedEntries, <-w.ch)
 L1:
-	for {
+	for i := 0; i < entriesChLen; i++ {
 		select {
 		case l := <-w.ch:
-			logs = append(logs, l)
+			waitedEntries = append(waitedEntries, l)
 		default:
 			break L1
 		}
 	}
-	lg.Logs = logs
-	return w.store.PutLogs(&lg)
+
+	chunks := int(math.Ceil(float64(len(waitedEntries)) / float64(w.apiBulkSize)))
+	for i := 0; i < chunks; i++ {
+		go func(start int) {
+			end := (start + 1) * w.apiBulkSize
+			if end > len(waitedEntries) {
+				end = len(waitedEntries)
+			}
+			lg := pb.LogGroup{Logs: waitedEntries[start:end]}
+			if e := w.store.PutLogs(&lg); e != nil {
+				// if error occurs we put logs with fallbackCore logger
+				for _, v := range lg.Logs {
+					fields := make([]zapcore.Field, len(v.Contents), len(v.Contents))
+					for i, val := range v.Contents {
+						fields[i] = zap.String(val.GetKey(), val.GetValue())
+					}
+					if e := w.fallbackCore.Write(zapcore.Entry{Time: time.Now()}, fields); e != nil {
+						log.Println("fallbackCore write fail", e)
+					}
+				}
+			}
+		}(i)
+	}
+
+	return nil
 }
 
-func (w *writer) Sync() {
+func (w *writer) sync() {
 	ctx, cancel := context.WithCancel(context.Background())
 	w.cancel = cancel
 	ticker := time.NewTicker(w.flushBufferInterval)
@@ -174,4 +189,13 @@ func (w *writer) Sync() {
 		}
 	}()
 	return
+}
+
+func (w *writer) observe() {
+	go func() {
+		for {
+			emetric.LibHandleSummary.Observe(float64(len(w.ch)), "elog", "ali_waited_entries")
+			time.Sleep(observeInterval)
+		}
+	}()
 }

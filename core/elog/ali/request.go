@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -15,10 +14,7 @@ const requestIDHeader = "x-log-requestid"
 const (
 	httpScheme  = "http://"
 	httpsScheme = "https://"
-	ipRegexStr  = `\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*`
 )
-
-var ipRegex = regexp.MustCompile(ipRegexStr)
 
 type badResError struct {
 	body   string

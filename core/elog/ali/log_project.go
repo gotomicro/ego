@@ -2,11 +2,12 @@ package ali
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/golang/protobuf/proto"
@@ -80,7 +81,7 @@ func (p *LogProject) ListLogStore() (storeNames []string, err error) {
 	return
 }
 
-func (p *LogProject) parseEndpoint() {
+func (p *LogProject) initHost() {
 	scheme := httpScheme // default to http scheme
 	host := p.endpoint
 
@@ -91,18 +92,6 @@ func (p *LogProject) parseEndpoint() {
 		host = strings.TrimPrefix(p.endpoint, scheme)
 	}
 
-	if ipRegex.MatchString(host) {
-		// use direct ip proxy
-		u, err := url.Parse(fmt.Sprintf("%s%s", scheme, host))
-		if err != nil {
-			return
-		}
-		cli := p.cli.GetClient()
-		cli.Transport = &http.Transport{
-			Proxy: http.ProxyURL(u),
-		}
-		p.cli = resty.NewWithClient(cli)
-	}
 	if p.name == "" {
 		p.host = fmt.Sprintf("%s%s", scheme, host)
 	} else {
@@ -137,6 +126,9 @@ func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
 // PutLogs puts logs into logstore.
 // The callers should transform user logs into LogGroup.
 func (s *LogStore) PutLogs(lg *pb.LogGroup) (err error) {
+	time.Sleep(50 * time.Millisecond)
+	return errors.New("mock")
+
 	body, err := proto.Marshal(lg)
 	if err != nil {
 		return

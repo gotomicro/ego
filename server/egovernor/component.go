@@ -9,6 +9,8 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -115,6 +117,9 @@ func (c *Component) Init() error {
 
 //Serve ..
 func (s *Component) Start() error {
+	HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		promhttp.Handler().ServeHTTP(w, r)
+	})
 	err := s.Server.Serve(s.listener)
 	if err == http.ErrServerClosed {
 		return nil

@@ -1,11 +1,9 @@
 package emetric
 
 import (
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/server/egovernor"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"net/http"
 	"time"
+
+	"github.com/gotomicro/ego/core/eapp"
 )
 
 var (
@@ -137,8 +135,4 @@ func init() {
 		eapp.BuildTime(),
 		eapp.GoVersion(),
 	).Set(float64(time.Now().UnixNano() / 1e6))
-
-	egovernor.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		promhttp.Handler().ServeHTTP(w, r)
-	})
 }
