@@ -25,6 +25,8 @@ const (
 	entryChanSize int = 4096
 	// observe interval
 	observeInterval = 5 * time.Second
+	// apiBulkMinSize sets bulk minimal size
+	apiBulkMinSize = 256
 )
 
 type LogContent = pb.Log_Content
@@ -76,6 +78,9 @@ func newWriter(c config) (*writer, error) {
 	entryChanSize := entryChanSize
 	if c.apiBulkSize >= entryChanSize {
 		c.apiBulkSize = entryChanSize
+	}
+	if c.apiBulkSize < apiBulkMinSize {
+		c.apiBulkSize = apiBulkMinSize
 	}
 	w := &writer{config: c, ch: make(chan *pb.Log, entryChanSize), curBufSize: new(int32)}
 	p := &LogProject{
@@ -143,6 +148,8 @@ func (w *writer) flush() error {
 	w.lock.Unlock()
 
 	chunks := int(math.Ceil(float64(len(waitedEntries)) / float64(w.apiBulkSize)))
+	wg := sync.WaitGroup{}
+	wg.Add(chunks)
 	for i := 0; i < chunks; i++ {
 		go func(start int) {
 			end := (start + 1) * w.apiBulkSize
@@ -154,8 +161,10 @@ func (w *writer) flush() error {
 				// if error occurs we put logs to fallback logger
 				w.writeToFallbackLogger(lg)
 			}
+			wg.Done()
 		}(i)
 	}
+	wg.Wait()
 
 	return nil
 }

@@ -82,8 +82,9 @@ const (
 )
 
 // newRotateFileCore construct  a rotate file zapcore.Core
-func newRotateFileCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, cf CloseFunc) {
+func newRotateFileCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 	// Debug output to console and file by default
+	cf := noopCloseFunc
 	var ws = zapcore.AddSync(newRotate(config))
 	if config.Debug {
 		ws = zap.CombineWriteSyncers(os.Stdout, ws)
@@ -91,7 +92,7 @@ func newRotateFileCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, c
 	if config.EnableAsync {
 		ws, cf = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
 	}
-	core = zapcore.NewCore(
+	core := zapcore.NewCore(
 		func() zapcore.Encoder {
 			if config.Debug {
 				return zapcore.NewConsoleEncoder(*config.encoderConfig)
@@ -105,11 +106,11 @@ func newRotateFileCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, c
 }
 
 // newAliCore construct a ali SLS zapcore.Core
-func newAliCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, cf CloseFunc) {
+func newAliCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 	c := *config
 	c.Name = defaultAliFallbackCorePath
 	fallbackCore, fallbackCoreCf := newRotateFileCore(&c, lv)
-	core, cf = ali.NewCore(
+	core, cf := ali.NewCore(
 		ali.WithEncoder(ali.NewMapObjEncoder(*config.encoderConfig)),
 		ali.WithEndpoint(config.AliEndpoint),
 		ali.WithAccessKeyID(config.AliAccessKeyID),
