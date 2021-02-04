@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -80,7 +79,7 @@ func (p *LogProject) ListLogStore() (storeNames []string, err error) {
 	return
 }
 
-func (p *LogProject) parseEndpoint() {
+func (p *LogProject) initHost() {
 	scheme := httpScheme // default to http scheme
 	host := p.endpoint
 
@@ -91,18 +90,6 @@ func (p *LogProject) parseEndpoint() {
 		host = strings.TrimPrefix(p.endpoint, scheme)
 	}
 
-	if ipRegex.MatchString(host) {
-		// use direct ip proxy
-		u, err := url.Parse(fmt.Sprintf("%s%s", scheme, host))
-		if err != nil {
-			return
-		}
-		cli := p.cli.GetClient()
-		cli.Transport = &http.Transport{
-			Proxy: http.ProxyURL(u),
-		}
-		p.cli = resty.NewWithClient(cli)
-	}
 	if p.name == "" {
 		p.host = fmt.Sprintf("%s%s", scheme, host)
 	} else {

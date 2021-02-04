@@ -8,11 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog/ali"
 	"github.com/gotomicro/ego/core/util/xcolor"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 const (
@@ -76,56 +77,73 @@ var (
 	ByteString = zap.ByteString
 )
 
+const (
+	defaultAliFallbackCorePath = "ali.log"
+)
+
+// newRotateFileCore construct  a rotate file zapcore.Core
+func newRotateFileCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, cf CloseFunc) {
+	// Debug output to console and file by default
+	var ws = zapcore.AddSync(newRotate(config))
+	if config.Debug {
+		ws = zap.CombineWriteSyncers(os.Stdout, ws)
+	}
+	if config.EnableAsync {
+		ws, cf = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
+	}
+	core = zapcore.NewCore(
+		func() zapcore.Encoder {
+			if config.Debug {
+				return zapcore.NewConsoleEncoder(*config.encoderConfig)
+			}
+			return zapcore.NewJSONEncoder(*config.encoderConfig)
+		}(),
+		ws,
+		lv,
+	)
+	return core, cf
+}
+
+// newAliCore construct a ali SLS zapcore.Core
+func newAliCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, cf CloseFunc) {
+	c := *config
+	c.Name = defaultAliFallbackCorePath
+	fallbackCore, fallbackCoreCf := newRotateFileCore(&c, lv)
+	core, cf = ali.NewCore(
+		ali.WithEncoder(ali.NewMapObjEncoder(*config.encoderConfig)),
+		ali.WithEndpoint(config.AliEndpoint),
+		ali.WithAccessKeyID(config.AliAccessKeyID),
+		ali.WithAccessKeySecret(config.AliAccessKeySecret),
+		ali.WithProject(config.AliProject),
+		ali.WithLogstore(config.AliLogstore),
+		ali.WithLevelEnabler(lv),
+		ali.WithFlushBufferSize(config.FlushBufferSize),
+		ali.WithFlushBufferInterval(config.FlushBufferInterval),
+		ali.WithApiBulkSize(config.AliApiBulkSize),
+		ali.WithApiTimeout(config.AliApiTimeout),
+		ali.WithApiRetryCount(config.AliApiRetryCount),
+		ali.WithApiRetryWaitTime(config.AliApiRetryWaitTime),
+		ali.WithApiRetryMaxWaitTime(config.AliApiRetryMaxWaitTime),
+		ali.WithFallbackCore(fallbackCore),
+	)
+	return core, func() (err error) {
+		if e := cf(); e != nil {
+			err = fmt.Errorf("exec close func fail, %w ", e)
+		}
+		if e := fallbackCoreCf(); e != nil {
+			err = fmt.Errorf("exec fallbackCore close func fail, %w", e)
+		}
+		return
+	}
+}
+
 func newCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
-	core := config.core
-	var asyncStopFunc CloseFunc
-
-	encoderConfig := *config.encoderConfig
 	if config.Writer == writerRotateFile {
-		// Debug output to console and file by default
-		var ws = zapcore.AddSync(newRotate(config))
-		if config.Debug {
-			ws = zap.CombineWriteSyncers(os.Stdout, ws)
-		}
-		if config.EnableAsync {
-			ws, asyncStopFunc = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
-		}
-
-		if core == nil {
-			core = zapcore.NewCore(
-				func() zapcore.Encoder {
-					if config.Debug {
-						return zapcore.NewConsoleEncoder(encoderConfig)
-					}
-					return zapcore.NewJSONEncoder(encoderConfig)
-				}(),
-				ws,
-				lv,
-			)
-		}
-		return core, asyncStopFunc
+		return newRotateFileCore(config, lv)
 	}
-
 	if config.Writer == writerAliSLS {
-		core, asyncStopFunc = ali.NewCore(
-			ali.WithEncoder(ali.NewMapObjEncoder(encoderConfig)),
-			ali.WithEndpoint(config.AliEndpoint),
-			ali.WithAccessKeyID(config.AliAccessKeyID),
-			ali.WithAccessKeySecret(config.AliAccessKeySecret),
-			ali.WithProject(config.AliProject),
-			ali.WithLogstore(config.AliLogstore),
-			ali.WithLevelEnabler(lv),
-			ali.WithFlushBufferSize(config.FlushBufferSize),
-			ali.WithFlushBufferInterval(config.FlushBufferInterval),
-			ali.WithApiBulkSize(config.AliApiBulkSize),
-			ali.WithApiTimeout(config.AliApiTimeout),
-			ali.WithApiRetryCount(config.AliApiRetryCount),
-			ali.WithApiRetryWaitTime(config.AliApiRetryWaitTime),
-			ali.WithApiRetryMaxWaitTime(config.AliApiRetryMaxWaitTime),
-		)
-		return core, nil
+		return newAliCore(config, lv)
 	}
-
 	return nil, nil
 }
 
@@ -436,7 +454,6 @@ func panicDetail(msg string, fields ...Field) {
 	for key, val := range enc.Fields {
 		fmt.Printf("    %s: %s\n", xcolor.Red(key), fmt.Sprintf("%+v", val))
 	}
-
 }
 
 // With ...

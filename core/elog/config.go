@@ -25,21 +25,19 @@ type Config struct {
 	FlushBufferSize        int           // 缓冲大小，默认256 * 1024B
 	FlushBufferInterval    time.Duration // 缓冲时间，默认5秒
 	Writer                 string        // 使用哪种Writer，默认使用fileWriter
-	AliAccessKeyID         string        // [aliWriter]阿里云sls AKID
-	AliAccessKeySecret     string        // [aliWriter]阿里云sls AKSecret
-	AliEndpoint            string        // [aliWriter]阿里云sls endpoint
-	AliProject             string        // [aliWriter]阿里云sls Project名称
-	AliLogstore            string        // [aliWriter]阿里云sls logstore名称
-	AliTopic               string        // [aliWriter]阿里云sls logstore名称
-	AliApiBulkSize         int           // [aliWriter]阿里云sls API单次请求发送最大日志条数
-	AliApiTimeout          time.Duration // [aliWriter]阿里云sls API接口超时
-	AliApiRetryCount       int           // [aliWriter]阿里云sls API接口重试次数
-	AliApiRetryWaitTime    time.Duration // [aliWriter]阿里云sls API接口重试默认等待间隔
-	AliApiRetryMaxWaitTime time.Duration // [aliWriter]阿里云sls API接口重试最大等待间隔
+	AliAccessKeyID         string        // [aliWriter]阿里云sls AKID，必填
+	AliAccessKeySecret     string        // [aliWriter]阿里云sls AKSecret，必填
+	AliEndpoint            string        // [aliWriter]阿里云sls endpoint，必填
+	AliProject             string        // [aliWriter]阿里云sls Project名称，必填
+	AliLogstore            string        // [aliWriter]阿里云sls logstore名称，必填
+	AliApiBulkSize         int           // [aliWriter]阿里云sls API单次请求发送最大日志条数，默认256条
+	AliApiTimeout          time.Duration // [aliWriter]阿里云sls API接口超时，默认3秒
+	AliApiRetryCount       int           // [aliWriter]阿里云sls API接口重试次数，默认3次
+	AliApiRetryWaitTime    time.Duration // [aliWriter]阿里云sls API接口重试默认等待间隔，默认1秒
+	AliApiRetryMaxWaitTime time.Duration // [aliWriter]阿里云sls API接口重试最大等待间隔，默认3秒
 
 	fields        []zap.Field // 日志初始化字段
 	callerSkip    int
-	core          zapcore.Core
 	encoderConfig *zapcore.EncoderConfig
 	configKey     string
 }
