@@ -26,6 +26,8 @@ const (
 // CloseFunc should be called when the caller exits to clean up buffers.
 type CloseFunc func() error
 
+var noopCloseFunc = func() error { return nil }
+
 // Buffer wraps a WriteSyncer in a buffer to improve performance,
 // if bufferSize = 0, we set it to defaultBufferSize
 // if flushInterval = 0, we set it to defaultFlushInterval

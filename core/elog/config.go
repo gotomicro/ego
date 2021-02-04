@@ -30,7 +30,7 @@ type Config struct {
 	AliEndpoint            string        // [aliWriter]阿里云sls endpoint，必填
 	AliProject             string        // [aliWriter]阿里云sls Project名称，必填
 	AliLogstore            string        // [aliWriter]阿里云sls logstore名称，必填
-	AliApiBulkSize         int           // [aliWriter]阿里云sls API单次请求发送最大日志条数，默认256条
+	AliApiBulkSize         int           // [aliWriter]阿里云sls API单次请求发送最大日志条数，最少256条，默认256条
 	AliApiTimeout          time.Duration // [aliWriter]阿里云sls API接口超时，默认3秒
 	AliApiRetryCount       int           // [aliWriter]阿里云sls API接口重试次数，默认3次
 	AliApiRetryWaitTime    time.Duration // [aliWriter]阿里云sls API接口重试默认等待间隔，默认1秒
