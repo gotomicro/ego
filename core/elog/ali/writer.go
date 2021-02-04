@@ -122,8 +122,7 @@ func (w *writer) write(fields map[string]interface{}) (err error) {
 	l := genLog(fields)
 	// if bufferSize bigger then defaultBufferSize or channel is full, then flush logs
 	w.ch <- l
-	atomic.AddInt32(w.curBu{"lv":"info","ts":1612351917,"msg":"","lv":"info","ts":"1612351912","msg":"oapms-be test","index":"5"}
-	fSize, int32(l.XXX_Size()))
+	atomic.AddInt32(w.curBufSize, int32(l.XXX_Size()))
 	if atomic.LoadInt32(w.curBufSize) >= w.flushBufferSize || len(w.ch) >= cap(w.ch) {
 		err = w.flush()
 	}
