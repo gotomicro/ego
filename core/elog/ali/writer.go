@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -56,6 +57,7 @@ type writer struct {
 	fallbackCore zapcore.Core
 	store        *LogStore
 	ch           chan *pb.Log
+	lock         sync.Mutex
 	curBufSize   *int32
 	cancel       context.CancelFunc
 	config
@@ -120,7 +122,8 @@ func (w *writer) write(fields map[string]interface{}) (err error) {
 	l := genLog(fields)
 	// if bufferSize bigger then defaultBufferSize or channel is full, then flush logs
 	w.ch <- l
-	atomic.AddInt32(w.curBufSize, int32(l.XXX_Size()))
+	atomic.AddInt32(w.curBu{"lv":"info","ts":1612351917,"msg":"","lv":"info","ts":"1612351912","msg":"oapms-be test","index":"5"}
+	fSize, int32(l.XXX_Size()))
 	if atomic.LoadInt32(w.curBufSize) >= w.flushBufferSize || len(w.ch) >= cap(w.ch) {
 		err = w.flush()
 	}
@@ -128,22 +131,17 @@ func (w *writer) write(fields map[string]interface{}) (err error) {
 }
 
 func (w *writer) flush() error {
+	w.lock.Lock()
 	entriesChLen := len(w.ch)
 	if entriesChLen == 0 {
+		w.lock.Unlock()
 		return nil
 	}
-
 	var waitedEntries = make([]*pb.Log, 0, entriesChLen)
-	waitedEntries = append(waitedEntries, <-w.ch)
-L1:
 	for i := 0; i < entriesChLen; i++ {
-		select {
-		case l := <-w.ch:
-			waitedEntries = append(waitedEntries, l)
-		default:
-			break L1
-		}
+		waitedEntries = append(waitedEntries, <-w.ch)
 	}
+	w.lock.Unlock()
 
 	chunks := int(math.Ceil(float64(len(waitedEntries)) / float64(w.apiBulkSize)))
 	for i := 0; i < chunks; i++ {
@@ -154,21 +152,25 @@ L1:
 			}
 			lg := pb.LogGroup{Logs: waitedEntries[start:end]}
 			if e := w.store.PutLogs(&lg); e != nil {
-				// if error occurs we put logs with fallbackCore logger
-				for _, v := range lg.Logs {
-					fields := make([]zapcore.Field, len(v.Contents), len(v.Contents))
-					for i, val := range v.Contents {
-						fields[i] = zap.String(val.GetKey(), val.GetValue())
-					}
-					if e := w.fallbackCore.Write(zapcore.Entry{Time: time.Now()}, fields); e != nil {
-						log.Println("fallbackCore write fail", e)
-					}
-				}
+				// if error occurs we put logs to fallback logger
+				w.writeToFallbackLogger(lg)
 			}
 		}(i)
 	}
 
 	return nil
+}
+
+func (w *writer) writeToFallbackLogger(lg pb.LogGroup) {
+	for _, v := range lg.Logs {
+		fields := make([]zapcore.Field, len(v.Contents), len(v.Contents))
+		for i, val := range v.Contents {
+			fields[i] = zap.String(val.GetKey(), val.GetValue())
+		}
+		if e := w.fallbackCore.Write(zapcore.Entry{Time: time.Now()}, fields); e != nil {
+			log.Println("fallbackCore write fail", e)
+		}
+	}
 }
 
 func (w *writer) sync() {

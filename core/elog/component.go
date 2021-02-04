@@ -81,14 +81,15 @@ const (
 	defaultAliFallbackCorePath = "ali.log"
 )
 
-func newRotateFileCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, asyncStopFunc CloseFunc) {
+// newRotateFileCore construct  a rotate file zapcore.Core
+func newRotateFileCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, cf CloseFunc) {
 	// Debug output to console and file by default
 	var ws = zapcore.AddSync(newRotate(config))
 	if config.Debug {
 		ws = zap.CombineWriteSyncers(os.Stdout, ws)
 	}
 	if config.EnableAsync {
-		ws, asyncStopFunc = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
+		ws, cf = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
 	}
 	core = zapcore.NewCore(
 		func() zapcore.Encoder {
@@ -100,14 +101,15 @@ func newRotateFileCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, a
 		ws,
 		lv,
 	)
-	return core, asyncStopFunc
+	return core, cf
 }
 
-func newAliCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, asyncStopFunc CloseFunc) {
+// newAliCore construct a ali SLS zapcore.Core
+func newAliCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, cf CloseFunc) {
 	c := *config
 	c.Name = defaultAliFallbackCorePath
 	fallbackCore, fallbackCoreCf := newRotateFileCore(&c, lv)
-	core, cf := ali.NewCore(
+	core, cf = ali.NewCore(
 		ali.WithEncoder(ali.NewMapObjEncoder(*config.encoderConfig)),
 		ali.WithEndpoint(config.AliEndpoint),
 		ali.WithAccessKeyID(config.AliAccessKeyID),
@@ -124,15 +126,14 @@ func newAliCore(config *Config, lv zap.AtomicLevel) (core zapcore.Core, asyncSto
 		ali.WithApiRetryMaxWaitTime(config.AliApiRetryMaxWaitTime),
 		ali.WithFallbackCore(fallbackCore),
 	)
-	return core, func() error {
-		var err error
+	return core, func() (err error) {
 		if e := cf(); e != nil {
-			err = fmt.Errorf("exec close func fail, %w ", err)
+			err = fmt.Errorf("exec close func fail, %w ", e)
 		}
-		if err := fallbackCoreCf(); err != nil {
-			err = fmt.Errorf("exec fallbackCore close func fail, %w", err)
+		if e := fallbackCoreCf(); e != nil {
+			err = fmt.Errorf("exec fallbackCore close func fail, %w", e)
 		}
-		return err
+		return
 	}
 }
 
