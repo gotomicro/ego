@@ -60,9 +60,3 @@ func (c *Container) Build(options ...Option) *Component {
 
 	return logger
 }
-
-func WithFileName(name string) Option {
-	return func(c *Container) {
-		c.Config.Name = name
-	}
-}
