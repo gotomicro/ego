@@ -36,7 +36,6 @@ func (c *Container) Build(options ...Option) *Component {
 	if eapp.IsDevelopmentMode() {
 		c.Config.Debug = true
 		c.Config.EnableAsync = false
-		c.Config.encoderConfig = DefaultDebugConfig()
 	}
 
 	if c.Config.encoderConfig == nil {
@@ -44,7 +43,7 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 
 	if c.Config.Debug {
-		c.Config.encoderConfig.EncodeLevel = DebugEncodeLevel
+		c.Config.encoderConfig = DefaultDebugConfig()
 	}
 
 	if eapp.EnableLoggerAddApp() {

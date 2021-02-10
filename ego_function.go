@@ -151,7 +151,7 @@ func loadConfig() error {
 	return nil
 }
 
-// initLogger init
+// initLogger init application and ego logger
 func (e *ego) initLogger() error {
 	if econf.Get(e.opts.configPrefix+"logger.default") != nil {
 		elog.DefaultLogger = elog.Load(e.opts.configPrefix + "logger.default").Build()
@@ -165,7 +165,7 @@ func (e *ego) initLogger() error {
 	return nil
 }
 
-// initTracer init
+// initTracer init global tracer
 func (e *ego) initTracer() error {
 	if econf.Get(e.opts.configPrefix+"trace.jaeger") != nil {
 		container := ejaeger.Load(e.opts.configPrefix + "trace.jaeger")
@@ -204,6 +204,12 @@ func (e *ego) printBanner() error {
 		return nil
 	}
 	const banner = `
+    _/_/_/_/    _/_/_/    _/_/   
+   _/        _/        _/    _/   
+  _/_/_/    _/  _/_/  _/    _/    
+ _/        _/    _/  _/    _/     
+_/_/_/_/    _/_/_/    _/_/  
+
 Welcome to Ego, starting application ...
 `
 	fmt.Println(xcolor.Blue(banner))

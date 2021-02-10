@@ -2,22 +2,20 @@ package elog
 
 const PackageName = "core.elog"
 
-// DefaultLogger default logger
-// Biz Log
-// debug=true as default, will be
+// DefaultLogger defines default logger, it's usually used in application business logic
 var DefaultLogger *Component
 
-// frame logger
+// EgoLogger defines ego framework logger, it's for ego framework only
 var EgoLogger *Component
 
 func init() {
-	DefaultLogger = DefaultContainer().Build()
+	DefaultLogger = DefaultContainer().Build(WithFileName(DefaultLoggerName))
 	EgoLogger = DefaultContainer().Build(WithFileName(EgoLoggerName))
 }
 
 const (
-	DefaultLoggerName = "default.log" // 默认业务日志名称
-	EgoLoggerName     = "ego.sys"     // 框架日志名称
+	DefaultLoggerName = "default.log"
+	EgoLoggerName     = "ego.sys"
 )
 
 // Auto ...

@@ -234,7 +234,7 @@ func DefaultDebugConfig() *zapcore.EncoderConfig {
 		MessageKey:     "msg",
 		StacktraceKey:  "stack",
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
+		EncodeLevel:    DebugEncodeLevel,
 		EncodeTime:     timeDebugEncoder,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
