@@ -9,13 +9,13 @@ var DefaultLogger *Component
 var EgoLogger *Component
 
 func init() {
-	DefaultLogger = DefaultContainer().Build(WithFileName(loggerNameDefault))
-	EgoLogger = DefaultContainer().Build(WithFileName(loggerNameEgo))
+	DefaultLogger = DefaultContainer().Build(WithFileName(DefaultLoggerName))
+	EgoLogger = DefaultContainer().Build(WithFileName(EgoLoggerName))
 }
 
 const (
-	loggerNameDefault = "default.log"
-	loggerNameEgo     = "ego.sys"
+	DefaultLoggerName = "default.log"
+	EgoLoggerName     = "ego.sys"
 )
 
 // Auto ...

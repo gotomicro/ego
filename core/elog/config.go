@@ -59,7 +59,7 @@ func DefaultConfig() *Config {
 		dir = eapp.EgoLogPath()
 	}
 	return &Config{
-		Name:                   loggerNameDefault,
+		Name:                   DefaultLoggerName,
 		Dir:                    dir,
 		Level:                  "info",
 		FlushBufferSize:        defaultBufferSize,
