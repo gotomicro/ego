@@ -204,7 +204,7 @@ func (e *ego) printBanner() error {
 		return nil
 	}
 	const banner = `
-    _/_/_/_/    _/_/_/    _/_/_   
+    _/_/_/_/    _/_/_/    _/_/   
    _/        _/        _/    _/   
   _/_/_/    _/  _/_/  _/    _/    
  _/        _/    _/  _/    _/     
