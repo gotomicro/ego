@@ -22,7 +22,6 @@ func Load(key string) *Container {
 	c := DefaultContainer()
 	if err := econf.UnmarshalKey(key, &c.Config); err != nil {
 		panic(err)
-		return c
 	}
 	c.name = key
 	return c
