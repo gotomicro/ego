@@ -117,7 +117,7 @@ egin.Load("server.http").Build()
 
 ![](docs/images/trace.png)
 
-* [统一的错误信息](https://ego.gocn.vip/awesome/logger.html)
+* [统一的错误信息](https://ego.gocn.vip/awesome/errors.html)
 * 统一的监控信息      
 
 ![](docs/images/metric.png)
