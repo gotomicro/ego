@@ -2,7 +2,6 @@ package manager
 
 import (
 	"errors"
-	"github.com/gotomicro/ego/core/eapp"
 	"os"
 
 	"github.com/gotomicro/ego/core/econf"
@@ -30,7 +29,7 @@ func Register(scheme string, creator econf.DataSource) {
 
 //NewDataSource ..
 func NewDataSource(scheme, configAddr string, watch bool) (econf.DataSource, error) {
-	if scheme == DefaultScheme && configAddr == eapp.EgoConfigPath() {
+	if scheme == DefaultScheme {
 		_, err := os.Stat(configAddr)
 		if err != nil {
 			return nil, ErrDefaultConfigNotExist
