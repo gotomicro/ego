@@ -43,3 +43,20 @@ func skipIfStillRunning(logger *elog.Component) JobWrapper {
 		})
 	}
 }
+
+// WithLocker 注入分布式locker
+func WithLocker(locker Locker) Option {
+	return func(c *Container) {
+		c.config.locker = locker
+	}
+}
+
+// WithChain ...
+func WithChain(wrappers ...JobWrapper) Option {
+	return func(c *Container) {
+		if c.config.wrappers == nil {
+			c.config.wrappers = []JobWrapper{}
+		}
+		c.config.wrappers = append(c.config.wrappers, wrappers...)
+	}
+}

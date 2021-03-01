@@ -33,23 +33,6 @@ func Load(key string) *Container {
 	return c
 }
 
-// WithLocker 注入分布式locker
-func WithLocker(locker Locker) Option {
-	return func(c *Container) {
-		c.config.locker = locker
-	}
-}
-
-// WithChain ...
-func WithChain(wrappers ...JobWrapper) Option {
-	return func(c *Container) {
-		if c.config.wrappers == nil {
-			c.config.wrappers = []JobWrapper{}
-		}
-		c.config.wrappers = append(c.config.wrappers, wrappers...)
-	}
-}
-
 // Build ...
 func (c *Container) Build(options ...Option) *Component {
 	for _, option := range options {
@@ -69,7 +52,7 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 
 	if c.config.DistributedTask && c.config.locker == nil {
-		c.logger.Panic("client etcd nil", elog.FieldKey("use WithClientEtcd method"))
+		c.logger.Panic("client locker nil", elog.FieldKey("use WithLocker method"))
 	}
 
 	return newComponent(c.name, c.config, c.logger)

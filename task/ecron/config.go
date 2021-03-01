@@ -19,13 +19,15 @@ type Config struct {
 	ConcurrentDelay  int           // 并发延迟，默认是执行超过定时时间后，下次执行的任务会跳过
 	ImmediatelyRun   bool          // 是否立刻执行，默认否
 	DistributedTask  bool          // 是否分布式任务，默认否，如果存在分布式任务，则会解析嵌入的etcd配置
-	WaitLockTime     time.Duration // 抢锁等待时间，默认0s
+	WaitLockTime     time.Duration // 抢锁等待时间，默认60s
+	LockTTL          time.Duration // 租期，默认60s
+	LockDir          string        // 定时任务锁目录
+	RefreshTTL       time.Duration // 刷新ttl，默认60s
+	WaitUnlockTime   time.Duration // 抢锁等待时间，默认1s
 	Endpoints        []string      // etcd地址
 	ConnectTimeout   time.Duration // 连接超时时间，默认5s
 	Secure           bool          // 是否安全通信，默认false
 	AutoSyncInterval time.Duration // 自动同步member list的间隔
-	TTL              int           // 过期时间，单位：s，默认失效时间为0s
-	WorkerLockDir    string        // 定时任务锁目录
 	wrappers         []JobWrapper
 	parser           cron.Parser
 	locker           Locker
@@ -37,10 +39,12 @@ func DefaultConfig() *Config {
 		WithSeconds:     false,
 		ConcurrentDelay: -1, // skip
 		ImmediatelyRun:  false,
-		TTL:             60,
 		DistributedTask: false,
-		WaitLockTime:    xtime.Duration("1000ms"),
-		WorkerLockDir:   "/ecron/lock/",
+		WaitLockTime:    xtime.Duration("60s"),
+		LockTTL:         xtime.Duration("60s"),
+		RefreshTTL:      xtime.Duration("50s"),
+		WaitUnlockTime:  xtime.Duration("1s"),
+		LockDir:         "/ecron/lock/%s/%s",
 		wrappers:        []JobWrapper{},
 		parser:          cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
 	}
@@ -61,42 +65,18 @@ func (wl *wrappedLogger) Error(err error, msg string, keysAndValues ...interface
 }
 
 type Locker interface {
-	Lock(context.Context) error
-	Unlock(context.Context) error
+	Lock(ctx context.Context, key string, ttl time.Duration) error
+	Unlock(ctx context.Context, key string) error
+	Refresh(ctx context.Context, key string, ttl time.Duration) error
 }
 
 type wrappedJob struct {
 	NamedJob
-	logger          *elog.Component
-	workerLockDir   string
-	distributedTask bool
-	waitLockTime    time.Duration
-	waitUnlockTime  time.Duration
-	leaseTTL        int
-	locker          Locker
+	logger *elog.Component
 }
 
 // Run ...
 func (wj wrappedJob) Run() {
-	if wj.distributedTask {
-		var err error
-		// 阻塞等待直到waitLockTime timeout
-		ctx, cancel := context.WithTimeout(context.Background(), wj.waitLockTime)
-		defer cancel()
-		err = wj.locker.Lock(ctx)
-		if err != nil {
-			wj.logger.Info("mutex lock", elog.String("err", err.Error()))
-			return
-		}
-
-		ctx, cancel = context.WithTimeout(context.Background(), wj.waitUnlockTime)
-		defer cancel()
-		err = wj.locker.Unlock(ctx)
-		if err != nil {
-			wj.logger.Info("mutex unlock", elog.String("err", err.Error()))
-			return
-		}
-	}
 	_ = wj.run()
 	return
 }

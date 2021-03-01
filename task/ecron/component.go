@@ -1,6 +1,9 @@
 package ecron
 
 import (
+	"context"
+	"fmt"
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/standard"
 	"sync/atomic"
 	"time"
@@ -61,7 +64,7 @@ func (f FuncJob) Name() string { return xstring.FunctionName(f) }
 // Component ...
 type Component struct {
 	name   string
-	Config *Config
+	config *Config
 	*cron.Cron
 	entries map[string]EntryID
 	logger  *elog.Component
@@ -69,7 +72,7 @@ type Component struct {
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
 	cron := &Component{
-		Config: config,
+		config: config,
 		Cron: cron.New(
 			cron.WithParser(config.parser),
 			cron.WithChain(config.wrappers...),
@@ -83,19 +86,14 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 // Schedule ...
 func (c *Component) Schedule(schedule Schedule, job NamedJob) EntryID {
-	if c.Config.ImmediatelyRun {
+	if c.config.ImmediatelyRun {
 		schedule = &immediatelyScheduler{
 			Schedule: schedule,
 		}
 	}
 	innnerJob := &wrappedJob{
-		NamedJob:        job,
-		logger:          c.logger,
-		workerLockDir:   c.Config.WorkerLockDir,
-		distributedTask: c.Config.DistributedTask,
-		waitLockTime:    c.Config.WaitLockTime,
-		waitUnlockTime:  c.Config.WaitLockTime,
-		leaseTTL:        c.Config.TTL,
+		NamedJob: job,
+		logger:   c.logger,
 	}
 	c.logger.Info("add job", elog.String("name", job.Name()))
 	return c.Cron.Schedule(schedule, innnerJob)
@@ -115,13 +113,12 @@ func (c *Component) Init() error {
 
 // GetEntryByName ...
 func (c *Component) GetEntryByName(name string) cron.Entry {
-	// todo(gorexlv): data race
 	return c.Entry(c.entries[name])
 }
 
 // AddJob ...
 func (c *Component) AddJob(spec string, cmd NamedJob) (EntryID, error) {
-	schedule, err := c.Config.parser.Parse(spec)
+	schedule, err := c.config.parser.Parse(spec)
 	if err != nil {
 		return 0, err
 	}
@@ -135,15 +132,62 @@ func (c *Component) AddFunc(spec string, cmd func() error) (EntryID, error) {
 
 // Start ...
 func (c *Component) Start() error {
-	c.logger.Info("add cron", elog.Int("number of scheduled jobs", len(c.Cron.Entries())))
-	c.Cron.Run()
+	if c.config.DistributedTask {
+		// 如果分布式的定时任务，那么就需要抢占锁
+		go func() {
+			var err error
+			for {
+				// 阻塞等待直到waitLockTime timeout
+				ctx, cancel := context.WithTimeout(context.Background(), c.config.WaitLockTime)
+				defer cancel()
+				err = c.config.locker.Lock(ctx, c.lockerName(), c.config.LockTTL)
+				if err != nil {
+					c.logger.Info("mutex lock", elog.String("err", err.Error()))
+					continue
+				}
+
+				c.logger.Info("add cron", elog.Int("number of scheduled jobs", len(c.Cron.Entries())))
+
+				c.Cron.Run()
+				// 定时续期
+				go func() {
+					for {
+						// todo 网络异常情况导致的问题
+						c.config.locker.Refresh(context.Background(), c.lockerName(), c.config.RefreshTTL)
+						time.Sleep(c.config.RefreshTTL)
+					}
+				}()
+				return
+			}
+		}()
+
+	} else {
+		c.logger.Info("add cron", elog.Int("number of scheduled jobs", len(c.Cron.Entries())))
+		c.Cron.Run()
+	}
+
 	return nil
 }
 
 // Stop ...
 func (c *Component) Stop() error {
 	_ = c.Cron.Stop()
+	if c.config.DistributedTask {
+		ctx, cancel := context.WithTimeout(context.Background(), c.config.WaitUnlockTime)
+		defer cancel()
+		err := c.config.locker.Unlock(ctx, c.lockerName())
+		if err != nil {
+			c.logger.Info("mutex unlock", elog.String("err", err.Error()))
+			return fmt.Errorf("cron stop err: %w", err)
+		}
+	}
 	return nil
+}
+
+// locker name
+//
+func (c *Component) lockerName() string {
+	return fmt.Sprintf(c.config.LockDir, eapp.AppInstance(), c.name)
 }
 
 type immediatelyScheduler struct {
