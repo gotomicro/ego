@@ -1,8 +1,6 @@
 package eapp
 
 import (
-	"crypto/md5"
-	"fmt"
 	"os"
 
 	"github.com/gotomicro/ego/core/constant"
@@ -12,8 +10,8 @@ var (
 	appMode        string
 	appRegion      string
 	appZone        string
-	appHost        string
-	appInstance    string
+	appHost        string // 应用的ip
+	appInstance    string // 通常是实例的机器名
 	egoDebug       string
 	egoConfigPath  string
 	egoLogPath     string
@@ -28,7 +26,7 @@ func InitEnv() {
 	appHost = os.Getenv(constant.EnvAppHost)
 	appInstance = os.Getenv(constant.EnvAppInstance)
 	if appInstance == "" {
-		appInstance = fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%s:%s", HostName(), Name()))))
+		appInstance = HostName()
 	}
 	egoDebug = os.Getenv(constant.EgoDebug)
 	egoConfigPath = os.Getenv(constant.EgoConfigPath)
@@ -57,6 +55,10 @@ func AppZone() string {
 
 func AppHost() string {
 	return appHost
+}
+
+func AppInstance() string {
+	return appInstance
 }
 
 // IsDevelopmentMode 判断是否是生产模式

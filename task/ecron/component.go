@@ -3,6 +3,7 @@ package ecron
 import (
 	"context"
 	"fmt"
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/standard"
 	"sync/atomic"
 	"time"
@@ -139,7 +140,7 @@ func (c *Component) Start() error {
 				// 阻塞等待直到waitLockTime timeout
 				ctx, cancel := context.WithTimeout(context.Background(), c.config.WaitLockTime)
 				defer cancel()
-				err = c.config.locker.Lock(ctx, fmt.Sprintf(c.config.WorkerLockDir, c.name), c.config.LockTTL)
+				err = c.config.locker.Lock(ctx, c.lockerName(), c.config.LockTTL)
 				if err != nil {
 					c.logger.Info("mutex lock", elog.String("err", err.Error()))
 					continue
@@ -151,7 +152,8 @@ func (c *Component) Start() error {
 				// 定时续期
 				go func() {
 					for {
-						c.config.locker.Refresh(context.Background(), fmt.Sprintf(c.config.WorkerLockDir, c.name), c.config.RefreshTTL)
+						// todo 网络异常情况导致的问题
+						c.config.locker.Refresh(context.Background(), c.lockerName(), c.config.RefreshTTL)
 						time.Sleep(c.config.RefreshTTL)
 					}
 				}()
@@ -173,13 +175,19 @@ func (c *Component) Stop() error {
 	if c.config.DistributedTask {
 		ctx, cancel := context.WithTimeout(context.Background(), c.config.WaitUnlockTime)
 		defer cancel()
-		err := c.config.locker.Unlock(ctx, fmt.Sprintf(c.config.WorkerLockDir, c.name))
+		err := c.config.locker.Unlock(ctx, c.lockerName())
 		if err != nil {
 			c.logger.Info("mutex unlock", elog.String("err", err.Error()))
 			return fmt.Errorf("cron stop err: %w", err)
 		}
 	}
 	return nil
+}
+
+// locker name
+//
+func (c *Component) lockerName() string {
+	return fmt.Sprintf(c.config.LockDir, eapp.AppInstance(), c.name)
 }
 
 type immediatelyScheduler struct {
