@@ -64,6 +64,7 @@ func (wl *wrappedLogger) Error(err error, msg string, keysAndValues ...interface
 	wl.Errorw("cron "+msg, append(keysAndValues, "err", err)...)
 }
 
+// go get github.com/gotomicro/eredis@v0.2.0+
 type Locker interface {
 	Lock(ctx context.Context, key string, ttl time.Duration) error
 	Unlock(ctx context.Context, key string) error
