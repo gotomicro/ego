@@ -152,7 +152,7 @@ func (c *Component) Start() error {
 				go func() {
 					for {
 						// todo 网络异常情况导致的问题
-						c.config.locker.Refresh(context.Background(), c.lockerName(), c.config.RefreshTTL)
+						c.config.locker.Refresh(context.Background(), c.lockerName(), c.config.LockTTL)
 						time.Sleep(c.config.RefreshTTL)
 					}
 				}()
