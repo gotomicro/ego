@@ -148,7 +148,6 @@ func (c *Component) Start() error {
 
 				c.logger.Info("add cron", elog.Int("number of scheduled jobs", len(c.Cron.Entries())))
 
-				c.Cron.Run()
 				// 定时续期
 				go func() {
 					for {
@@ -157,6 +156,7 @@ func (c *Component) Start() error {
 						time.Sleep(c.config.RefreshTTL)
 					}
 				}()
+				c.Cron.Run()
 				return
 			}
 		}()
