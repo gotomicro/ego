@@ -93,6 +93,13 @@ func WithAddress(address string) Option {
 	}
 }
 
+// 定义服务名称
+func WithName(name string) Option {
+	return func(c *ServiceInfo) {
+		c.Name = name
+	}
+}
+
 func WithKind(kind constant.ServiceKind) Option {
 	return func(c *ServiceInfo) {
 		c.Kind = kind
