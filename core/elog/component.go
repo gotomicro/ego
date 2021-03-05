@@ -152,7 +152,7 @@ func newLogger(name string, config *Config) *Component {
 	zapOptions := make([]zap.Option, 0)
 	zapOptions = append(zapOptions, zap.AddStacktrace(zap.DPanicLevel))
 	if config.EnableAddCaller {
-		zapOptions = append(zapOptions, zap.AddCaller(), zap.AddCallerSkip(config.callerSkip))
+		zapOptions = append(zapOptions, zap.AddCaller(), zap.AddCallerSkip(config.CallerSkip))
 	}
 	if len(config.fields) > 0 {
 		zapOptions = append(zapOptions, zap.Fields(config.fields...))

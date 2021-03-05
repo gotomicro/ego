@@ -37,7 +37,7 @@ type Config struct {
 	AliApiRetryMaxWaitTime time.Duration // [aliWriter]阿里云sls API接口重试最大等待间隔，默认3秒
 
 	fields        []zap.Field // 日志初始化字段
-	callerSkip    int
+	CallerSkip    int
 	encoderConfig *zapcore.EncoderConfig
 	configKey     string
 }
@@ -68,7 +68,7 @@ func DefaultConfig() *Config {
 		MaxAge:                 7,   // 1 day
 		MaxBackup:              10,  // 10 backup
 		RotateInterval:         24 * time.Hour,
-		callerSkip:             1,
+		CallerSkip:             1,
 		EnableAddCaller:        false,
 		EnableAsync:            true,
 		encoderConfig:          DefaultZapConfig(),
