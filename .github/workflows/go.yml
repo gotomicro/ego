@@ -21,3 +21,6 @@ jobs:
 
       - name: Test
         run: go test -v ./...
+
+      - name: Codecov
+        uses: codecov/codecov-action@v1.2.1
