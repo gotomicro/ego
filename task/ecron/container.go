@@ -39,19 +39,21 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 
-	if c.config.WithSeconds {
+	if c.config.EnableWithSeconds {
 		c.config.parser = cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
 	}
 
-	if c.config.ConcurrentDelay > 0 { // 延迟
-		c.config.wrappers = append(c.config.wrappers, delayIfStillRunning(c.logger))
-	} else if c.config.ConcurrentDelay < 0 { // 跳过
+	switch c.config.DelayExecType {
+	case "skip":
 		c.config.wrappers = append(c.config.wrappers, skipIfStillRunning(c.logger))
-	} else {
-		// 默认不延迟也不跳过
+	case "queue":
+		c.config.wrappers = append(c.config.wrappers, queueIfStillRunning(c.logger))
+	case "concurrent":
+	default:
+		c.config.wrappers = append(c.config.wrappers, skipIfStillRunning(c.logger))
 	}
 
-	if c.config.DistributedTask && c.config.locker == nil {
+	if c.config.EnableDistributedTask && c.config.locker == nil {
 		c.logger.Panic("client locker nil", elog.FieldKey("use WithLocker method"))
 	}
 

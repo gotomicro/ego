@@ -8,10 +8,10 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-// delayIfStillRunning serializes jobs, delaying subsequent runs until the
+// queueIfStillRunning serializes jobs, delaying subsequent runs until the
 // previous one is complete. Jobs running after a delay of more than a minute
 // have the delay logged at Info.
-func delayIfStillRunning(logger *elog.Component) JobWrapper {
+func queueIfStillRunning(logger *elog.Component) JobWrapper {
 	return func(j Job) Job {
 		var mu sync.Mutex
 		return cron.FuncJob(func() {
@@ -19,7 +19,7 @@ func delayIfStillRunning(logger *elog.Component) JobWrapper {
 			mu.Lock()
 			defer mu.Unlock()
 			if dur := time.Since(start); dur > time.Minute {
-				logger.Info("cron delay", elog.String("duration", dur.String()))
+				logger.Info("cron queue", elog.String("duration", dur.String()))
 			}
 			j.Run()
 		})

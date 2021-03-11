@@ -38,8 +38,8 @@ func WithEnableAccessInterceptor(enableAccessInterceptor bool) Option {
 	}
 }
 
-func WithEnableAccessInterceptorReply(enableAccessInterceptorReply bool) Option {
+func WithEnableAccessInterceptorRes(enableAccessInterceptorRes bool) Option {
 	return func(c *Container) {
-		c.config.EnableAccessInterceptorReply = enableAccessInterceptorReply
+		c.config.EnableAccessInterceptorRes = enableAccessInterceptorRes
 	}
 }
