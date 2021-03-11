@@ -76,7 +76,7 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 |通过k8s调用gRPC||[例子](https://github.com/gotomicro/ego-component/tree/master/eetcd/examples)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_6-%E4%BD%BF%E7%94%A8k8s%E7%9A%84grpc)|
 |调用MySQL|[代码](https://github.com/gotomicro/ego-component/tree/master/egorm)|[例子](https://github.com/gotomicro/ego-component/tree/master/egorm/examples/gorm)|[文档](https://ego.gocn.vip/frame/client/gorm.html#example)|
 |调用Redis|[代码](https://github.com/gotomicro/ego-component/tree/master/eredis)|[例子](https://github.com/gotomicro/ego-component/tree/master/eredis/examples/redis)|[文档](https://ego.gocn.vip/frame/client/redis.html#example)|
-|调用Redis分布式锁|[代码](https://github.com/gotomicro/ego-component/tree/master/eredis)||｜
+|调用Redis分布式锁|[代码](https://github.com/gotomicro/ego-component/tree/master/eredis)|||
 |调用Mongo|[代码](https://github.com/gotomicro/ego-component/tree/master/emongo)|||
 |调用Kafka|[代码](https://github.com/gotomicro/ego-component/tree/master/ekafka)|||
 |调用ETCD|[代码](https://github.com/gotomicro/ego-component/tree/master/eetcd)|||
