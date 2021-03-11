@@ -86,7 +86,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 // Schedule ...
 func (c *Component) Schedule(schedule Schedule, job NamedJob) EntryID {
-	if c.config.ImmediatelyRun {
+	if c.config.EnableImmediatelyRun {
 		schedule = &immediatelyScheduler{
 			Schedule: schedule,
 		}
@@ -132,7 +132,7 @@ func (c *Component) AddFunc(spec string, cmd func() error) (EntryID, error) {
 
 // Start ...
 func (c *Component) Start() error {
-	if c.config.DistributedTask {
+	if c.config.EnableDistributedTask {
 		// 如果分布式的定时任务，那么就需要抢占锁
 		go func() {
 			var err error
@@ -172,7 +172,7 @@ func (c *Component) Start() error {
 // Stop ...
 func (c *Component) Stop() error {
 	_ = c.Cron.Stop()
-	if c.config.DistributedTask {
+	if c.config.EnableDistributedTask {
 		ctx, cancel := context.WithTimeout(context.Background(), c.config.WaitUnlockTime)
 		defer cancel()
 		err := c.config.locker.Unlock(ctx, c.lockerName())

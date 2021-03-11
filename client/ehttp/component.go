@@ -50,7 +50,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 			elog.FieldAddr(rr.URL.Host),
 		)
 
-		if config.EnableAccessInterceptorReply {
+		if config.EnableAccessInterceptorRes {
 			fields = append(fields, elog.FieldValueAny(respBody))
 		}
 
