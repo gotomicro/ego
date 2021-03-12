@@ -1,0 +1,115 @@
+{
+  "projectName": "ego",
+  "projectOwner": "gotomicro",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 64,
+  "commit": false,
+  "commitConvention": "none",
+  "contributorTemplate": "<a href=\"<%= contributor.profile %>\"><img src=\"<%= contributor.avatar_url %>\" width=\"<%= options.imageSize %>px;\" alt=\"\"/><br /><sub><b><%= contributor.name %></b></sub></a>",
+  "contributors": [
+    {
+      "login": "askuy",
+      "name": "askuy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/14119383?v=4",
+      "profile": "https://github.com/askuy",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "sevennt",
+      "name": "Wei Zheng",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10843736?v=4",
+      "profile": "https://github.com/sevennt",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "shaoyuan1943",
+      "name": "shaoyuan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3054782?v=4",
+      "profile": "https://zhuanlan.zhihu.com/c_1209048962315108352",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "wujunze",
+      "name": "Panda",
+      "avatar_url": "https://avatars.githubusercontent.com/u/12997869?v=4",
+      "profile": "https://wujunze.com/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "NeoyeElf",
+      "name": "刘文哲",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6872731?v=4",
+      "profile": "https://github.com/NeoyeElf",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "zhjunjun",
+      "name": "zhangjunjun",
+      "avatar_url": "https://avatars.githubusercontent.com/u/16819579?v=4",
+      "profile": "https://github.com/zhjunjun",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "devincd",
+      "name": "devincd",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7844367?v=4",
+      "profile": "https://github.com/devincd",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "flycash",
+      "name": "Ming Deng",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9923838?v=4",
+      "profile": "https://www.jianshu.com/u/f2b47e5528d8",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "cute-angelia",
+      "name": "Angelia",
+      "avatar_url": "https://avatars.githubusercontent.com/u/26561606?v=4",
+      "profile": "https://github.com/cute-angelia",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "flutterWang",
+      "name": "Wbofeng",
+      "avatar_url": "https://avatars.githubusercontent.com/u/54163491?v=4",
+      "profile": "https://www.yuque.com/wbofeng",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "clannadxr",
+      "name": "clannadxr",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9847143?v=4",
+      "profile": "https://github.com/clannadxr",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}
