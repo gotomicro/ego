@@ -1,4 +1,7 @@
 ## EGO
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Go](https://github.com/gotomicro/ego/workflows/Go/badge.svg?branch=master)](https://github.com/gotomicro/ego/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gotomicro/ego)](https://goreportcard.com/report/github.com/gotomicro/ego)
 [![codecov](https://codecov.io/gh/gotomicro/ego/branch/master/graph/badge.svg)](https://codecov.io/gh/gotomicro/ego)
@@ -160,3 +163,35 @@ go run main.go --config=config.toml
 使用scripts文件夹里的[包编译](examples/build)，可以看到优雅的version提示
 
 ![图片](./docs/images/version.png)
+
+## Contributors
+
+Thanks for these wonderful people:
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/askuy"><img src="https://avatars.githubusercontent.com/u/14119383?v=4" width="64px;" alt=""/><br /><sub><b>askuy</b></sub></a></td>
+    <td align="center"><a href="https://github.com/sevennt"><img src="https://avatars.githubusercontent.com/u/10843736?v=4" width="64px;" alt=""/><br /><sub><b>Wei Zheng</b></sub></a></td>
+    <td align="center"><a href="https://zhuanlan.zhihu.com/c_1209048962315108352"><img src="https://avatars.githubusercontent.com/u/3054782?v=4" width="64px;" alt=""/><br /><sub><b>shaoyuan</b></sub></a></td>
+    <td align="center"><a href="https://wujunze.com/"><img src="https://avatars.githubusercontent.com/u/12997869?v=4" width="64px;" alt=""/><br /><sub><b>Panda</b></sub></a></td>
+    <td align="center"><a href="https://github.com/NeoyeElf"><img src="https://avatars.githubusercontent.com/u/6872731?v=4" width="64px;" alt=""/><br /><sub><b>刘文哲</b></sub></a></td>
+    <td align="center"><a href="https://github.com/zhjunjun"><img src="https://avatars.githubusercontent.com/u/16819579?v=4" width="64px;" alt=""/><br /><sub><b>zhangjunjun</b></sub></a></td>
+    <td align="center"><a href="https://github.com/devincd"><img src="https://avatars.githubusercontent.com/u/7844367?v=4" width="64px;" alt=""/><br /><sub><b>devincd</b></sub></a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://www.jianshu.com/u/f2b47e5528d8"><img src="https://avatars.githubusercontent.com/u/9923838?v=4" width="64px;" alt=""/><br /><sub><b>Ming Deng</b></sub></a></td>
+    <td align="center"><a href="https://github.com/cute-angelia"><img src="https://avatars.githubusercontent.com/u/26561606?v=4" width="64px;" alt=""/><br /><sub><b>Angelia</b></sub></a></td>
+    <td align="center"><a href="https://www.yuque.com/wbofeng"><img src="https://avatars.githubusercontent.com/u/54163491?v=4" width="64px;" alt=""/><br /><sub><b>Wbofeng</b></sub></a></td>
+    <td align="center"><a href="https://github.com/clannadxr"><img src="https://avatars.githubusercontent.com/u/9847143?v=4" width="64px;" alt=""/><br /><sub><b>clannadxr</b></sub></a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!

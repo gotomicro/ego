@@ -1,3 +1,8 @@
 .idea
 bin
 logs
+
+node_modules
+.vscode
+yarn.lock
+package-lock.json
