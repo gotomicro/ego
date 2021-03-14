@@ -162,6 +162,9 @@ go run main.go --config=config.toml
 
 ![图片](./docs/images/version.png)
 
+## 7 加入我们
+![image](./docs/images/join.jpeg)
+
 ## Contributors
 
 Thanks for these wonderful people:
