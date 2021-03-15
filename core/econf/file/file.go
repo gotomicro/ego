@@ -51,7 +51,7 @@ func ExtParser(configAddr string) (econf.Unmarshaller, string) {
 func (fp *fileDataSource) Parse(path string, watch bool) {
 	absolutePath, err := filepath.Abs(path)
 	if err != nil {
-		elog.Panic("new datasource", elog.Any("err", err))
+		elog.Panic("new datasource", elog.FieldErr(err))
 	}
 	dir := checkAndGetParentDir(absolutePath)
 	fp.path = absolutePath
@@ -84,7 +84,7 @@ func (fp *fileDataSource) IsConfigChanged() <-chan struct{} {
 func (fp *fileDataSource) watch() {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
-		elog.Fatal("new file watcher", elog.FieldComponent("file datasource"), elog.Any("err", err))
+		elog.Fatal("new file watcher", elog.FieldComponent("file datasource"), elog.FieldErr(err))
 	}
 	defer w.Close()
 	done := make(chan bool)
@@ -110,7 +110,7 @@ func (fp *fileDataSource) watch() {
 				}
 			case err := <-w.Errors:
 				// log.Println("error: ", err)
-				elog.Error("read watch error", elog.FieldComponent("file datasource"), elog.Any("err", err))
+				elog.Error("read watch error", elog.FieldComponent("file datasource"), elog.FieldErr(err))
 			}
 		}
 	}()

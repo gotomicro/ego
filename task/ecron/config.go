@@ -96,7 +96,7 @@ func (wj wrappedJob) run() (err error) {
 			fields = append(fields, zap.ByteString("stack", stack[:length]))
 		}
 		if err != nil {
-			fields = append(fields, elog.String("err", err.Error()), elog.Duration("cost", time.Since(beg)))
+			fields = append(fields, elog.FieldErr(err), elog.Duration("cost", time.Since(beg)))
 			wj.logger.Error("run", fields...)
 		} else {
 			wj.logger.Info("run", fields...)

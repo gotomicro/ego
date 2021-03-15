@@ -16,7 +16,7 @@ func main() {
 		helloworld.RegisterGreeterServer(server.Server, &Greeter{server: server})
 		return server
 	}()).Run(); err != nil {
-		elog.Panic("startup", elog.Any("err", err))
+		elog.Panic("startup", elog.FieldErr(err))
 	}
 }
 

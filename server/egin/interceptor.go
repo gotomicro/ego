@@ -85,7 +85,7 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 				fields = append(fields,
 					elog.FieldEvent(event),
 					zap.ByteString("stack", stack),
-					zap.Any("err", rec),
+					elog.FieldErrAny(rec),
 					elog.FieldCode(int32(c.Writer.Status())),
 				)
 				logger.Error("access", fields...)
@@ -94,7 +94,7 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 
 			fields = append(fields,
 				elog.FieldEvent(event),
-				zap.String("err", c.Errors.ByType(gin.ErrorTypePrivate).String()),
+				elog.FieldErrAny(c.Errors.ByType(gin.ErrorTypePrivate).String()),
 				elog.FieldCode(int32(c.Writer.Status())),
 			)
 

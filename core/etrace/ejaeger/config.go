@@ -29,7 +29,7 @@ type Config struct {
 func Load(key string) *Config {
 	var config = DefaultConfig()
 	if err := econf.UnmarshalKey(key, config); err != nil {
-		elog.Panic("unmarshal key", elog.Any("err", err))
+		elog.Panic("unmarshal key", elog.FieldErr(err))
 	}
 	return config
 }

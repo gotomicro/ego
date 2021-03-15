@@ -13,7 +13,7 @@ import (
 func main() {
 	err := ego.New().Cron(cron1()).Run()
 	if err != nil {
-		elog.Panic("startup engine", elog.Any("err", err))
+		elog.Panic("startup engine", elog.FieldErr(err))
 	}
 }
 

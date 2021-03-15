@@ -142,7 +142,7 @@ func (c *Component) Start() error {
 				defer cancel()
 				err = c.config.locker.Lock(ctx, c.lockerName(), c.config.LockTTL)
 				if err != nil {
-					c.logger.Info("mutex lock", elog.String("err", err.Error()))
+					c.logger.Info("mutex lock", elog.FieldErr(err))
 					continue
 				}
 
@@ -177,7 +177,7 @@ func (c *Component) Stop() error {
 		defer cancel()
 		err := c.config.locker.Unlock(ctx, c.lockerName())
 		if err != nil {
-			c.logger.Info("mutex unlock", elog.String("err", err.Error()))
+			c.logger.Info("mutex unlock", elog.FieldErr(err))
 			return fmt.Errorf("cron stop err: %w", err)
 		}
 	}
