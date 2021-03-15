@@ -467,3 +467,13 @@ func (logger *Component) With(fields ...Field) *Component {
 		config:  logger.config,
 	}
 }
+
+// GetConfigDir 获取日志路径
+func (logger *Component) GetConfigDir() string {
+	return logger.config.Dir
+}
+
+// GetConfigName 获取日志名称
+func (logger *Component) GetConfigName() string {
+	return logger.config.Name
+}

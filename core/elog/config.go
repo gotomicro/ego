@@ -15,7 +15,7 @@ type Config struct {
 	Debug                  bool          // 是否双写至文件控制日志输出到终端
 	Level                  string        // 日志初始等级，默认info级别
 	Dir                    string        // [fileWriter]日志输出目录，默认logs
-	Name                   string        // [fileWriter]日志文件名称，默认框架日志mocro.sys，业务日志default.log
+	Name                   string        // [fileWriter]日志文件名称，默认框架日志ego.sys，业务日志default.log
 	MaxSize                int           // [fileWriter]日志输出文件最大长度，超过改值则截断，默认500M
 	MaxAge                 int           // [fileWriter]日志存储最大时间，默认最大保存天数为7天
 	MaxBackup              int           // [fileWriter]日志存储最大数量，默认最大保存文件个数为10个
