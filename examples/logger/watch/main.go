@@ -19,6 +19,6 @@ func main() {
 		return nil
 	}).Run()
 	if err != nil {
-		elog.Panic("startup", elog.Any("err", err))
+		elog.Panic("startup", elog.FieldErr(err))
 	}
 }

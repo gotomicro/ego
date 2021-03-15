@@ -81,6 +81,11 @@ func FieldErr(err error) Field {
 	return zap.Error(err)
 }
 
+// FieldErrorAny
+func FieldErrAny(err interface{}) Field {
+	return zap.Any("error", err)
+}
+
 func FieldDescription(value string) Field {
 	return String("desc", value)
 }

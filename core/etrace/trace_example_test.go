@@ -15,7 +15,7 @@ func ExampleTraceFunc() {
 		defer span.Finish()
 
 		// todo something
-		fmt.Println("err", ctx.Err())
+		fmt.Println("error", ctx.Err())
 		time.Sleep(time.Second)
 	}
 
