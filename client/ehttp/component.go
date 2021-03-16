@@ -1,7 +1,11 @@
 package ehttp
 
 import (
+	"golang.org/x/net/publicsuffix"
 	"log"
+	"net"
+	"net/http"
+	"net/http/cookiejar"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -77,7 +81,13 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 			logger.Info("access", fields...)
 		}
 	}
-	restyClient := resty.New().
+
+	// resty的默认方法，无法设置长连接个数，和是否开启长连接，这里重新构造http client。
+	cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	restyClient := resty.NewWithClient(&http.Client{
+		Transport: createTransport(config),
+		Jar:       cookieJar,
+	}).
 		SetDebug(config.RawDebug).
 		SetTimeout(config.ReadTimeout).
 		SetHeader("app", eapp.Name()).
@@ -93,10 +103,31 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 			}
 		}).
 		SetHostURL(config.Addr)
+
 	return &Component{
 		name:   name,
 		config: config,
 		logger: logger,
 		Client: restyClient,
+	}
+}
+
+func createTransport(config *Config) *http.Transport {
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+	}
+
+	return &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           dialer.DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          config.MaxIdleConns,
+		IdleConnTimeout:       config.IdleConnTimeout,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		DisableKeepAlives:     !config.EnableKeepAlives,
+		MaxIdleConnsPerHost:   config.MaxIdleConnsPerHost,
 	}
 }
