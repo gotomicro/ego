@@ -39,16 +39,11 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var beg = time.Now()
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
-		var fields = make([]elog.Field, 0, 11)
+		var fields = make([]elog.Field, 0, 15)
 		var brokenPipe bool
 		var event = "normal"
 		defer func() {
 			cost := time.Since(beg)
-
-			// slow log
-			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
-				event = "slow"
-			}
 
 			fields = append(fields,
 				elog.FieldCost(cost),
@@ -61,6 +56,11 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 
 			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(c.Request.Context())))
+			}
+
+			// slow log
+			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
+				logger.Warn("slow", fields...)
 			}
 
 			if rec := recover(); rec != nil {
@@ -98,12 +98,7 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 				elog.FieldErrAny(c.Errors.ByType(gin.ErrorTypePrivate).String()),
 				elog.FieldCode(int32(c.Writer.Status())),
 			)
-
-			if event == "slow" {
-				logger.Warn("access", fields...)
-			} else {
-				logger.Info("access", fields...)
-			}
+			logger.Info("access", fields...)
 		}()
 		c.Next()
 	}
