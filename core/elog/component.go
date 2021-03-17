@@ -125,6 +125,9 @@ func newAliCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 		ali.WithApiRetryCount(config.AliApiRetryCount),
 		ali.WithApiRetryWaitTime(config.AliApiRetryWaitTime),
 		ali.WithApiRetryMaxWaitTime(config.AliApiRetryMaxWaitTime),
+		ali.WithApiMaxIdleConns(config.AliApiMaxIdleConns),
+		ali.WithApiIdleConnTimeout(config.AliApiIdleConnTimeout),
+		ali.WithApiMaxIdleConnsPerHost(config.AliApiMaxIdleConnsPerHost),
 		ali.WithFallbackCore(fallbackCore),
 	)
 	return core, func() (err error) {
