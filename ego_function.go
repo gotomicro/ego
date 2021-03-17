@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/econf/file"
 	"github.com/gotomicro/ego/core/econf/manager"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
@@ -125,29 +124,25 @@ func parseFlags() error {
 // loadConfig init
 func loadConfig() error {
 	var configAddr = eflag.String("config")
-	// 如果配置为空，那么赋值默认配置
-	if configAddr == "" {
-		configAddr = eapp.EgoConfigPath()
-	}
+	provider, parser, tag, err := manager.NewDataSource(configAddr, eflag.Bool("watch"))
 
-	// 暂时只支持文件
-	file.Register()
-	provider, err := manager.NewDataSource(file.DataSourceFile, configAddr, eflag.Bool("watch"))
-	if err != manager.ErrDefaultConfigNotExist {
-		if err != nil {
-			elog.EgoLogger.Panic("data source: provider error", elog.FieldComponent(econf.PackageName), elog.FieldErr(err))
-		}
-
-		parser, tag := file.ExtParser(configAddr)
-		// 如果不是，就要加载文件，加载不到panic
-		if err := econf.LoadFromDataSource(provider, parser, econf.TagName(tag)); err != nil {
-			elog.EgoLogger.Panic("data source: load config", elog.FieldComponent(econf.PackageName), elog.FieldErrKind("unmarshal config err"), elog.FieldErr(err))
-		}
-		elog.EgoLogger.Info("init config", elog.FieldComponent(econf.PackageName), elog.String("addr", configAddr))
+	// 如果不存在配置，找不到该文件路径，该错误只存在file类型
+	if err == manager.ErrDefaultConfigNotExist {
 		// 如果协议是file类型，并且是默认文件配置，那么判断下文件是否存在，如果不存在只告诉warning，什么都不做
-	} else {
 		elog.EgoLogger.Warn("no config... ", elog.FieldComponent(econf.PackageName), elog.String("addr", configAddr), elog.FieldErr(err))
+		return nil
 	}
+
+	// 如果存在错误，报错
+	if err != nil {
+		elog.EgoLogger.Panic("data source: provider error", elog.FieldComponent(econf.PackageName), elog.FieldErr(err))
+	}
+
+	// 如果不是，就要加载文件，加载不到panic
+	if err := econf.LoadFromDataSource(provider, parser, econf.TagName(tag)); err != nil {
+		elog.EgoLogger.Panic("data source: load config", elog.FieldComponent(econf.PackageName), elog.FieldErrKind("unmarshal config err"), elog.FieldErr(err))
+	}
+	elog.EgoLogger.Info("init config", elog.FieldComponent(econf.PackageName), elog.String("addr", configAddr))
 	return nil
 }
 

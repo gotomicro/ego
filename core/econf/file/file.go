@@ -1,24 +1,17 @@
 package file
 
 import (
-	"encoding/json"
-	"github.com/gotomicro/ego/core/econf"
+	"github.com/fsnotify/fsnotify"
 	"github.com/gotomicro/ego/core/econf/manager"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/util/xgo"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/BurntSushi/toml"
-	"github.com/fsnotify/fsnotify"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/util/xgo"
 )
-
-// DataSourceFile defines file scheme
-const DataSourceFile = "file"
 
 // fileDataSource file provider.
 type fileDataSource struct {
@@ -29,22 +22,8 @@ type fileDataSource struct {
 	logger      *elog.Component
 }
 
-func Register() {
-	manager.Register("file", &fileDataSource{})
-}
-
-func ExtParser(configAddr string) (econf.Unmarshaller, string) {
-	ext := filepath.Ext(configAddr)
-	switch ext {
-	case ".json":
-		return json.Unmarshal, "json"
-	case ".toml":
-		return toml.Unmarshal, "toml"
-	default:
-		// TODO 处理configAddr为ETCD的情况？
-		elog.EgoLogger.Panic("data source: invalid configuration type")
-	}
-	return nil, ""
+func init() {
+	manager.Register(manager.DefaultScheme, &fileDataSource{})
 }
 
 // Parse
