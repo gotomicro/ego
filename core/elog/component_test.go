@@ -9,8 +9,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 
 	"github.com/gotomicro/ego/core/econf"
 )
@@ -93,9 +91,6 @@ func getMessage(iter int) string {
 
 func BenchmarkAliWriter(b *testing.B) {
 	b.Logf("Logging at a disabled level with some accumulated context.")
-	ec := zap.NewProductionEncoderConfig()
-	ec.EncodeDuration = zapcore.NanosDurationEncoder
-	ec.EncodeTime = zapcore.EpochNanosTimeEncoder
 	aliLogger := newAliLogger()
 	b.Run("ali", func(b *testing.B) {
 		b.ResetTimer()
