@@ -1,7 +1,6 @@
 package ehttp
 
 import (
-	"golang.org/x/net/publicsuffix"
 	"log"
 	"net"
 	"net/http"
@@ -9,9 +8,12 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/opentracing/opentracing-go"
+	"golang.org/x/net/publicsuffix"
 
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/util/xdebug"
 )
 
@@ -54,12 +56,17 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 			elog.FieldAddr(rr.URL.Host),
 		)
 
+		// 开启了链路，那么就记录链路id
+		if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+			fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(request.Context())))
+		}
+
 		if config.EnableAccessInterceptorRes {
 			fields = append(fields, elog.FieldValueAny(respBody))
 		}
 
 		if err != nil {
-			elog.FieldErr(err)
+			fields = append(fields, elog.FieldErr(err))
 			if response == nil {
 				// 无 response 的是连接超时等系统级错误
 				fields = append(fields, elog.FieldEvent("error"))

@@ -3,6 +3,13 @@ package ego
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
+
+	"go.uber.org/automaxprocs/maxprocs"
+
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/econf/manager"
@@ -12,11 +19,6 @@ import (
 	"github.com/gotomicro/ego/core/etrace/ejaeger"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"github.com/gotomicro/ego/core/util/xgo"
-	"go.uber.org/automaxprocs/maxprocs"
-	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
 )
 
 // waitSignals wait signal

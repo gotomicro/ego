@@ -2,6 +2,11 @@ package ego
 
 import (
 	"context"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
 	_ "github.com/gotomicro/ego/core/econf/file"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
@@ -11,10 +16,6 @@ import (
 	"github.com/gotomicro/ego/server"
 	"github.com/gotomicro/ego/task/ecron"
 	"github.com/gotomicro/ego/task/ejob"
-	"os"
-	"strings"
-	"sync"
-	"time"
 )
 
 // Ego分为三大部分

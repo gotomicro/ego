@@ -29,5 +29,5 @@ require (
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98
 	google.golang.org/grpc v1.29.1
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
