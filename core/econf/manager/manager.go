@@ -3,14 +3,16 @@ package manager
 import (
 	"encoding/json"
 	"errors"
-	"github.com/BurntSushi/toml"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/elog"
-	"gopkg.in/yaml.v2"
 	"net/url"
 	"os"
 	"path/filepath"
+
+	"github.com/BurntSushi/toml"
+	"gopkg.in/yaml.v3"
+
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/elog"
 )
 
 var (

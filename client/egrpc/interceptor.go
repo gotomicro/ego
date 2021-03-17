@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -164,6 +165,11 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 			elog.FieldCost(cost),
 			elog.FieldName(cc.Target()),
 		)
+
+		// 开启了链路，那么就记录链路id
+		if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+			fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
+		}
 
 		if config.EnableAccessInterceptorReq {
 			fields = append(fields, elog.Any("req", json.RawMessage(xstring.Json(req))))

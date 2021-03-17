@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -160,7 +161,8 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
 		var beg = time.Now()
-		var fields = make([]elog.Field, 0, 8)
+		// 为了性能考虑，如果要加日志字段，需要改变slice大小
+		var fields = make([]elog.Field, 0, 10)
 		var event = "normal"
 
 		// 此处必须使用defer来recover handler内部可能出现的panic
@@ -192,6 +194,11 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				elog.FieldPeerName(getPeerName(ctx)),
 				elog.FieldPeerIP(getPeerIP(ctx)),
 			)
+
+			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
+			}
+
 			if config.EnableAccessInterceptorReq {
 				fields = append(fields, elog.Any("req", json.RawMessage(xstring.Json(req))))
 			}

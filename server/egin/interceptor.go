@@ -3,9 +3,6 @@ package egin
 import (
 	"bytes"
 	"fmt"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -15,11 +12,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
+	"go.uber.org/zap"
 
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
-	"go.uber.org/zap"
 )
 
 var (
@@ -38,7 +38,8 @@ func extractAPP(ctx *gin.Context) string {
 func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var beg = time.Now()
-		var fields = make([]elog.Field, 0, 8)
+		// 为了性能考虑，如果要加日志字段，需要改变slice大小
+		var fields = make([]elog.Field, 0, 11)
 		var brokenPipe bool
 		var event = "normal"
 		defer func() {
