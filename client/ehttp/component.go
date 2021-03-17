@@ -46,9 +46,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 			}
 		}
 
-		var isSlowLog, isErrLog bool
 		var fields = make([]elog.Field, 0, 15)
-
 		fields = append(fields,
 			elog.FieldMethod(fullMethod),
 			elog.FieldName(name),
@@ -65,25 +63,22 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 			fields = append(fields, elog.FieldValueAny(respBody))
 		}
 
+		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
+			logger.Warn("slow", fields...)
+		}
+
 		if err != nil {
-			fields = append(fields, elog.FieldErr(err))
+			fields = append(fields, elog.FieldEvent("error"), elog.FieldErr(err))
 			if response == nil {
 				// 无 response 的是连接超时等系统级错误
-				fields = append(fields, elog.FieldEvent("error"))
 				logger.Error("access", fields...)
-			} else {
-				logger.Warn("access", fields...)
+				return
 			}
-			isErrLog = true
-		}
-
-		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
-			fields = append(fields, elog.FieldEvent("slow"))
 			logger.Warn("access", fields...)
-			isSlowLog = true
+			return
 		}
 
-		if config.EnableAccessInterceptor && !isSlowLog && !isErrLog {
+		if config.EnableAccessInterceptor {
 			fields = append(fields, elog.FieldEvent("normal"))
 			logger.Info("access", fields...)
 		}

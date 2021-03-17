@@ -153,8 +153,6 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		beg := time.Now()
 		err := invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
-		isErrLog := false
-		isSlowLog := false
 		spbStatus := ecode.ExtractCodes(err)
 		var fields = make([]elog.Field, 0, 15)
 		fields = append(fields,
@@ -178,27 +176,24 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 			fields = append(fields, elog.Any("res", json.RawMessage(xstring.Json(res))))
 		}
 
+		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
+			_logger.Warn("slow", fields...)
+		}
+
 		if err != nil {
+			fields = append(fields, elog.FieldEvent("error"), elog.FieldErr(err))
 			// 只记录系统级别错误
 			if spbStatus.Code < ecode.EcodeNum {
-				fields = append(fields, elog.FieldEvent("error"))
 				// 只记录系统级别错误
 				_logger.Error("access", fields...)
-			} else {
-				// 业务报错只做warning
-				_logger.Warn("access", fields...)
+				return err
 			}
-			isErrLog = true
+			// 业务报错只做warning
+			_logger.Warn("access", fields...)
 			return err
 		}
 
-		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
-			fields = append(fields, elog.FieldEvent("slow"))
-			isSlowLog = true
-			_logger.Warn("access", fields...)
-		}
-
-		if config.EnableAccessInterceptor && !isErrLog && !isSlowLog {
+		if config.EnableAccessInterceptor {
 			fields = append(fields, elog.FieldEvent("normal"))
 			_logger.Info("access", fields...)
 		}
