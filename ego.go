@@ -2,6 +2,7 @@ package ego
 
 import (
 	"context"
+	_ "github.com/gotomicro/ego/core/econf/file"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/eregistry"
@@ -233,8 +234,7 @@ func (e *ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 			}(s)
 		}
 	}
-
-	e.smu.RUnlock()
+	e.smu.RLock()
 
 	// 停止定时任务
 	for _, w := range e.crons {
@@ -242,6 +242,7 @@ func (e *ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 			e.cycle.Run(w.Stop)
 		}(w)
 	}
+
 	<-e.cycle.Done()
 	e.cycle.Close()
 	return err
