@@ -20,4 +20,14 @@ jobs:
         run: go build -v ./...
 
       - name: Test
-        run: go test -v ./...
+        run: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: CodeCov
+        uses: codecov/codecov-action@v1
+        with:
+          #      token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./coverage.txt
+          flags: unittests # optional
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)

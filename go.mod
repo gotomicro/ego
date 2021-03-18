@@ -6,6 +6,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
+	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-resty/resty/v2 v2.3.0
