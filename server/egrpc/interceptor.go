@@ -61,7 +61,6 @@ func traceUnaryServerInterceptor(ctx context.Context, req interface{}, info *grp
 	)
 
 	defer span.Finish()
-
 	resp, err := handler(ctx, req)
 
 	if err != nil {
