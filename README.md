@@ -1,4 +1,5 @@
 ## EGO
+[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors-)
 [![Go](https://github.com/gotomicro/ego/workflows/Go/badge.svg?branch=master)](https://github.com/gotomicro/ego/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gotomicro/ego)](https://goreportcard.com/report/github.com/gotomicro/ego)
 [![codecov](https://codecov.io/gh/gotomicro/ego/branch/master/graph/badge.svg)](https://codecov.io/gh/gotomicro/ego)
@@ -62,39 +63,30 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 
 
 ## 4 功能
-* server HTTP
-    * [例子](https://github.com/gotomicro/ego/tree/master/examples/server/http)
-    * [使用方式](https://ego.gocn.vip/frame/server/http.html)
-* server gRPC
-    * [例子](https://github.com/gotomicro/ego/tree/master/examples/server/grpc)
-    * [使用方式](https://ego.gocn.vip/frame/server/grpc.html#example)
-* task job
-    * [例子](https://github.com/gotomicro/ego/tree/master/examples/task/job)
-    * [使用方式](https://ego.gocn.vip/frame/task/job.html)
-* task cron
-    * [例子](https://github.com/gotomicro/ego/tree/master/examples/task/cron)
-    * [使用方式](https://ego.gocn.vip/frame/task/cron.html)
-* client HTTP
-    * [例子](https://github.com/gotomicro/ego/tree/master/examples/http/client)
-    * [使用方式](https://ego.gocn.vip/frame/client/http.html#example)
-* client gRPC
-    * [直连例子](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
-    * [ETCD例子](https://github.com/gotomicro/ego-component/tree/master/eetcd/examples)
-    * [使用方式](https://ego.gocn.vip/frame/client/grpc.html#example)
-* client mysql
-    * [例子](https://github.com/gotomicro/ego-component/tree/master/egorm/examples/gorm)
-    * [使用方式](https://ego.gocn.vip/frame/client/gorm.html#example)
-* client redis
-    * [例子](https://github.com/gotomicro/ego-component/tree/master/eredis/examples/redis)
-    * [使用方式](https://ego.gocn.vip/frame/client/redis.html#example)
-* client mongo
-    * [例子](https://github.com/gotomicro/ego-component/tree/master/emongo)
-* client kafka
-    * [例子](https://github.com/gotomicro/ego-component/tree/master/ekafka/examples)
-* client wechat
-    * [例子](https://github.com/gotomicro/ego-component/tree/master/ewechat)
-* client dingding
-    * [例子](https://github.com/gotomicro/ego-component/tree/master/edingtalk/examples)    
+|组件名称|代码|例子|文档|
+| --- | --- | --- | --- |
+|HTTP服务|[代码](./server/egin)|[例子](./examples/server/http)|[文档](https://ego.gocn.vip/frame/server/http.html)|
+|gRPC服务|[代码](./server/egrpc)|[例子](./examples/server/grpc)|[文档](https://ego.gocn.vip/frame/server/grpc.html#example)|
+|治理服务|[代码](./server/egovernor)|[例子](./examples/server/governor)|[文档](https://ego.gocn.vip/frame/server/governor.html)|
+|短时任务|[代码](./task/ejob)|[例子](./examples/task/job)|[文档](https://ego.gocn.vip/frame/task/job.html)|
+|常规定时任务|[代码](./task/ecron)|[例子](./examples/task/job)|[文档](https://ego.gocn.vip/frame/task/cron.html#_3-%E5%B8%B8%E8%A7%84%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1)|
+|分布式定时任务|||[文档](https://ego.gocn.vip/frame/task/cron.html#_4-%E5%88%86%E5%B8%83%E5%BC%8F%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1)|
+|调用HTTP|[代码](./client/ehttp)|[例子](./examples/http/client)|[文档](https://ego.gocn.vip/frame/client/http.html#example)|
+|直连调用gRPC|[代码](./client/egrpc)|[例子](./examples/grpc/direct)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_4-%E7%9B%B4%E8%BF%9Egrpc)|
+|通过etcd调用gRPC||[例子](https://github.com/gotomicro/ego-component/tree/master/eetcd/examples)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_5-%E4%BD%BF%E7%94%A8etcd%E7%9A%84grpc)|
+|通过k8s调用gRPC||[例子](https://github.com/gotomicro/ego-component/tree/master/eetcd/examples)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_6-%E4%BD%BF%E7%94%A8k8s%E7%9A%84grpc)|
+|调用MySQL|[代码](https://github.com/gotomicro/ego-component/tree/master/egorm)|[例子](https://github.com/gotomicro/ego-component/tree/master/egorm/examples/gorm)|[文档](https://ego.gocn.vip/frame/client/gorm.html#example)|
+|调用Redis|[代码](https://github.com/gotomicro/ego-component/tree/master/eredis)|[例子](https://github.com/gotomicro/ego-component/tree/master/eredis/examples/redis)|[文档](https://ego.gocn.vip/frame/client/redis.html#example)|
+|调用Redis分布式锁|[代码](https://github.com/gotomicro/ego-component/tree/master/eredis)|||
+|调用Mongo|[代码](https://github.com/gotomicro/ego-component/tree/master/emongo)|||
+|调用Kafka|[代码](https://github.com/gotomicro/ego-component/tree/master/ekafka)|||
+|调用ETCD|[代码](https://github.com/gotomicro/ego-component/tree/master/eetcd)|||
+|调用K8S|[代码](https://github.com/gotomicro/ego-component/tree/master/ek8s)|||
+|调用Oauth2|[代码](https://github.com/gotomicro/ego-component/tree/master/eoauth2)|||
+|调用Wechat|[代码](https://github.com/gotomicro/ego-component/tree/master/ewechat)|||
+|调用Dingtalk|[代码](https://github.com/gotomicro/ego-component/tree/master/edingtalk)|||
+|调用Jira|[代码](https://github.com/gotomicro/ego-component/tree/master/ejira)|||
+
 * 更多组件请查看:[https://github.com/gotomicro/ego-component](https://github.com/gotomicro/ego-component)
 
 
@@ -169,3 +161,37 @@ go run main.go --config=config.toml
 使用scripts文件夹里的[包编译](examples/build)，可以看到优雅的version提示
 
 ![图片](./docs/images/version.png)
+
+## 7 加入我们
+![image](./docs/images/join.jpeg)
+
+## Contributors
+
+Thanks for these wonderful people:
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/askuy"><img src="https://avatars.githubusercontent.com/u/14119383?v=4" width="64px;" alt=""/><br /><sub><b>askuy</b></sub></a></td>
+    <td align="center"><a href="https://github.com/sevennt"><img src="https://avatars.githubusercontent.com/u/10843736?v=4" width="64px;" alt=""/><br /><sub><b>Wei Zheng</b></sub></a></td>
+    <td align="center"><a href="https://zhuanlan.zhihu.com/c_1209048962315108352"><img src="https://avatars.githubusercontent.com/u/3054782?v=4" width="64px;" alt=""/><br /><sub><b>shaoyuan</b></sub></a></td>
+    <td align="center"><a href="https://wujunze.com/"><img src="https://avatars.githubusercontent.com/u/12997869?v=4" width="64px;" alt=""/><br /><sub><b>Panda</b></sub></a></td>
+    <td align="center"><a href="https://github.com/NeoyeElf"><img src="https://avatars.githubusercontent.com/u/6872731?v=4" width="64px;" alt=""/><br /><sub><b>刘文哲</b></sub></a></td>
+    <td align="center"><a href="https://github.com/zhjunjun"><img src="https://avatars.githubusercontent.com/u/16819579?v=4" width="64px;" alt=""/><br /><sub><b>zhangjunjun</b></sub></a></td>
+    <td align="center"><a href="https://github.com/devincd"><img src="https://avatars.githubusercontent.com/u/7844367?v=4" width="64px;" alt=""/><br /><sub><b>devincd</b></sub></a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://www.jianshu.com/u/f2b47e5528d8"><img src="https://avatars.githubusercontent.com/u/9923838?v=4" width="64px;" alt=""/><br /><sub><b>Ming Deng</b></sub></a></td>
+    <td align="center"><a href="https://github.com/cute-angelia"><img src="https://avatars.githubusercontent.com/u/26561606?v=4" width="64px;" alt=""/><br /><sub><b>Angelia</b></sub></a></td>
+    <td align="center"><a href="https://www.yuque.com/wbofeng"><img src="https://avatars.githubusercontent.com/u/54163491?v=4" width="64px;" alt=""/><br /><sub><b>Wbofeng</b></sub></a></td>
+    <td align="center"><a href="https://github.com/clannadxr"><img src="https://avatars.githubusercontent.com/u/9847143?v=4" width="64px;" alt=""/><br /><sub><b>clannadxr</b></sub></a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+

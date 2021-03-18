@@ -38,8 +38,29 @@ func WithEnableAccessInterceptor(enableAccessInterceptor bool) Option {
 	}
 }
 
-func WithEnableAccessInterceptorReply(enableAccessInterceptorReply bool) Option {
+func WithEnableAccessInterceptorRes(enableAccessInterceptorRes bool) Option {
 	return func(c *Container) {
-		c.config.EnableAccessInterceptorReply = enableAccessInterceptorReply
+		c.config.EnableAccessInterceptorRes = enableAccessInterceptorRes
+	}
+}
+
+// WithMaxIdleConns 设置最大空闲连接数
+func WithMaxIdleConns(maxIdleConns int) Option {
+	return func(c *Container) {
+		c.config.MaxIdleConns = maxIdleConns
+	}
+}
+
+// WithMaxIdleConns 设置长连接个数
+func WithMaxIdleConnsPerHost(maxIdleConnsPerHost int) Option {
+	return func(c *Container) {
+		c.config.MaxIdleConnsPerHost = maxIdleConnsPerHost
+	}
+}
+
+// WithEnableKeepAlives 设置是否开启长连接，默认打开
+func WithEnableKeepAlives(enableKeepAlives bool) Option {
+	return func(c *Container) {
+		c.config.EnableKeepAlives = enableKeepAlives
 	}
 }

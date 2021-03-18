@@ -3,9 +3,6 @@ package egin
 import (
 	"bytes"
 	"fmt"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -15,11 +12,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
+	"go.uber.org/zap"
 
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
-	"go.uber.org/zap"
 )
 
 var (
@@ -29,23 +29,21 @@ var (
 	slash     = []byte("/")
 )
 
+// extractAPP 提取header头中的app信息
 func extractAPP(ctx *gin.Context) string {
 	return ctx.Request.Header.Get("app")
 }
 
+// recoverMiddleware 恢复拦截器，记录500信息，以及慢日志信息
 func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var beg = time.Now()
-		var fields = make([]elog.Field, 0, 8)
+		// 为了性能考虑，如果要加日志字段，需要改变slice大小
+		var fields = make([]elog.Field, 0, 15)
 		var brokenPipe bool
 		var event = "normal"
 		defer func() {
 			cost := time.Since(beg)
-
-			// slow log
-			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
-				event = "slow"
-			}
 
 			fields = append(fields,
 				elog.FieldCost(cost),
@@ -60,6 +58,11 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(c.Request.Context())))
 			}
 
+			// slow log
+			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
+				logger.Warn("slow", fields...)
+			}
+
 			if rec := recover(); rec != nil {
 				if ne, ok := rec.(*net.OpError); ok {
 					if se, ok := ne.Err.(*os.SyscallError); ok {
@@ -68,36 +71,34 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 						}
 					}
 				}
+
+				if brokenPipe {
+					// If the connection is dead, we can't write a status to it.
+					c.Error(rec.(error)) // nolint: errcheck
+					c.Abort()
+				} else {
+					c.AbortWithStatus(http.StatusInternalServerError)
+				}
+
 				event = "recover"
-				var err = rec.(error)
+				stack := stack(3)
+
 				fields = append(fields,
 					elog.FieldEvent(event),
-					zap.ByteString("stack", stack(3)),
-					elog.FieldErr(err),
-					elog.FieldCode(int32(http.StatusInternalServerError)),
+					zap.ByteString("stack", stack),
+					elog.FieldErrAny(rec),
+					elog.FieldCode(int32(c.Writer.Status())),
 				)
 				logger.Error("access", fields...)
-				// If the connection is dead, we can't write a status to it.
-				if brokenPipe {
-					c.Error(err) // nolint: errcheck
-					c.Abort()
-					return
-				}
-				c.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}
 
 			fields = append(fields,
 				elog.FieldEvent(event),
-				zap.String("err", c.Errors.ByType(gin.ErrorTypePrivate).String()),
+				elog.FieldErrAny(c.Errors.ByType(gin.ErrorTypePrivate).String()),
 				elog.FieldCode(int32(c.Writer.Status())),
 			)
-
-			if event == "slow" {
-				logger.Warn("access", fields...)
-			} else {
-				logger.Info("access", fields...)
-			}
+			logger.Info("access", fields...)
 		}()
 		c.Next()
 	}

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -60,7 +61,6 @@ func traceUnaryServerInterceptor(ctx context.Context, req interface{}, info *grp
 	)
 
 	defer span.Finish()
-
 	resp, err := handler(ctx, req)
 
 	if err != nil {
@@ -160,16 +160,13 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
 		var beg = time.Now()
-		var fields = make([]elog.Field, 0, 8)
+		// 为了性能考虑，如果要加日志字段，需要改变slice大小
+		var fields = make([]elog.Field, 0, 15)
 		var event = "normal"
 
 		// 此处必须使用defer来recover handler内部可能出现的panic
 		defer func() {
 			cost := time.Since(beg)
-			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
-				event = "slow"
-			}
-
 			if rec := recover(); rec != nil {
 				switch rec := rec.(type) {
 				case error:
@@ -192,6 +189,11 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				elog.FieldPeerName(getPeerName(ctx)),
 				elog.FieldPeerIP(getPeerIP(ctx)),
 			)
+
+			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
+			}
+
 			if config.EnableAccessInterceptorReq {
 				fields = append(fields, elog.Any("req", json.RawMessage(xstring.Json(req))))
 			}
@@ -199,16 +201,16 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				fields = append(fields, elog.Any("res", json.RawMessage(xstring.Json(res))))
 			}
 
+			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
+				logger.Warn("slow", fields...)
+			}
+
 			if err != nil {
 				fields = append(fields, elog.FieldErr(err))
 				logger.Error("access", fields...)
 				return
 			}
-			if event == "slow" {
-				logger.Warn("access", fields...)
-			} else {
-				logger.Info("access", fields...)
-			}
+			logger.Info("access", fields...)
 		}()
 
 		return handler(ctx, req)

@@ -125,6 +125,9 @@ func newAliCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 		ali.WithApiRetryCount(config.AliApiRetryCount),
 		ali.WithApiRetryWaitTime(config.AliApiRetryWaitTime),
 		ali.WithApiRetryMaxWaitTime(config.AliApiRetryMaxWaitTime),
+		ali.WithApiMaxIdleConns(config.AliApiMaxIdleConns),
+		ali.WithApiIdleConnTimeout(config.AliApiIdleConnTimeout),
+		ali.WithApiMaxIdleConnsPerHost(config.AliApiMaxIdleConnsPerHost),
 		ali.WithFallbackCore(fallbackCore),
 	)
 	return core, func() (err error) {
@@ -466,4 +469,14 @@ func (logger *Component) With(fields ...Field) *Component {
 		sugar:   desugarLogger.Sugar(),
 		config:  logger.config,
 	}
+}
+
+// GetConfigDir 获取日志路径
+func (logger *Component) GetConfigDir() string {
+	return logger.config.Dir
+}
+
+// GetConfigName 获取日志名称
+func (logger *Component) GetConfigName() string {
+	return logger.config.Name
 }

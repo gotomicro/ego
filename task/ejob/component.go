@@ -1,10 +1,13 @@
 package ejob
 
 import (
+	"context"
+	"time"
+
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/standard"
-	"time"
 )
 
 func init() {
@@ -47,13 +50,19 @@ func (c *Component) Init() error {
 }
 
 func (c *Component) Start() error {
+	span, ctx := etrace.StartSpanFromContext(
+		context.Background(),
+		"ego-job",
+	)
+	defer span.Finish()
+	traceId := etrace.ExtractTraceID(ctx)
 	beg := time.Now()
-	c.logger.Info("start ejob", elog.FieldName(c.name))
-	err := c.config.startFunc()
+	c.logger.Info("start ejob", elog.FieldName(c.name), elog.FieldTid(traceId))
+	err := c.config.startFunc(ctx)
 	if err != nil {
-		c.logger.Error("stop ejob", elog.FieldName(c.name), elog.FieldErr(err), elog.FieldCost(time.Since(beg)))
+		c.logger.Error("stop ejob", elog.FieldName(c.name), elog.FieldErr(err), elog.FieldCost(time.Since(beg)), elog.FieldTid(traceId))
 	} else {
-		c.logger.Info("stop ejob", elog.FieldName(c.name), elog.FieldCost(time.Since(beg)))
+		c.logger.Info("stop ejob", elog.FieldName(c.name), elog.FieldCost(time.Since(beg)), elog.FieldTid(traceId))
 	}
 	return err
 }

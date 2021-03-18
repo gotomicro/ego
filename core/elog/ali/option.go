@@ -92,6 +92,24 @@ func WithApiRetryMaxWaitTime(apiRetryMaxWaitTime time.Duration) Option {
 	}
 }
 
+func WithApiMaxIdleConns(apiMaxIdleConns int) Option {
+	return func(c *config) {
+		c.apiMaxIdleConns = apiMaxIdleConns
+	}
+}
+
+func WithApiIdleConnTimeout(apiIdleConnTimeout time.Duration) Option {
+	return func(c *config) {
+		c.apiIdleConnTimeout = apiIdleConnTimeout
+	}
+}
+
+func WithApiMaxIdleConnsPerHost(apiMaxIdleConnsPerHost int) Option {
+	return func(c *config) {
+		c.apiMaxIdleConnsPerHost = apiMaxIdleConnsPerHost
+	}
+}
+
 func WithFallbackCore(core zapcore.Core) Option {
 	return func(c *config) {
 		c.fallbackCore = core

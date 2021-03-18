@@ -1,24 +1,17 @@
 package file
 
 import (
-	"encoding/json"
-	"github.com/gotomicro/ego/core/econf"
+	"github.com/fsnotify/fsnotify"
 	"github.com/gotomicro/ego/core/econf/manager"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/util/xgo"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/BurntSushi/toml"
-	"github.com/fsnotify/fsnotify"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/util/xgo"
 )
-
-// DataSourceFile defines file scheme
-const DataSourceFile = "file"
 
 // fileDataSource file provider.
 type fileDataSource struct {
@@ -29,29 +22,15 @@ type fileDataSource struct {
 	logger      *elog.Component
 }
 
-func Register() {
-	manager.Register("file", &fileDataSource{})
-}
-
-func ExtParser(configAddr string) (econf.Unmarshaller, string) {
-	ext := filepath.Ext(configAddr)
-	switch ext {
-	case ".json":
-		return json.Unmarshal, "json"
-	case ".toml":
-		return toml.Unmarshal, "toml"
-	default:
-		// TODO 处理configAddr为ETCD的情况？
-		elog.EgoLogger.Panic("data source: invalid configuration type")
-	}
-	return nil, ""
+func init() {
+	manager.Register(manager.DefaultScheme, &fileDataSource{})
 }
 
 // Parse
 func (fp *fileDataSource) Parse(path string, watch bool) {
 	absolutePath, err := filepath.Abs(path)
 	if err != nil {
-		elog.Panic("new datasource", elog.Any("err", err))
+		elog.Panic("new datasource", elog.FieldErr(err))
 	}
 	dir := checkAndGetParentDir(absolutePath)
 	fp.path = absolutePath
@@ -84,7 +63,7 @@ func (fp *fileDataSource) IsConfigChanged() <-chan struct{} {
 func (fp *fileDataSource) watch() {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
-		elog.Fatal("new file watcher", elog.FieldComponent("file datasource"), elog.Any("err", err))
+		elog.Fatal("new file watcher", elog.FieldComponent("file datasource"), elog.FieldErr(err))
 	}
 	defer w.Close()
 	done := make(chan bool)
@@ -110,7 +89,7 @@ func (fp *fileDataSource) watch() {
 				}
 			case err := <-w.Errors:
 				// log.Println("error: ", err)
-				elog.Error("read watch error", elog.FieldComponent("file datasource"), elog.Any("err", err))
+				elog.Error("read watch error", elog.FieldComponent("file datasource"), elog.FieldErr(err))
 			}
 		}
 	}()

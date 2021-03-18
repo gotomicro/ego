@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ const PackageName = "server.egin"
 
 // Component ...
 type Component struct {
+	mu     sync.Mutex
 	name   string
 	config *Config
 	logger *elog.Component
@@ -73,7 +75,6 @@ func (c *Component) Upgrade(ws *WebSocket) gin.IRoutes {
 
 // Serve implements server.Component interface.
 func (c *Component) Start() error {
-
 	for _, route := range c.Engine.Routes() {
 		info, flag := c.routerCommentMap[commentUniqKey(route.Method, route.Path)]
 		// 如果有注释，日志打出来
@@ -83,10 +84,13 @@ func (c *Component) Start() error {
 			c.logger.Info("add route", elog.FieldMethod(route.Method), elog.String("path", route.Path))
 		}
 	}
+	// 因为start和stop在多个goroutine里，需要对Server上写锁
+	c.mu.Lock()
 	c.Server = &http.Server{
 		Addr:    c.config.Address(),
 		Handler: c,
 	}
+	c.mu.Unlock()
 	err := c.Server.Serve(c.listener)
 	if err == http.ErrServerClosed {
 		return nil
@@ -97,13 +101,19 @@ func (c *Component) Start() error {
 // Stop implements server.Component interface
 // it will terminate gin server immediately
 func (c *Component) Stop() error {
-	return c.Server.Close()
+	c.mu.Lock()
+	err := c.Server.Close()
+	c.mu.Unlock()
+	return err
 }
 
 // GracefulStop implements server.Component interface
 // it will stop gin server gracefully
 func (c *Component) GracefulStop(ctx context.Context) error {
-	return c.Server.Shutdown(ctx)
+	c.mu.Lock()
+	err := c.Server.Shutdown(ctx)
+	c.mu.Unlock()
+	return err
 }
 
 // Info returns server info, used by governor and consumer balancer

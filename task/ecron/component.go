@@ -3,10 +3,11 @@ package ecron
 import (
 	"context"
 	"fmt"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/standard"
 	"sync/atomic"
 	"time"
+
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/standard"
 
 	"github.com/robfig/cron/v3"
 
@@ -47,16 +48,18 @@ type (
 	Job = cron.Job
 	//NamedJob ..
 	NamedJob interface {
-		Run() error
+		Run(ctx context.Context) error
 		Name() string
 	}
 )
 
 // FuncJob ...
-type FuncJob func() error
+type FuncJob func(ctx context.Context) error
 
 // Run ...
-func (f FuncJob) Run() error { return f() }
+func (f FuncJob) Run(ctx context.Context) error {
+	return f(ctx)
+}
 
 // Name ...
 func (f FuncJob) Name() string { return xstring.FunctionName(f) }
@@ -86,7 +89,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 // Schedule ...
 func (c *Component) Schedule(schedule Schedule, job NamedJob) EntryID {
-	if c.config.ImmediatelyRun {
+	if c.config.EnableImmediatelyRun {
 		schedule = &immediatelyScheduler{
 			Schedule: schedule,
 		}
@@ -126,13 +129,13 @@ func (c *Component) AddJob(spec string, cmd NamedJob) (EntryID, error) {
 }
 
 // AddFunc ...
-func (c *Component) AddFunc(spec string, cmd func() error) (EntryID, error) {
+func (c *Component) AddFunc(spec string, cmd func(ctx context.Context) error) (EntryID, error) {
 	return c.AddJob(spec, FuncJob(cmd))
 }
 
 // Start ...
 func (c *Component) Start() error {
-	if c.config.DistributedTask {
+	if c.config.EnableDistributedTask {
 		// 如果分布式的定时任务，那么就需要抢占锁
 		go func() {
 			var err error
@@ -142,7 +145,7 @@ func (c *Component) Start() error {
 				defer cancel()
 				err = c.config.locker.Lock(ctx, c.lockerName(), c.config.LockTTL)
 				if err != nil {
-					c.logger.Info("mutex lock", elog.String("err", err.Error()))
+					c.logger.Info("mutex lock", elog.FieldErr(err))
 					continue
 				}
 
@@ -172,12 +175,12 @@ func (c *Component) Start() error {
 // Stop ...
 func (c *Component) Stop() error {
 	_ = c.Cron.Stop()
-	if c.config.DistributedTask {
+	if c.config.EnableDistributedTask {
 		ctx, cancel := context.WithTimeout(context.Background(), c.config.WaitUnlockTime)
 		defer cancel()
 		err := c.config.locker.Unlock(ctx, c.lockerName())
 		if err != nil {
-			c.logger.Info("mutex unlock", elog.String("err", err.Error()))
+			c.logger.Info("mutex unlock", elog.FieldErr(err))
 			return fmt.Errorf("cron stop err: %w", err)
 		}
 	}

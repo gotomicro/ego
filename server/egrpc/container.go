@@ -1,11 +1,12 @@
 package egrpc
 
 import (
+	"google.golang.org/grpc"
+
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/util/xnet"
-	"google.golang.org/grpc"
 )
 
 type Option func(c *Container)
@@ -86,9 +87,15 @@ func WithUnaryInterceptor(interceptors ...grpc.UnaryServerInterceptor) Option {
 
 // Build ...
 func (c *Container) Build(options ...Option) *Component {
+	var streamInterceptors []grpc.StreamServerInterceptor
+	var unaryInterceptors []grpc.UnaryServerInterceptor
+	// trace 必须在最外层，否则无法取到trace信息，传递到其他中间件
 	if c.config.EnableTraceInterceptor {
-		options = append(options, WithUnaryInterceptor(traceUnaryServerInterceptor))
-		options = append(options, WithStreamInterceptor(traceStreamServerInterceptor))
+		unaryInterceptors = []grpc.UnaryServerInterceptor{traceUnaryServerInterceptor, defaultUnaryServerInterceptor(c.logger, c.config)}
+		streamInterceptors = []grpc.StreamServerInterceptor{traceStreamServerInterceptor, defaultStreamServerInterceptor(c.logger, c.config)}
+	} else {
+		unaryInterceptors = []grpc.UnaryServerInterceptor{defaultUnaryServerInterceptor(c.logger, c.config)}
+		streamInterceptors = []grpc.StreamServerInterceptor{defaultStreamServerInterceptor(c.logger, c.config)}
 	}
 
 	if c.config.EnableMetricInterceptor {
@@ -100,13 +107,13 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 
-	var streamInterceptors = append(
-		[]grpc.StreamServerInterceptor{defaultStreamServerInterceptor(c.logger, c.config)},
+	streamInterceptors = append(
+		streamInterceptors,
 		c.config.streamInterceptors...,
 	)
 
-	var unaryInterceptors = append(
-		[]grpc.UnaryServerInterceptor{defaultUnaryServerInterceptor(c.logger, c.config)},
+	unaryInterceptors = append(
+		unaryInterceptors,
 		c.config.unaryInterceptors...,
 	)
 

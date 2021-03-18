@@ -3,10 +3,10 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/standard"
 
 	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/standard"
 )
 
 type Option func(c *ServiceInfo)
