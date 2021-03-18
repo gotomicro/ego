@@ -1,16 +1,18 @@
 package ejob
 
+import (
+	"context"
+)
+
 // Config ...
 type Config struct {
 	Name      string
-	startFunc func() error
-	stopFunc  func() error
+	startFunc func(ctx context.Context) error
 }
 
 func DefaultConfig() *Config {
 	return &Config{
 		Name:      "",
 		startFunc: nil,
-		stopFunc:  nil,
 	}
 }

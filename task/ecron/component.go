@@ -3,10 +3,11 @@ package ecron
 import (
 	"context"
 	"fmt"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/standard"
 	"sync/atomic"
 	"time"
+
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/standard"
 
 	"github.com/robfig/cron/v3"
 
@@ -47,16 +48,18 @@ type (
 	Job = cron.Job
 	//NamedJob ..
 	NamedJob interface {
-		Run() error
+		Run(ctx context.Context) error
 		Name() string
 	}
 )
 
 // FuncJob ...
-type FuncJob func() error
+type FuncJob func(ctx context.Context) error
 
 // Run ...
-func (f FuncJob) Run() error { return f() }
+func (f FuncJob) Run(ctx context.Context) error {
+	return f(ctx)
+}
 
 // Name ...
 func (f FuncJob) Name() string { return xstring.FunctionName(f) }
@@ -126,7 +129,7 @@ func (c *Component) AddJob(spec string, cmd NamedJob) (EntryID, error) {
 }
 
 // AddFunc ...
-func (c *Component) AddFunc(spec string, cmd func() error) (EntryID, error) {
+func (c *Component) AddFunc(spec string, cmd func(ctx context.Context) error) (EntryID, error) {
 	return c.AddJob(spec, FuncJob(cmd))
 }
 
