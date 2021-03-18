@@ -1,3 +1,4 @@
+[trace.jaeger]
 [cron.test]
 enableDistributedTask = false          # 是否分布式任务，默认否，如果存在分布式任务，会只执行该定时人物
 enableImmediatelyRun = false        # 是否立刻执行，默认否

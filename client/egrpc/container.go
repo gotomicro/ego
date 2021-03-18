@@ -30,7 +30,6 @@ func Load(key string) *Container {
 	c.logger = c.logger.With(elog.FieldComponentName(key))
 	c.logger = c.logger.With(elog.FieldAddr(c.config.Addr))
 	c.name = key
-
 	return c
 }
 

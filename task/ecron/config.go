@@ -6,11 +6,14 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/emetric"
-	"github.com/gotomicro/ego/core/util/xtime"
+	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
+
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/util/xtime"
 )
 
 // Config ...
@@ -79,8 +82,20 @@ func (wj wrappedJob) Run() {
 }
 
 func (wj wrappedJob) run() (err error) {
+	span, ctx := etrace.StartSpanFromContext(
+		context.Background(),
+		"ego-cron",
+	)
+	defer span.Finish()
+	traceId := etrace.ExtractTraceID(ctx)
 	emetric.JobHandleCounter.Inc("cron", wj.Name(), "begin")
 	var fields = []elog.Field{zap.String("name", wj.Name())}
+	// 如果设置了链路，增加链路信息
+	if opentracing.IsGlobalTracerRegistered() {
+		fields = append(fields, elog.FieldTid(traceId))
+	}
+
+	wj.logger.Info("cron start", fields...)
 	var beg = time.Now()
 	defer func() {
 		if rec := recover(); rec != nil {
@@ -97,12 +112,12 @@ func (wj wrappedJob) run() (err error) {
 		}
 		if err != nil {
 			fields = append(fields, elog.FieldErr(err), elog.Duration("cost", time.Since(beg)))
-			wj.logger.Error("run", fields...)
+			wj.logger.Error("cron end", fields...)
 		} else {
-			wj.logger.Info("run", fields...)
+			wj.logger.Info("cron end", fields...)
 		}
 		emetric.JobHandleHistogram.Observe(time.Since(beg).Seconds(), "cron", wj.Name())
 	}()
 
-	return wj.NamedJob.Run()
+	return wj.NamedJob.Run(ctx)
 }
