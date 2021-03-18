@@ -16,8 +16,10 @@ import (
 	"github.com/gotomicro/ego/core/util/xmap"
 )
 
+// PackageName 包名
 const PackageName = "core.econf"
 
+// Configuration 配置
 type Configuration struct {
 	mu        sync.RWMutex
 	override  map[string]interface{}
@@ -69,9 +71,9 @@ func (c *Configuration) OnChange(fn func(*Configuration)) {
 }
 
 // LoadFromDataSource ...
-func (c *Configuration) LoadFromDataSource(ds DataSource, unmarshaller Unmarshaller, opts ...GetOption) error {
+func (c *Configuration) LoadFromDataSource(ds DataSource, unmarshaller Unmarshaller, opts ...Option) error {
 	for _, opt := range opts {
-		opt(&defaultGetOptions)
+		opt(&defaultContainer)
 	}
 
 	content, err := ds.ReadConfig()
@@ -107,7 +109,7 @@ func (c *Configuration) Load(content []byte, unmarshal Unmarshaller) error {
 	return c.apply(configuration)
 }
 
-// Load loads configuration from provided data source.
+// LoadFromReader loads configuration from provided data source.
 func (c *Configuration) LoadFromReader(reader io.Reader, unmarshaller Unmarshaller) error {
 	content, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -332,7 +334,7 @@ func (c *Configuration) UnmarshalWithExpect(key string, expect interface{}) inte
 }
 
 // UnmarshalKey takes a single key and unmarshal it into a Struct with default defaultConfiguration.
-func UnmarshalKey(key string, rawVal interface{}, opts ...GetOption) error {
+func UnmarshalKey(key string, rawVal interface{}, opts ...Option) error {
 	return defaultConfiguration.UnmarshalKey(key, rawVal, opts...)
 }
 
@@ -340,8 +342,8 @@ func UnmarshalKey(key string, rawVal interface{}, opts ...GetOption) error {
 var ErrInvalidKey = errors.New("invalid key, maybe not exist in config")
 
 // UnmarshalKey takes a single key and unmarshal it into a Struct.
-func (c *Configuration) UnmarshalKey(key string, rawVal interface{}, opts ...GetOption) error {
-	var options = defaultGetOptions
+func (c *Configuration) UnmarshalKey(key string, rawVal interface{}, opts ...Option) error {
+	var options = defaultContainer
 	for _, opt := range opts {
 		opt(&options)
 	}

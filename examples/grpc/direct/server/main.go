@@ -22,10 +22,12 @@ func main() {
 	}
 }
 
+// Greeter ...
 type Greeter struct {
 	server *egrpc.Component
 }
 
+// SayHello ...
 func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
 	if request.Name == "error" {
 		return nil, status.Error(codes.Unavailable, "error")

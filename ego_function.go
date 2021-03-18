@@ -22,7 +22,7 @@ import (
 )
 
 // waitSignals wait signal
-func (e *ego) waitSignals() {
+func (e *Ego) waitSignals() {
 	sig := make(chan os.Signal, 2)
 	signal.Notify(
 		sig,
@@ -41,7 +41,7 @@ func (e *ego) waitSignals() {
 	}()
 }
 
-func (e *ego) startServers() error {
+func (e *Ego) startServers() error {
 	// start multi servers
 	for _, s := range e.servers {
 		s := s
@@ -61,7 +61,7 @@ func (e *ego) startServers() error {
 	return nil
 }
 
-func (e *ego) startCrons() error {
+func (e *Ego) startCrons() error {
 	for _, w := range e.crons {
 		w := w
 		e.cycle.Run(func() error {
@@ -72,7 +72,7 @@ func (e *ego) startCrons() error {
 }
 
 // todo handle error
-func (e *ego) startJobs() error {
+func (e *Ego) startJobs() error {
 	if len(e.jobs) == 0 {
 		return nil
 	}
@@ -141,29 +141,29 @@ func loadConfig() error {
 	}
 
 	// 如果不是，就要加载文件，加载不到panic
-	if err := econf.LoadFromDataSource(provider, parser, econf.TagName(tag)); err != nil {
+	if err := econf.LoadFromDataSource(provider, parser, econf.WithTagName(tag)); err != nil {
 		elog.EgoLogger.Panic("data source: load config", elog.FieldComponent(econf.PackageName), elog.FieldErrKind("unmarshal config err"), elog.FieldErr(err))
 	}
 	elog.EgoLogger.Info("init config", elog.FieldComponent(econf.PackageName), elog.String("addr", configAddr))
 	return nil
 }
 
-// initLogger init application and ego logger
-func (e *ego) initLogger() error {
+// initLogger init application and Ego logger
+func (e *Ego) initLogger() error {
 	if econf.Get(e.opts.configPrefix+"logger.default") != nil {
 		elog.DefaultLogger = elog.Load(e.opts.configPrefix + "logger.default").Build()
 		elog.EgoLogger.Info("reinit default logger", elog.FieldComponent(elog.PackageName))
 	}
 
-	if econf.Get(e.opts.configPrefix+"logger.ego") != nil {
-		elog.EgoLogger = elog.Load(e.opts.configPrefix + "logger.ego").Build(elog.WithFileName(elog.EgoLoggerName))
-		elog.EgoLogger.Info("reinit ego logger", elog.FieldComponent(elog.PackageName))
+	if econf.Get(e.opts.configPrefix+"logger.Ego") != nil {
+		elog.EgoLogger = elog.Load(e.opts.configPrefix + "logger.Ego").Build(elog.WithFileName(elog.EgoLoggerName))
+		elog.EgoLogger.Info("reinit Ego logger", elog.FieldComponent(elog.PackageName))
 	}
 	return nil
 }
 
 // initTracer init global tracer
-func (e *ego) initTracer() error {
+func (e *Ego) initTracer() error {
 	if econf.Get(e.opts.configPrefix+"trace.jaeger") != nil {
 		container := ejaeger.Load(e.opts.configPrefix + "trace.jaeger")
 		tracer := container.Build()
@@ -178,7 +178,7 @@ func (e *ego) initTracer() error {
 
 // initMaxProcs init
 func initMaxProcs() error {
-	if maxProcs := econf.GetInt("ego.maxProc"); maxProcs != 0 {
+	if maxProcs := econf.GetInt("Ego.maxProc"); maxProcs != 0 {
 		runtime.GOMAXPROCS(maxProcs)
 	} else {
 		if _, err := maxprocs.Set(); err != nil {
@@ -191,12 +191,12 @@ func initMaxProcs() error {
 
 func printLogger() error {
 	elog.EgoLogger.Info("init default logger", elog.FieldComponent(elog.PackageName))
-	elog.EgoLogger.Info("init ego logger", elog.FieldComponent(elog.PackageName))
+	elog.EgoLogger.Info("init Ego logger", elog.FieldComponent(elog.PackageName))
 	return nil
 }
 
 // printBanner init
-func (e *ego) printBanner() error {
+func (e *Ego) printBanner() error {
 	if e.opts.disableBanner {
 		return nil
 	}

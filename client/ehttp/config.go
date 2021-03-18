@@ -7,6 +7,7 @@ import (
 	"github.com/gotomicro/ego/core/util/xtime"
 )
 
+// Config HTTP配置选项
 type Config struct {
 	Addr                       string        // 连接地址
 	Debug                      bool          // 是否开启调试，默认不开启，开启后并加上export EGO_DEBUG=true，可以看到每次请求，配置名、地址、耗时、请求数据、响应数据

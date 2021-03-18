@@ -6,19 +6,22 @@ import (
 	"go.uber.org/zap"
 )
 
+// FieldComponent 设置组件
 func FieldComponent(value string) Field {
 	return String("comp", value)
 }
 
+// FieldComponentName 设置组件配置名
 func FieldComponentName(value string) Field {
 	return String("compName", value)
 }
 
-// FieldApp ...
+// FieldApp 设置应用名
 func FieldApp(value string) Field {
 	return String("app", value)
 }
 
+// FieldAddr 设置地址
 func FieldAddr(value string) Field {
 	return String("addr", value)
 }
@@ -43,15 +46,17 @@ func FieldCode(value int32) Field {
 	return Int32("code", value)
 }
 
+// FieldTid 设置链路id
 func FieldTid(value string) Field {
 	return String("tid", value)
 }
 
+// FieldSize ...
 func FieldSize(value int32) Field {
 	return Int32("size", value)
 }
 
-// 耗时时间
+// FieldCost 耗时时间
 func FieldCost(value time.Duration) Field {
 	return zap.Float64("cost", float64(value.Microseconds())/1000)
 }
@@ -81,11 +86,12 @@ func FieldErr(err error) Field {
 	return zap.Error(err)
 }
 
-// FieldErrorAny
+// FieldErrAny ...
 func FieldErrAny(err interface{}) Field {
 	return zap.Any("error", err)
 }
 
+// FieldDescription ...
 func FieldDescription(value string) Field {
 	return String("desc", value)
 }
@@ -110,14 +116,17 @@ func FieldEvent(value string) Field {
 	return String("event", value)
 }
 
-func FieldIp(value string) Field {
+// FieldIP ...
+func FieldIP(value string) Field {
 	return String("ip", value)
 }
 
+// FieldPeerIP ...
 func FieldPeerIP(value string) Field {
 	return String("peerIp", value)
 }
 
+// FieldPeerName ...
 func FieldPeerName(value string) Field {
 	return String("peerName", value)
 }

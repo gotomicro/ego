@@ -2,13 +2,17 @@ package egrpc
 
 import (
 	"context"
-	"github.com/gotomicro/ego/core/elog"
-	"google.golang.org/grpc"
 	"time"
+
+	"google.golang.org/grpc"
+
+	"github.com/gotomicro/ego/core/elog"
 )
 
+// PackageName 设置包名
 const PackageName = "client.egrpc"
 
+// Component 组件
 type Component struct {
 	name   string
 	config *Config

@@ -1,15 +1,16 @@
 package ejaeger
 
 import (
-	"github.com/gotomicro/ego/core/eapp"
 	"os"
 	"time"
 
-	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/elog"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	jconfig "github.com/uber/jaeger-client-go/config"
+
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/elog"
 )
 
 // Config ...
@@ -25,7 +26,7 @@ type Config struct {
 	closer           func() error
 }
 
-// RawConfig ...
+// Load 加载配置key
 func Load(key string) *Config {
 	var config = DefaultConfig()
 	if err := econf.UnmarshalKey(key, config); err != nil {
@@ -104,6 +105,7 @@ func (config *Config) Build(options ...jconfig.Option) opentracing.Tracer {
 	return tracer
 }
 
+// Stop 停止
 func (config *Config) Stop() error {
 	return config.closer()
 }

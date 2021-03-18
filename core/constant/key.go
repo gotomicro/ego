@@ -10,6 +10,6 @@ const (
 	// KeyConsumerConfig ...
 	KeyConsumerConfig = "__consumer_config_"
 
-	// KeyServiceInfo
+	// KeyServiceInfo ...
 	KeyServiceInfo = "__service_info_"
 )

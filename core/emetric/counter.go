@@ -14,7 +14,7 @@ type CounterVecOpts struct {
 }
 
 // Build ...
-func (opts CounterVecOpts) Build() *counterVec {
+func (opts CounterVecOpts) Build() *CounterVec {
 	vec := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: opts.Namespace,
@@ -23,13 +23,13 @@ func (opts CounterVecOpts) Build() *counterVec {
 			Help:      opts.Help,
 		}, opts.Labels)
 	prometheus.MustRegister(vec)
-	return &counterVec{
+	return &CounterVec{
 		CounterVec: vec,
 	}
 }
 
 // NewCounterVec ...
-func NewCounterVec(name string, labels []string) *counterVec {
+func NewCounterVec(name string, labels []string) *CounterVec {
 	return CounterVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      name,
@@ -38,16 +38,17 @@ func NewCounterVec(name string, labels []string) *counterVec {
 	}.Build()
 }
 
-type counterVec struct {
+// CounterVec ...
+type CounterVec struct {
 	*prometheus.CounterVec
 }
 
 // Inc ...
-func (counter *counterVec) Inc(labels ...string) {
+func (counter *CounterVec) Inc(labels ...string) {
 	counter.WithLabelValues(labels...).Inc()
 }
 
 // Add ...
-func (counter *counterVec) Add(v float64, labels ...string) {
+func (counter *CounterVec) Add(v float64, labels ...string) {
 	counter.WithLabelValues(labels...).Add(v)
 }

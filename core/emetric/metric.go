@@ -15,28 +15,27 @@ var (
 	TypeGRPCStream = "stream"
 	// TypeRedis ...
 	TypeRedis = "redis"
-	TypeGorm  = "gorm"
-	// TypeRocketMQ ...
-	TypeRocketMQ = "rocketmq"
+	// TypeGorm ...
+	TypeGorm = "gorm"
 	// TypeWebsocket ...
 	TypeWebsocket = "ws"
 
 	// TypeMySQL ...
 	TypeMySQL = "mysql"
 
-	// CodeJob
+	// CodeJobSuccess ...
 	CodeJobSuccess = "ok"
 	// CodeJobFail ...
 	CodeJobFail = "fail"
 	// CodeJobReentry ...
 	CodeJobReentry = "reentry"
 
-	// CodeCache
+	// CodeCacheMiss ...
 	CodeCacheMiss = "miss"
 	// CodeCacheHit ...
 	CodeCacheHit = "hit"
 
-	// Namespace
+	// DefaultNamespace ...
 	DefaultNamespace = "ego"
 )
 
@@ -82,7 +81,7 @@ var (
 		Name:      "job_handle_seconds",
 		Labels:    []string{"type", "name"},
 	}.Build()
-
+	// LibHandleHistogram ...
 	LibHandleHistogram = HistogramVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "lib_handle_seconds",
@@ -94,7 +93,7 @@ var (
 		Name:      "lib_handle_total",
 		Labels:    []string{"type", "method", "address", "code"},
 	}.Build()
-
+	// LibHandleSummary ...
 	LibHandleSummary = SummaryVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "lib_handle_stats",

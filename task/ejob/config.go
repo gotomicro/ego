@@ -10,6 +10,7 @@ type Config struct {
 	startFunc func(ctx context.Context) error
 }
 
+// DefaultConfig 默认配置
 func DefaultConfig() *Config {
 	return &Config{
 		Name:      "",

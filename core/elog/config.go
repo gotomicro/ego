@@ -30,14 +30,14 @@ type Config struct {
 	AliEndpoint               string        // [aliWriter]阿里云sls endpoint，必填
 	AliProject                string        // [aliWriter]阿里云sls Project名称，必填
 	AliLogstore               string        // [aliWriter]阿里云sls logstore名称，必填
-	AliApiBulkSize            int           // [aliWriter]阿里云sls API单次请求发送最大日志条数，最少256条，默认256条
-	AliApiTimeout             time.Duration // [aliWriter]阿里云sls API接口超时，默认3秒
-	AliApiRetryCount          int           // [aliWriter]阿里云sls API接口重试次数，默认3次
-	AliApiRetryWaitTime       time.Duration // [aliWriter]阿里云sls API接口重试默认等待间隔，默认1秒
-	AliApiRetryMaxWaitTime    time.Duration // [aliWriter]阿里云sls API接口重试最大等待间隔，默认3秒
-	AliApiMaxIdleConnsPerHost int           // [aliWriter]阿里云sls 单个Host HTTP最大空闲连接数，应当大于AliApiMaxIdleConns
-	AliApiMaxIdleConns        int           // [aliWriter]阿里云sls HTTP最大空闲连接数
-	AliApiIdleConnTimeout     time.Duration // [aliWriter]阿里云sls HTTP空闲连接保活时间
+	AliAPIBulkSize            int           // [aliWriter]阿里云sls API单次请求发送最大日志条数，最少256条，默认256条
+	AliAPITimeout             time.Duration // [aliWriter]阿里云sls API接口超时，默认3秒
+	AliAPIRetryCount          int           // [aliWriter]阿里云sls API接口重试次数，默认3次
+	AliAPIRetryWaitTime       time.Duration // [aliWriter]阿里云sls API接口重试默认等待间隔，默认1秒
+	AliAPIRetryMaxWaitTime    time.Duration // [aliWriter]阿里云sls API接口重试最大等待间隔，默认3秒
+	AliAPIMaxIdleConnsPerHost int           // [aliWriter]阿里云sls 单个Host HTTP最大空闲连接数，应当大于AliApiMaxIdleConns
+	AliAPIMaxIdleConns        int           // [aliWriter]阿里云sls HTTP最大空闲连接数
+	AliAPIIdleConnTimeout     time.Duration // [aliWriter]阿里云sls HTTP空闲连接保活时间
 
 	fields        []zap.Field // 日志初始化字段
 	CallerSkip    int
@@ -74,15 +74,15 @@ func DefaultConfig() *Config {
 		CallerSkip:                1,
 		EnableAddCaller:           false,
 		EnableAsync:               true,
-		encoderConfig:             DefaultZapConfig(),
+		encoderConfig:             defaultZapConfig(),
 		Writer:                    writerRotateFile,
-		AliApiBulkSize:            256,
-		AliApiTimeout:             3 * time.Second,
-		AliApiRetryCount:          3,
-		AliApiRetryWaitTime:       1 * time.Second,
-		AliApiRetryMaxWaitTime:    3 * time.Second,
-		AliApiMaxIdleConnsPerHost: 20,
-		AliApiMaxIdleConns:        25,
-		AliApiIdleConnTimeout:     30 * time.Second,
+		AliAPIBulkSize:            256,
+		AliAPITimeout:             3 * time.Second,
+		AliAPIRetryCount:          3,
+		AliAPIRetryWaitTime:       1 * time.Second,
+		AliAPIRetryMaxWaitTime:    3 * time.Second,
+		AliAPIMaxIdleConnsPerHost: 20,
+		AliAPIMaxIdleConns:        25,
+		AliAPIIdleConnTimeout:     30 * time.Second,
 	}
 }

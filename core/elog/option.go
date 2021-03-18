@@ -1,17 +1,23 @@
 package elog
 
+// Option 可选项
+type Option func(c *Container)
+
+// WithFileName 设置文件名
 func WithFileName(name string) Option {
 	return func(c *Container) {
 		c.config.Name = name
 	}
 }
 
+// WithDebug 设置在命令行显示
 func WithDebug(debug bool) Option {
 	return func(c *Container) {
 		c.config.Debug = debug
 	}
 }
 
+// WithLevel 设置级别
 func WithLevel(level string) Option {
 	return func(c *Container) {
 		c.config.Level = level

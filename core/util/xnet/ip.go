@@ -22,7 +22,7 @@ func GetLocalIP() (string, error) {
 	return "", errors.New("unable to determine locla ip")
 }
 
-// GetLocalIP ...
+// GetLocalMainIP ...
 func GetLocalMainIP() (string, int, error) {
 	// UDP Connect, no handshake
 	conn, err := net.Dial("udp", "8.8.8.8:8")

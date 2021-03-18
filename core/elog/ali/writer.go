@@ -33,6 +33,7 @@ const (
 	apiBulkMinSize = 256
 )
 
+// LogContent ...
 type LogContent = pb.Log_Content
 
 // config is the config for Ali Log

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-
+	// 引入file的config协议
 	_ "github.com/gotomicro/ego/core/econf/file"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
@@ -18,11 +18,11 @@ import (
 	"github.com/gotomicro/ego/task/ejob"
 )
 
-// Ego分为三大部分
+// Ego 分为三大部分
 // 第一部分 系统数据：生命周期，配置前缀，锁，日志，错误
 // 第二部分 运行程序：系统初始化函数，用户初始化函数，服务，定时任务，短时任务
 // 第三部分 可选方法：是否悬挂，注册中心，运行停止前清理，运行停止后清理
-type ego struct {
+type Ego struct {
 	// 第一部分 系统数据
 	cycle  *xcycle.Cycle   // 生命周期
 	smu    *sync.RWMutex   // 锁
@@ -51,9 +51,9 @@ type opts struct {
 	shutdownSignals []os.Signal
 }
 
-// New new ego
-func New(options ...Option) *ego {
-	e := &ego{
+// New new Ego
+func New(options ...Option) *Ego {
+	e := &Ego{
 		// 第一部分 系统数据
 		cycle:  xcycle.NewCycle(),
 		smu:    &sync.RWMutex{},
@@ -111,7 +111,7 @@ func New(options ...Option) *ego {
 }
 
 // Invoker 传入所需要的函数
-func (e *ego) Invoker(fns ...func() error) *ego {
+func (e *Ego) Invoker(fns ...func() error) *Ego {
 	e.smu.Lock()
 	defer e.smu.Unlock()
 
@@ -122,27 +122,28 @@ func (e *ego) Invoker(fns ...func() error) *ego {
 	return e
 }
 
-func (e *ego) Registry(reg eregistry.Registry) *ego {
+// Registry 设置注册中心
+func (e *Ego) Registry(reg eregistry.Registry) *Ego {
 	e.registerer = reg
 	return e
 }
 
-// 服务
-func (e *ego) Serve(s ...server.Server) *ego {
+// Serve 设置服务
+func (e *Ego) Serve(s ...server.Server) *Ego {
 	e.smu.Lock()
 	defer e.smu.Unlock()
 	e.servers = append(e.servers, s...)
 	return e
 }
 
-// 定时任务
-func (e *ego) Cron(w ...ecron.Ecron) *ego {
+// Cron 设置定时任务
+func (e *Ego) Cron(w ...ecron.Ecron) *Ego {
 	e.crons = append(e.crons, w...)
 	return e
 }
 
-// 短时任务
-func (e *ego) Job(runners ...ejob.Ejob) *ego {
+// Job 设置短时任务
+func (e *Ego) Job(runners ...ejob.Ejob) *Ego {
 	// start job by name
 	jobFlag := eflag.String("job")
 	if jobFlag == "" {
@@ -181,8 +182,8 @@ func (e *ego) Job(runners ...ejob.Ejob) *ego {
 	return e
 }
 
-// 运行程序
-func (e *ego) Run() error {
+// Run 运行程序
+func (e *Ego) Run() error {
 	if e.err != nil {
 		return e.err
 	}
@@ -202,18 +203,18 @@ func (e *ego) Run() error {
 
 	// 阻塞，等待信号量
 	if err := <-e.cycle.Wait(e.opts.hang); err != nil {
-		e.logger.Error("ego shutdown with error", elog.FieldComponent("app"), elog.FieldErr(err))
+		e.logger.Error("Ego shutdown with error", elog.FieldComponent("app"), elog.FieldErr(err))
 		return err
 	}
-	e.logger.Info("stop ego, bye!", elog.FieldComponent("app"))
+	e.logger.Info("stop Ego, bye!", elog.FieldComponent("app"))
 
 	// 运行停止后清理
 	runSerialFuncLogError(e.opts.afterStopClean)
 	return nil
 }
 
-// 停止程序
-func (e *ego) Stop(ctx context.Context, isGraceful bool) (err error) {
+// Stop 停止程序
+func (e *Ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 	// 运行停止前清理
 	runSerialFuncLogError(e.opts.beforeStopClean)
 

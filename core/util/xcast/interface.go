@@ -113,9 +113,9 @@ func ToTimeE(i interface{}) (tim time.Time, err error) {
 		if e == nil {
 			return d, nil
 		}
-		return time.Time{}, fmt.Errorf("could not parse Date/Time format: %v\n", e)
+		return time.Time{}, fmt.Errorf("could not parse Date/Time format: %v", e)
 	default:
-		return time.Time{}, fmt.Errorf("unable to Cast %#v to Time\n", i)
+		return time.Time{}, fmt.Errorf("unable to Cast %#v to Time", i)
 	}
 }
 
@@ -136,7 +136,7 @@ func ToDurationE(i interface{}) (d time.Duration, err error) {
 		d, err = time.ParseDuration(s)
 		return
 	default:
-		err = fmt.Errorf("unable to Cast %#v to Duration\n", i)
+		err = fmt.Errorf("unable to cast %#v to duration", i)
 		return
 	}
 }

@@ -20,10 +20,12 @@ func main() {
 	}
 }
 
+// Greeter ...
 type Greeter struct {
 	server *egrpc.Component
 }
 
+// SayHello ...
 func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
 	return &helloworld.HelloReply{
 		Message: "Hello EGO, I'm " + g.server.Address(),

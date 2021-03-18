@@ -9,9 +9,10 @@ import (
 	"github.com/gotomicro/ego/core/standard"
 )
 
+// Option 可选项
 type Option func(c *ServiceInfo)
 
-// ServiceConfigurator represents service configurator
+// ConfigInfo represents service configurator
 type ConfigInfo struct {
 	Routes []Route
 }
@@ -67,6 +68,7 @@ type WeightGroup struct {
 	Weight int
 }
 
+// ApplyOptions 设置可选项
 func ApplyOptions(options ...Option) ServiceInfo {
 	info := defaultServiceInfo()
 	for _, option := range options {
@@ -75,31 +77,35 @@ func ApplyOptions(options ...Option) ServiceInfo {
 	return info
 }
 
+// WithMetaData 设置metadata信息
 func WithMetaData(key, value string) Option {
 	return func(c *ServiceInfo) {
 		c.Metadata[key] = value
 	}
 }
 
+// WithScheme 设置协议
 func WithScheme(scheme string) Option {
 	return func(c *ServiceInfo) {
 		c.Scheme = scheme
 	}
 }
 
+// WithAddress 设置地址
 func WithAddress(address string) Option {
 	return func(c *ServiceInfo) {
 		c.Address = address
 	}
 }
 
-// 定义服务名称
+// WithName 定义服务名称
 func WithName(name string) Option {
 	return func(c *ServiceInfo) {
 		c.Name = name
 	}
 }
 
+// WithKind 设置类型
 func WithKind(kind constant.ServiceKind) Option {
 	return func(c *ServiceInfo) {
 		c.Kind = kind

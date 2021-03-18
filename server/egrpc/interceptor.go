@@ -195,10 +195,10 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			}
 
 			if config.EnableAccessInterceptorReq {
-				fields = append(fields, elog.Any("req", json.RawMessage(xstring.Json(req))))
+				fields = append(fields, elog.Any("req", json.RawMessage(xstring.JSON(req))))
 			}
 			if config.EnableAccessInterceptorRes {
-				fields = append(fields, elog.Any("res", json.RawMessage(xstring.Json(res))))
+				fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
 			}
 
 			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {

@@ -1,20 +1,11 @@
 package econf
 
-// GetOption ...
-type (
-	GetOption  func(o *GetOptions)
-	GetOptions struct {
-		TagName string
-	}
-)
+// Option 选项
+type Option func(o *Container)
 
-var defaultGetOptions = GetOptions{
-	TagName: "mapstructure",
-}
-
-// 设置Tag
-func TagName(tag string) GetOption {
-	return func(o *GetOptions) {
+// WithTagName 设置Tag
+func WithTagName(tag string) Option {
+	return func(o *Container) {
 		o.TagName = tag
 	}
 }

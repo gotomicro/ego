@@ -63,6 +63,7 @@ func (wl *wrappedLogger) Error(err error, msg string, keysAndValues ...interface
 	wl.Errorw("cron "+msg, append(keysAndValues, "err", err)...)
 }
 
+// Locker 锁的接口
 // go get github.com/gotomicro/eredis@v0.2.0+
 type Locker interface {
 	Lock(ctx context.Context, key string, ttl time.Duration) error
@@ -87,12 +88,12 @@ func (wj wrappedJob) run() (err error) {
 		"ego-cron",
 	)
 	defer span.Finish()
-	traceId := etrace.ExtractTraceID(ctx)
+	traceID := etrace.ExtractTraceID(ctx)
 	emetric.JobHandleCounter.Inc("cron", wj.Name(), "begin")
 	var fields = []elog.Field{zap.String("name", wj.Name())}
 	// 如果设置了链路，增加链路信息
 	if opentracing.IsGlobalTracerRegistered() {
-		fields = append(fields, elog.FieldTid(traceId))
+		fields = append(fields, elog.FieldTid(traceID))
 	}
 
 	wj.logger.Info("cron start", fields...)

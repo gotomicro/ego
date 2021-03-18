@@ -6,110 +6,129 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// Option 可选项
 type Option func(c *config)
 
+// WithEncoder ...
 func WithEncoder(enc zapcore.Encoder) Option {
 	return func(c *config) {
 		c.encoder = enc
 	}
 }
 
+// WithEndpoint ...
 func WithEndpoint(endpoint string) Option {
 	return func(c *config) {
 		c.endpoint = endpoint
 	}
 }
 
+// WithAccessKeyID ...
 func WithAccessKeyID(akID string) Option {
 	return func(c *config) {
 		c.accessKeyID = akID
 	}
 }
 
+// WithAccessKeySecret ....
 func WithAccessKeySecret(akSecret string) Option {
 	return func(c *config) {
 		c.accessKeySecret = akSecret
 	}
 }
 
+// WithProject ...
 func WithProject(project string) Option {
 	return func(c *config) {
 		c.project = project
 	}
 }
 
+// WithLogstore ...
 func WithLogstore(logStore string) Option {
 	return func(c *config) {
 		c.logstore = logStore
 	}
 }
 
+// WithLevelEnabler ...
 func WithLevelEnabler(lv zapcore.LevelEnabler) Option {
 	return func(c *config) {
 		c.levelEnabler = lv
 	}
 }
 
+// WithFlushBufferSize ...
 func WithFlushBufferSize(flushBufferSize int) Option {
 	return func(c *config) {
 		c.flushBufferSize = int32(flushBufferSize)
 	}
 }
 
+// WithFlushBufferInterval ...
 func WithFlushBufferInterval(flushBufferInterval time.Duration) Option {
 	return func(c *config) {
 		c.flushBufferInterval = flushBufferInterval
 	}
 }
 
-func WithApiBulkSize(apiBulkSize int) Option {
+// WithAPIBulkSize ...
+func WithAPIBulkSize(apiBulkSize int) Option {
 	return func(c *config) {
 		c.apiBulkSize = apiBulkSize
 	}
 }
 
-func WithApiTimeout(apiTimeout time.Duration) Option {
+// WithAPITimeout ...
+func WithAPITimeout(apiTimeout time.Duration) Option {
 	return func(c *config) {
 		c.apiTimeout = apiTimeout
 	}
 }
 
-func WithApiRetryCount(apiRetryCount int) Option {
+// WithAPIRetryCount ...
+func WithAPIRetryCount(apiRetryCount int) Option {
 	return func(c *config) {
 		c.apiRetryCount = apiRetryCount
 	}
 }
 
-func WithApiRetryWaitTime(apiRetryWaitTime time.Duration) Option {
+// WithAPIRetryWaitTime ...
+func WithAPIRetryWaitTime(apiRetryWaitTime time.Duration) Option {
 	return func(c *config) {
 		c.apiRetryWaitTime = apiRetryWaitTime
 	}
 }
 
-func WithApiRetryMaxWaitTime(apiRetryMaxWaitTime time.Duration) Option {
+// WithAPIRetryMaxWaitTime ...
+func WithAPIRetryMaxWaitTime(apiRetryMaxWaitTime time.Duration) Option {
 	return func(c *config) {
 		c.apiRetryMaxWaitTime = apiRetryMaxWaitTime
 	}
 }
 
-func WithApiMaxIdleConns(apiMaxIdleConns int) Option {
+// WithAPIMaxIdleConns ...
+func WithAPIMaxIdleConns(apiMaxIdleConns int) Option {
 	return func(c *config) {
 		c.apiMaxIdleConns = apiMaxIdleConns
 	}
 }
 
-func WithApiIdleConnTimeout(apiIdleConnTimeout time.Duration) Option {
+// WithAPIIdleConnTimeout ...
+func WithAPIIdleConnTimeout(apiIdleConnTimeout time.Duration) Option {
 	return func(c *config) {
 		c.apiIdleConnTimeout = apiIdleConnTimeout
 	}
 }
 
-func WithApiMaxIdleConnsPerHost(apiMaxIdleConnsPerHost int) Option {
+// WithAPIMaxIdleConnsPerHost ...
+func WithAPIMaxIdleConnsPerHost(apiMaxIdleConnsPerHost int) Option {
 	return func(c *config) {
 		c.apiMaxIdleConnsPerHost = apiMaxIdleConnsPerHost
 	}
 }
 
+// WithFallbackCore ...
 func WithFallbackCore(core zapcore.Core) Option {
 	return func(c *config) {
 		c.fallbackCore = core

@@ -10,6 +10,7 @@ import (
 	"net"
 )
 
+// PackageName 包名
 const PackageName = "server.egrpc"
 
 // Component ...
@@ -38,57 +39,60 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 }
 
-func (s *Component) Name() string {
-	return s.name
+// Name 配置名称
+func (c *Component) Name() string {
+	return c.name
 }
 
+// PackageName 包名
 func (c *Component) PackageName() string {
 	return PackageName
 }
 
-func (s *Component) Init() error {
-	listener, err := net.Listen(s.config.Network, s.config.Address())
+// Init 初始化
+func (c *Component) Init() error {
+	listener, err := net.Listen(c.config.Network, c.config.Address())
 	if err != nil {
-		s.logger.Panic("new grpc server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
+		c.logger.Panic("new grpc server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
 	}
-	s.config.Port = listener.Addr().(*net.TCPAddr).Port
+	c.config.Port = listener.Addr().(*net.TCPAddr).Port
 
 	info := server.ApplyOptions(
 		server.WithScheme("grpc"),
 		server.WithAddress(listener.Addr().String()),
 		server.WithKind(constant.ServiceProvider),
 	)
-	s.listener = listener
-	s.serverInfo = &info
+	c.listener = listener
+	c.serverInfo = &info
 	return nil
 }
 
-// Component implements server.Component interface.
-func (s *Component) Start() error {
-	err := s.Server.Serve(s.listener)
+// Start implements server.Component interface.
+func (c *Component) Start() error {
+	err := c.Server.Serve(c.listener)
 	return err
 }
 
 // Stop implements server.Component interface
 // it will terminate echo server immediately
-func (s *Component) Stop() error {
-	s.Server.Stop()
+func (c *Component) Stop() error {
+	c.Server.Stop()
 	return nil
 }
 
 // GracefulStop implements server.Component interface
 // it will stop echo server gracefully
-func (s *Component) GracefulStop(ctx context.Context) error {
+func (c *Component) GracefulStop(ctx context.Context) error {
 	go func() {
-		s.Server.GracefulStop()
-		close(s.quit)
+		c.Server.GracefulStop()
+		close(c.quit)
 	}()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-s.quit:
+		case <-c.quit:
 			return nil
 		}
 	}
@@ -96,10 +100,11 @@ func (s *Component) GracefulStop(ctx context.Context) error {
 }
 
 // Info returns server info, used by governor and consumer balancer
-func (s *Component) Info() *server.ServiceInfo {
-	return s.serverInfo
+func (c *Component) Info() *server.ServiceInfo {
+	return c.serverInfo
 }
 
+// Address 服务地址
 func (c *Component) Address() string {
 	return c.config.Address()
 }

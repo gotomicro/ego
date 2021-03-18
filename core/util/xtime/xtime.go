@@ -15,10 +15,13 @@ func Duration(str string) time.Duration {
 	return dur
 }
 
+// TS ...
 var TS TimeFormat = "2006-01-02 15:04:05"
 
+// TimeFormat ...
 type TimeFormat string
 
+// Format 格式化
 func (ts TimeFormat) Format(t time.Time) string {
 	return t.Format(string(ts))
 }

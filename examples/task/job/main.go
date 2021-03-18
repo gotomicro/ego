@@ -20,6 +20,7 @@ func main() {
 	}
 }
 
+// NewJobRunner 创建新的job
 func NewJobRunner() *ejob.Component {
 	return ejob.DefaultContainer().Build(
 		ejob.WithName("jobrunner"),

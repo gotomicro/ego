@@ -49,7 +49,7 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 				elog.FieldCost(cost),
 				elog.FieldType(c.Request.Method), // GET, POST
 				elog.FieldMethod(c.Request.URL.Path),
-				elog.FieldIp(c.ClientIP()),
+				elog.FieldIP(c.ClientIP()),
 				elog.FieldSize(int32(c.Writer.Size())),
 				elog.FieldPeerIP(getPeerIP(c.Request.RemoteAddr)),
 			)
