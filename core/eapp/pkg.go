@@ -47,7 +47,7 @@ func init() {
 	startTime = xtime.TS.Format(time.Now())
 	SetBuildTime(buildTime)
 	goVersion = runtime.Version()
-	InitEnv()
+	initEnv()
 
 	// ego version
 	egoVersion = "unknown version"

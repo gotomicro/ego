@@ -12,12 +12,13 @@ type HistogramVecOpts struct {
 	Buckets   []float64
 }
 
-type histogramVec struct {
+// HistogramVec ...
+type HistogramVec struct {
 	*prometheus.HistogramVec
 }
 
 // Build ...
-func (opts HistogramVecOpts) Build() *histogramVec {
+func (opts HistogramVecOpts) Build() *HistogramVec {
 	vec := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: opts.Namespace,
@@ -27,12 +28,12 @@ func (opts HistogramVecOpts) Build() *histogramVec {
 			Buckets:   opts.Buckets,
 		}, opts.Labels)
 	prometheus.MustRegister(vec)
-	return &histogramVec{
+	return &HistogramVec{
 		HistogramVec: vec,
 	}
 }
 
 // Observe ...
-func (histogram *histogramVec) Observe(v float64, labels ...string) {
+func (histogram *HistogramVec) Observe(v float64, labels ...string) {
 	histogram.WithLabelValues(labels...).Observe(v)
 }

@@ -27,11 +27,11 @@ func OnChange(fn func(*Configuration)) {
 // LoadFromDataSource load configuration from data source
 // if data source supports dynamic config, a monitor goroutinue
 // would be
-func LoadFromDataSource(ds DataSource, unmarshaller Unmarshaller, opts ...GetOption) error {
+func LoadFromDataSource(ds DataSource, unmarshaller Unmarshaller, opts ...Option) error {
 	return defaultConfiguration.LoadFromDataSource(ds, unmarshaller, opts...)
 }
 
-// Load loads configuration from provided provider with default defaultConfiguration.
+// LoadFromReader loads configuration from provided provider with default defaultConfiguration.
 func LoadFromReader(r io.Reader, unmarshaller Unmarshaller) error {
 	return defaultConfiguration.LoadFromReader(r, unmarshaller)
 }
@@ -51,6 +51,7 @@ func Traverse(sep string) map[string]interface{} {
 	return defaultConfiguration.traverse(sep)
 }
 
+// RawConfig 原始配置
 func RawConfig() []byte {
 	return defaultConfiguration.raw()
 }

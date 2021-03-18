@@ -44,20 +44,20 @@ func init() {
 	OmitDefaultAPI.RegisterExtension(new(emitDefaultExtension))
 }
 
-// Json ...
-func Json(obj interface{}) string {
+// JSON ...
+func JSON(obj interface{}) string {
 	aa, _ := _jsonAPI.Marshal(obj)
 	return string(aa)
 }
 
-// JsonBytes ...
-func JsonBytes(obj interface{}) []byte {
+// JSONBytes ...
+func JSONBytes(obj interface{}) []byte {
 	aa, _ := _jsonAPI.Marshal(obj)
 	return aa
 }
 
-// PrettyJson ...
-func PrettyJson(obj interface{}) string {
+// PrettyJSON ...
+func PrettyJSON(obj interface{}) string {
 	aa, _ := _jsonPrettyAPI.MarshalIndent(obj, "", "    ")
 	return string(aa)
 }

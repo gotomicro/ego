@@ -3,19 +3,20 @@ package egovernor
 import (
 	"context"
 	"encoding/json"
-	"github.com/gotomicro/ego/core/constant"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/server"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	"net"
 	"net/http"
 	"net/http/pprof"
 	"os"
 	"runtime/debug"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/server"
 )
 
 var (
@@ -24,6 +25,7 @@ var (
 	routes          = []string{}
 )
 
+// PackageName 包名
 const PackageName = "server.egin"
 
 func init() {
@@ -98,14 +100,17 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 }
 
+// Name 配置名称
 func (c *Component) Name() string {
 	return c.name
 }
 
+// PackageName 包名
 func (c *Component) PackageName() string {
 	return PackageName
 }
 
+// Init 初始化
 func (c *Component) Init() error {
 	var listener, err = net.Listen("tcp4", c.config.Address())
 	if err != nil {
@@ -115,12 +120,12 @@ func (c *Component) Init() error {
 	return nil
 }
 
-//Serve ..
-func (s *Component) Start() error {
+// Start 开始
+func (c *Component) Start() error {
 	HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		promhttp.Handler().ServeHTTP(w, r)
 	})
-	err := s.Server.Serve(s.listener)
+	err := c.Server.Serve(c.listener)
 	if err == http.ErrServerClosed {
 		return nil
 	}
@@ -129,20 +134,20 @@ func (s *Component) Start() error {
 }
 
 //Stop ..
-func (s *Component) Stop() error {
-	return s.Server.Close()
+func (c *Component) Stop() error {
+	return c.Server.Close()
 }
 
 //GracefulStop ..
-func (s *Component) GracefulStop(ctx context.Context) error {
-	return s.Server.Shutdown(ctx)
+func (c *Component) GracefulStop(ctx context.Context) error {
+	return c.Server.Shutdown(ctx)
 }
 
 //Info ..
-func (s *Component) Info() *server.ServiceInfo {
+func (c *Component) Info() *server.ServiceInfo {
 	info := server.ApplyOptions(
 		server.WithScheme("http"),
-		server.WithAddress(s.listener.Addr().String()),
+		server.WithAddress(c.listener.Addr().String()),
 		server.WithKind(constant.ServiceGovernor),
 	)
 	// info.Name = info.Name + "." + ModName

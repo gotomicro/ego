@@ -12,13 +12,13 @@ func main() {
 	if err := ego.New().
 		Serve(
 			egovernor.Load("server.governor").Build(),
-			serverHttp(),
+			serverHTTP(),
 		).Run(); err != nil {
 		elog.Panic("startup", elog.FieldErr(err))
 	}
 }
 
-func serverHttp() *egin.Component {
+func serverHTTP() *egin.Component {
 	server := egin.Load("server.http").Build()
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.JSON(200, "Hello")

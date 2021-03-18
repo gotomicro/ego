@@ -33,13 +33,18 @@ git checkout -b feature/my-feature origin/master
 ```
 这样我们就切出来一个分支了。该分支的代码和origin/master上的完全一致。
 
-## 5 提交 commit
+## 5 Golint
+```bash
+golint ./...
+```
+
+## 6 提交 commit
 ```bash
 git add .
 git commit
 git push upstream my-feature
 ```
 
-## 6 提交 PR
+## 7 提交 PR
 访问 https://github.com/gotomicro/ego, 
 点击 "Compare" 比较变更并点击 "Pull request" 提交 PR

@@ -17,8 +17,10 @@ import (
 	"github.com/gotomicro/ego/core/util/xdebug"
 )
 
+// PackageName 设置包名
 const PackageName = "client.ehttp"
 
+// Component 组件
 type Component struct {
 	name   string
 	config *Config

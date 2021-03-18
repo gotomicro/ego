@@ -35,9 +35,13 @@ const (
 )
 
 type (
-	Func      func(string, ...zap.Field)
-	Field     = zap.Field
-	Level     = zapcore.Level
+	// Func ...
+	Func func(string, ...zap.Field)
+	// Field ...
+	Field = zap.Field
+	// Level ...
+	Level = zapcore.Level
+	// Component 组件
 	Component struct {
 		name          string
 		desugar       *zap.Logger
@@ -120,14 +124,14 @@ func newAliCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 		ali.WithLevelEnabler(lv),
 		ali.WithFlushBufferSize(config.FlushBufferSize),
 		ali.WithFlushBufferInterval(config.FlushBufferInterval),
-		ali.WithApiBulkSize(config.AliApiBulkSize),
-		ali.WithApiTimeout(config.AliApiTimeout),
-		ali.WithApiRetryCount(config.AliApiRetryCount),
-		ali.WithApiRetryWaitTime(config.AliApiRetryWaitTime),
-		ali.WithApiRetryMaxWaitTime(config.AliApiRetryMaxWaitTime),
-		ali.WithApiMaxIdleConns(config.AliApiMaxIdleConns),
-		ali.WithApiIdleConnTimeout(config.AliApiIdleConnTimeout),
-		ali.WithApiMaxIdleConnsPerHost(config.AliApiMaxIdleConnsPerHost),
+		ali.WithAPIBulkSize(config.AliAPIBulkSize),
+		ali.WithAPITimeout(config.AliAPITimeout),
+		ali.WithAPIRetryCount(config.AliAPIRetryCount),
+		ali.WithAPIRetryWaitTime(config.AliAPIRetryWaitTime),
+		ali.WithAPIRetryMaxWaitTime(config.AliAPIRetryMaxWaitTime),
+		ali.WithAPIMaxIdleConns(config.AliAPIMaxIdleConns),
+		ali.WithAPIIdleConnTimeout(config.AliAPIIdleConnTimeout),
+		ali.WithAPIMaxIdleConnsPerHost(config.AliAPIMaxIdleConnsPerHost),
 		ali.WithFallbackCore(fallbackCore),
 	)
 	return core, func() (err error) {
@@ -211,8 +215,7 @@ func (logger *Component) Flush() error {
 	return nil
 }
 
-// DefaultZapConfig ...
-func DefaultZapConfig() *zapcore.EncoderConfig {
+func defaultZapConfig() *zapcore.EncoderConfig {
 	return &zapcore.EncoderConfig{
 		TimeKey:        "ts",
 		LevelKey:       "lv",
@@ -228,7 +231,7 @@ func DefaultZapConfig() *zapcore.EncoderConfig {
 	}
 }
 
-func DefaultDebugConfig() *zapcore.EncoderConfig {
+func defaultDebugConfig() *zapcore.EncoderConfig {
 	return &zapcore.EncoderConfig{
 		TimeKey:        "ts",
 		LevelKey:       "lv",

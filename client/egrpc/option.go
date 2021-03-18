@@ -27,7 +27,7 @@ func WithBalancerName(balancerName string) Option {
 	}
 }
 
-// WithAddr setting grpc dial timeout
+// WithDialTimeout setting grpc dial timeout
 func WithDialTimeout(t time.Duration) Option {
 	return func(c *Container) {
 		c.config.DialTimeout = t

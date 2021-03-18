@@ -22,6 +22,7 @@ func main() {
 	}
 }
 
+// People ...
 type People struct {
 	Name string
 }

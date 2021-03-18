@@ -12,11 +12,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
 )
 
+// PackageName 包名
 const PackageName = "server.egin"
 
 // Component ...
@@ -43,14 +45,17 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 }
 
+// Name 配置名称
 func (c *Component) Name() string {
 	return c.name
 }
 
+// PackageName 包名
 func (c *Component) PackageName() string {
 	return PackageName
 }
 
+// Init 初始化
 func (c *Component) Init() error {
 	listener, err := net.Listen("tcp", c.config.Address())
 	if err != nil {
@@ -61,19 +66,19 @@ func (c *Component) Init() error {
 	return nil
 }
 
-// 注册路由注释
+// RegisterRouteComment 注册路由注释
 func (c *Component) RegisterRouteComment(method, path, comment string) {
 	c.routerCommentMap[commentUniqKey(method, path)] = comment
 }
 
-//Upgrade protocol to WebSocket
+// Upgrade protocol to WebSocket
 func (c *Component) Upgrade(ws *WebSocket) gin.IRoutes {
 	return c.GET(ws.Pattern, func(c *gin.Context) {
 		ws.Upgrade(c.Writer, c.Request)
 	})
 }
 
-// Serve implements server.Component interface.
+// Start implements server.Component interface.
 func (c *Component) Start() error {
 	for _, route := range c.Engine.Routes() {
 		info, flag := c.routerCommentMap[commentUniqKey(route.Method, route.Path)]

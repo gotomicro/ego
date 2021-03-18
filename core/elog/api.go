@@ -1,5 +1,6 @@
 package elog
 
+// PackageName 包名
 const PackageName = "core.elog"
 
 // DefaultLogger defines default logger, it's usually used in application business logic
@@ -14,8 +15,10 @@ func init() {
 }
 
 const (
+	// DefaultLoggerName 业务日志名
 	DefaultLoggerName = "default.log"
-	EgoLoggerName     = "ego.sys"
+	// EgoLoggerName 系统文件名
+	EgoLoggerName = "ego.sys"
 )
 
 // Auto ...

@@ -8,39 +8,42 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var _ zapcore.Encoder = &mapObjEncoder{}
+var _ zapcore.Encoder = &MapObjEncoder{}
 
 var encoderPool = sync.Pool{New: func() interface{} {
-	return &mapObjEncoder{MapObjectEncoder: zapcore.NewMapObjectEncoder()}
+	return &MapObjEncoder{MapObjectEncoder: zapcore.NewMapObjectEncoder()}
 }}
 
-func getEncoder() *mapObjEncoder {
-	return encoderPool.Get().(*mapObjEncoder)
+func getEncoder() *MapObjEncoder {
+	return encoderPool.Get().(*MapObjEncoder)
 }
 
-func putEncoder(enc *mapObjEncoder) {
+func putEncoder(enc *MapObjEncoder) {
 	enc.MapObjectEncoder = zapcore.NewMapObjectEncoder()
 	encoderPool.Put(enc)
 }
 
-type mapObjEncoder struct {
+// MapObjEncoder ...
+type MapObjEncoder struct {
 	*zapcore.EncoderConfig
 	parentFields []zapcore.Field
 	*zapcore.MapObjectEncoder
 }
 
-func NewMapObjEncoder(cfg zapcore.EncoderConfig) *mapObjEncoder {
-	return &mapObjEncoder{
+// NewMapObjEncoder ...
+func NewMapObjEncoder(cfg zapcore.EncoderConfig) *MapObjEncoder {
+	return &MapObjEncoder{
 		EncoderConfig:    &cfg,
 		MapObjectEncoder: zapcore.NewMapObjectEncoder(),
 	}
 }
 
-func (e *mapObjEncoder) Clone() zapcore.Encoder {
+// Clone ...
+func (e *MapObjEncoder) Clone() zapcore.Encoder {
 	return e.clone()
 }
 
-func (e *mapObjEncoder) clone() *mapObjEncoder {
+func (e *MapObjEncoder) clone() *MapObjEncoder {
 	clone := getEncoder()
 	clone.EncoderConfig = e.EncoderConfig
 	// copy parentFields
@@ -55,12 +58,13 @@ func (e *mapObjEncoder) clone() *mapObjEncoder {
 	return clone
 }
 
-func (e *mapObjEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
+// EncodeEntry ...
+func (e *MapObjEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
 	// do nothing, just implement zapcore.Encoder.EncodeEntry()
 	return nil, nil
 }
 
-func (e *mapObjEncoder) encodeEntry(ent zapcore.Entry, fields []zapcore.Field) *mapObjEncoder {
+func (e *MapObjEncoder) encodeEntry(ent zapcore.Entry, fields []zapcore.Field) *MapObjEncoder {
 	final := e.clone()
 	if final.LevelKey != "" {
 		final.AddString(final.LevelKey, ent.Level.String())
@@ -120,10 +124,10 @@ type ioCore struct {
 }
 
 func (c *ioCore) With(fields []zapcore.Field) zapcore.Core {
-	c.enc.(*mapObjEncoder).parentFields = fields
+	c.enc.(*MapObjEncoder).parentFields = fields
 	clone := c.clone()
 	// NOTICE: we must reset parentFields otherwise parent logger with also print parent fields
-	c.enc.(*mapObjEncoder).parentFields = nil
+	c.enc.(*MapObjEncoder).parentFields = nil
 	return clone
 }
 
@@ -135,7 +139,7 @@ func (c *ioCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.Che
 }
 
 func (c *ioCore) Write(ent zapcore.Entry, fields []zapcore.Field) (err error) {
-	clone := c.enc.(*mapObjEncoder).encodeEntry(ent, fields)
+	clone := c.enc.(*MapObjEncoder).encodeEntry(ent, fields)
 	addFields(clone, append(fields, clone.parentFields...))
 	if err := c.writer.write(clone.Fields); err != nil {
 		return err

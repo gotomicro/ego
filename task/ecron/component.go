@@ -15,6 +15,7 @@ import (
 	"github.com/gotomicro/ego/core/util/xstring"
 )
 
+// PackageName 包名
 const PackageName = "task.ecron"
 
 var (
@@ -102,14 +103,17 @@ func (c *Component) Schedule(schedule Schedule, job NamedJob) EntryID {
 	return c.Cron.Schedule(schedule, innnerJob)
 }
 
+// Name 配置名称
 func (c *Component) Name() string {
 	return c.name
 }
 
+// PackageName 包名
 func (c *Component) PackageName() string {
 	return PackageName
 }
 
+// Init 初始化
 func (c *Component) Init() error {
 	return nil
 }
@@ -207,6 +211,7 @@ func (is *immediatelyScheduler) Next(curr time.Time) (next time.Time) {
 	return is.Schedule.Next(curr)
 }
 
+// Ecron 定时任务interface
 type Ecron interface {
 	standard.Component
 }

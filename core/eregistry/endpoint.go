@@ -30,6 +30,7 @@ func newEndpoints() *Endpoints {
 	}
 }
 
+// DeepCopy ...
 func (in *Endpoints) DeepCopy() *Endpoints {
 	if in == nil {
 		return nil
@@ -40,6 +41,7 @@ func (in *Endpoints) DeepCopy() *Endpoints {
 	return out
 }
 
+// DeepCopyInfo ...
 func (in *Endpoints) DeepCopyInfo(out *Endpoints) {
 	for key, info := range in.Nodes {
 		out.Nodes[key] = info

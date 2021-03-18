@@ -20,6 +20,7 @@ func init() {
 	)
 }
 
+// PackageName 包名
 const PackageName = "task.ejob"
 
 // Component ...
@@ -37,36 +38,41 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 }
 
+// Name 配置名称
 func (c *Component) Name() string {
 	return c.config.Name
 }
 
+// PackageName 包名
 func (c *Component) PackageName() string {
 	return PackageName
 }
 
+// Init 初始化
 func (c *Component) Init() error {
 	return nil
 }
 
+// Start 启动
 func (c *Component) Start() error {
 	span, ctx := etrace.StartSpanFromContext(
 		context.Background(),
 		"ego-job",
 	)
 	defer span.Finish()
-	traceId := etrace.ExtractTraceID(ctx)
+	traceID := etrace.ExtractTraceID(ctx)
 	beg := time.Now()
-	c.logger.Info("start ejob", elog.FieldName(c.name), elog.FieldTid(traceId))
+	c.logger.Info("start ejob", elog.FieldName(c.name), elog.FieldTid(traceID))
 	err := c.config.startFunc(ctx)
 	if err != nil {
-		c.logger.Error("stop ejob", elog.FieldName(c.name), elog.FieldErr(err), elog.FieldCost(time.Since(beg)), elog.FieldTid(traceId))
+		c.logger.Error("stop ejob", elog.FieldName(c.name), elog.FieldErr(err), elog.FieldCost(time.Since(beg)), elog.FieldTid(traceID))
 	} else {
-		c.logger.Info("stop ejob", elog.FieldName(c.name), elog.FieldCost(time.Since(beg)), elog.FieldTid(traceId))
+		c.logger.Info("stop ejob", elog.FieldName(c.name), elog.FieldCost(time.Since(beg)), elog.FieldTid(traceID))
 	}
 	return err
 }
 
+// Stop ...
 func (c *Component) Stop() error {
 	return nil
 }

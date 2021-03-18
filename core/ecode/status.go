@@ -16,27 +16,28 @@ import (
 type Status interface {
 }
 
-type spbStatus struct {
+// SpbStatus ...
+type SpbStatus struct {
 	*spb.Status
 }
 
 // GetCodeAsInt ...
-func (s *spbStatus) GetCodeAsInt() int {
+func (s *SpbStatus) GetCodeAsInt() int {
 	return int(s.Code)
 }
 
 // GetCodeAsUint32 ...
-func (s *spbStatus) GetCodeAsUint32() uint32 {
+func (s *SpbStatus) GetCodeAsUint32() uint32 {
 	return uint32(s.Code)
 }
 
 // GetCodeAsBool ...
-func (s *spbStatus) GetCodeAsBool() bool {
+func (s *SpbStatus) GetCodeAsBool() bool {
 	return s.CauseCode() == 0
 }
 
 // GetMessage ...
-func (s *spbStatus) GetMessage(exts ...interface{}) string {
+func (s *SpbStatus) GetMessage(exts ...interface{}) string {
 	if len(exts)%2 != 0 {
 		panic("parameter must be odd")
 	}
@@ -57,7 +58,7 @@ func (s *spbStatus) GetMessage(exts ...interface{}) string {
 }
 
 // GetDetailMessage ...
-func (s *spbStatus) GetDetailMessage(exts ...interface{}) string {
+func (s *SpbStatus) GetDetailMessage(exts ...interface{}) string {
 	var buf bytes.Buffer
 	buf.WriteString(s.GetMessage(exts...))
 	for _, detail := range s.Details {
@@ -68,18 +69,18 @@ func (s *spbStatus) GetDetailMessage(exts ...interface{}) string {
 }
 
 // String ...
-func (s *spbStatus) String() string {
+func (s *SpbStatus) String() string {
 	bs, _ := json.Marshal(s)
 	return string(bs)
 }
 
 // CauseCode ...
-func (s *spbStatus) CauseCode() int {
+func (s *SpbStatus) CauseCode() int {
 	return int(s.Code) % 10000
 }
 
 // Proto ...
-func (s *spbStatus) Proto() *spb.Status {
+func (s *SpbStatus) Proto() *spb.Status {
 	if s == nil {
 		return nil
 	}
@@ -87,7 +88,7 @@ func (s *spbStatus) Proto() *spb.Status {
 }
 
 // MustWithDetails ...
-func (s *spbStatus) MustWithDetails(details ...interface{}) *spbStatus {
+func (s *SpbStatus) MustWithDetails(details ...interface{}) *SpbStatus {
 	status, err := s.WithDetails(details...)
 	if err != nil {
 		panic(err)
@@ -97,7 +98,7 @@ func (s *spbStatus) MustWithDetails(details ...interface{}) *spbStatus {
 
 // WithDetails returns a new status with the provided details messages appended to the status.
 // If any errors are encountered, it returns nil and the first error encountered.
-func (s *spbStatus) WithDetails(details ...interface{}) (*spbStatus, error) {
+func (s *SpbStatus) WithDetails(details ...interface{}) (*SpbStatus, error) {
 	if s.CauseCode() == 0 {
 		return nil, errors.New("no error details for status with code OK")
 	}
@@ -117,7 +118,7 @@ func (s *spbStatus) WithDetails(details ...interface{}) (*spbStatus, error) {
 			p.Details = append(p.Details, any)
 		}
 	}
-	return &spbStatus{Status: p}, nil
+	return &SpbStatus{Status: p}, nil
 }
 
 func marshalAny(obj interface{}) (*any.Any, error) {

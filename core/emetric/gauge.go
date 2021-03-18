@@ -11,12 +11,13 @@ type GaugeVecOpts struct {
 	Labels    []string
 }
 
-type gaugeVec struct {
+// GaugeVec ...
+type GaugeVec struct {
 	*prometheus.GaugeVec
 }
 
 // Build ...
-func (opts GaugeVecOpts) Build() *gaugeVec {
+func (opts GaugeVecOpts) Build() *GaugeVec {
 	vec := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: opts.Namespace,
@@ -25,13 +26,13 @@ func (opts GaugeVecOpts) Build() *gaugeVec {
 			Help:      opts.Help,
 		}, opts.Labels)
 	prometheus.MustRegister(vec)
-	return &gaugeVec{
+	return &GaugeVec{
 		GaugeVec: vec,
 	}
 }
 
 // NewGaugeVec ...
-func NewGaugeVec(name string, labels []string) *gaugeVec {
+func NewGaugeVec(name string, labels []string) *GaugeVec {
 	return GaugeVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      name,
@@ -41,16 +42,16 @@ func NewGaugeVec(name string, labels []string) *gaugeVec {
 }
 
 // Inc ...
-func (gv *gaugeVec) Inc(labels ...string) {
+func (gv *GaugeVec) Inc(labels ...string) {
 	gv.WithLabelValues(labels...).Inc()
 }
 
 // Add ...
-func (gv *gaugeVec) Add(v float64, labels ...string) {
+func (gv *GaugeVec) Add(v float64, labels ...string) {
 	gv.WithLabelValues(labels...).Add(v)
 }
 
 // Set ...
-func (gv *gaugeVec) Set(v float64, labels ...string) {
+func (gv *GaugeVec) Set(v float64, labels ...string) {
 	gv.WithLabelValues(labels...).Set(v)
 }

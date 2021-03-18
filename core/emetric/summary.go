@@ -12,12 +12,13 @@ type SummaryVecOpts struct {
 	Labels     []string
 }
 
-type summaryVec struct {
+// SummaryVec ...
+type SummaryVec struct {
 	*prometheus.SummaryVec
 }
 
 // Build ...
-func (opts SummaryVecOpts) Build() *summaryVec {
+func (opts SummaryVecOpts) Build() *SummaryVec {
 	vec := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace:  opts.Namespace,
@@ -27,12 +28,12 @@ func (opts SummaryVecOpts) Build() *summaryVec {
 			Objectives: opts.Objectives,
 		}, opts.Labels)
 	prometheus.MustRegister(vec)
-	return &summaryVec{
+	return &SummaryVec{
 		SummaryVec: vec,
 	}
 }
 
 // Observe ...
-func (summary *summaryVec) Observe(v float64, labels ...string) {
+func (summary *SummaryVec) Observe(v float64, labels ...string) {
 	summary.WithLabelValues(labels...).Observe(v)
 }

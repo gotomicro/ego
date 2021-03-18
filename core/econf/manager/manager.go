@@ -17,10 +17,12 @@ import (
 
 var (
 	// ErrInvalidDataSource defines an error that the scheme has been registered
-	ErrInvalidDataSource     = errors.New("invalid data source, please make sure the scheme has been registered")
-	ErrDefaultConfigNotExist = errors.New("default config not exit")
+	ErrInvalidDataSource = errors.New("invalid data source, please make sure the scheme has been registered")
+	// ErrDefaultConfigNotExist 默认配置不存在
+	ErrDefaultConfigNotExist = errors.New("default config not exist")
 	registry                 map[string]econf.DataSource
-	DefaultScheme            = "file"
+	// DefaultScheme 默认协议
+	DefaultScheme = "file"
 )
 
 // DataSourceCreatorFunc represents a dataSource creator function
