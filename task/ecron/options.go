@@ -9,26 +9,6 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 )
 
-// Option 可选项
-type Option func(c *Container)
-
-// WithLocker 注入分布式locker
-func WithLocker(locker Locker) Option {
-	return func(c *Container) {
-		c.config.locker = locker
-	}
-}
-
-// WithChain ...
-func WithChain(wrappers ...JobWrapper) Option {
-	return func(c *Container) {
-		if c.config.wrappers == nil {
-			c.config.wrappers = []JobWrapper{}
-		}
-		c.config.wrappers = append(c.config.wrappers, wrappers...)
-	}
-}
-
 // queueIfStillRunning serializes jobs, delaying subsequent runs until the
 // previous one is complete. Jobs running after a delay of more than a minute
 // have the delay logged at Info.
@@ -62,5 +42,52 @@ func skipIfStillRunning(logger *elog.Component) JobWrapper {
 				logger.Info("cron skip")
 			}
 		})
+	}
+}
+
+type Option func(c *Container)
+
+// WithLock 设置分布式锁. 当 Config.EnableDistributedTask = true 时, 本 Option 必须设置
+func WithLock(lock Lock) Option {
+	return func(c *Container) {
+		c.config.lock = lock
+	}
+}
+
+// WithWrappers 设置 JobWrapper
+func WithWrappers(wrappers ...JobWrapper) Option {
+	return func(c *Container) {
+		if c.config.wrappers == nil {
+			c.config.wrappers = []JobWrapper{}
+		}
+		c.config.wrappers = append(c.config.wrappers, wrappers...)
+	}
+}
+
+//WithJob 指定Job
+func WithJob(job FuncJob) Option {
+	return func(c *Container) {
+		c.config.job = job
+	}
+}
+
+//WithSeconds 开启秒单位
+func WithSeconds() Option {
+	return func(c *Container) {
+		c.config.EnableSeconds = true
+	}
+}
+
+//WithParser 设置时间 parser
+func WithParser(p cron.Parser) Option {
+	return func(c *Container) {
+		c.config.parser = p
+	}
+}
+
+//WithLocation 设置时区
+func WithLocation(loc *time.Location) Option {
+	return func(c *Container) {
+		c.config.loc = loc
 	}
 }

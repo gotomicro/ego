@@ -40,7 +40,7 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 
-	if c.config.EnableWithSeconds {
+	if c.config.EnableSeconds {
 		c.config.parser = cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
 	}
 
@@ -54,8 +54,8 @@ func (c *Container) Build(options ...Option) *Component {
 		c.config.wrappers = append(c.config.wrappers, skipIfStillRunning(c.logger))
 	}
 
-	if c.config.EnableDistributedTask && c.config.locker == nil {
-		c.logger.Panic("client locker nil", elog.FieldKey("use WithLocker method"))
+	if c.config.EnableDistributedTask && c.config.lock == nil {
+		c.logger.Panic("lock can not be nil", elog.FieldKey("use WithLock option to set lock"))
 	}
 
 	return newComponent(c.name, c.config, c.logger)
