@@ -1,124 +1,55 @@
 package ecron
 
 import (
-	"context"
-	"fmt"
-	"runtime"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron/v3"
-	"go.uber.org/zap"
 
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/emetric"
-	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/util/xtime"
 )
 
 // Config ...
 type Config struct {
-	WaitLockTime          time.Duration // 抢锁等待时间，默认60s
-	LockTTL               time.Duration // 租期，默认60s
-	LockDir               string        // 定时任务锁目录
-	RefreshTTL            time.Duration // 刷新ttl，默认60s
-	WaitUnlockTime        time.Duration // 抢锁等待时间，默认1s
-	DelayExecType         string        // skip，queue，concurrent，如果上一个任务执行较慢，到达了新任务执行时间，那么新任务选择跳过，排队，并发执行的策略，新任务默认选择skip策略
-	EnableDistributedTask bool          // 是否分布式任务，默认否，如果存在分布式任务，会只执行该定时人物
-	EnableImmediatelyRun  bool          // 是否立刻执行，默认否
-	EnableWithSeconds     bool          // 是否使用秒作解析器，默认否
-	wrappers              []JobWrapper
-	parser                cron.Parser
-	locker                Locker
+	// Required. 触发时间
+	//	默认最小单位为分钟.比如:
+	//		"* * * * * *" 代表每分钟执行
+	//	如果 EnableSeconds = true. 那么最小单位为秒. 示例:
+	//		"*/3 * * * * * *" 代表每三秒钟执行一次
+	Spec string
+
+	WaitLockTime   time.Duration // 抢锁等待时间，默认 4s
+	LockTTL        time.Duration // 租期，默认 16s
+	RefreshGap     time.Duration // 锁刷新间隔时间， 默认 4s
+	WaitUnlockTime time.Duration // 解锁等待时间，默认 1s
+
+	DelayExecType         string // skip，queue，concurrent，如果上一个任务执行较慢，到达了新任务执行时间，那么新任务选择跳过，排队，并发执行的策略，新任务默认选择skip策略
+	EnableDistributedTask bool   // 是否分布式任务，默认否，如果存在分布式任务，会只执行该定时人物
+	EnableImmediatelyRun  bool   // 是否立刻执行，默认否
+	EnableSeconds         bool   // 是否使用秒作解析器，默认否
+
+	wrappers []JobWrapper
+	parser   cron.Parser
+	lock     Lock
+	job      FuncJob
+	loc      *time.Location
 }
 
 // DefaultConfig ...
 func DefaultConfig() *Config {
 	return &Config{
-		EnableWithSeconds:     false,
-		EnableImmediatelyRun:  false,
-		EnableDistributedTask: false,
-		DelayExecType:         "skip",
-		WaitLockTime:          xtime.Duration("60s"),
-		LockTTL:               xtime.Duration("60s"),
-		RefreshTTL:            xtime.Duration("50s"),
+		Spec:                  "", // required in config
+		WaitLockTime:          xtime.Duration("4s"),
+		LockTTL:               xtime.Duration("16s"),
+		RefreshGap:            xtime.Duration("4s"),
 		WaitUnlockTime:        xtime.Duration("1s"),
-		LockDir:               "/ecron/lock/%s/%s",
+		DelayExecType:         "skip",
+		EnableDistributedTask: false,
+		EnableImmediatelyRun:  false,
+		EnableSeconds:         false,
 		wrappers:              []JobWrapper{},
 		parser:                cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
+		lock:                  nil,
+		job:                   nil,
+		loc:                   time.Local,
 	}
-}
-
-type wrappedLogger struct {
-	*elog.Component
-}
-
-// Info logs routine messages about cron's operation.
-func (wl *wrappedLogger) Info(msg string, keysAndValues ...interface{}) {
-	wl.Infow("cron "+msg, keysAndValues...)
-}
-
-// Error logs an error condition.
-func (wl *wrappedLogger) Error(err error, msg string, keysAndValues ...interface{}) {
-	wl.Errorw("cron "+msg, append(keysAndValues, "err", err)...)
-}
-
-// Locker 锁的接口
-// go get github.com/gotomicro/eredis@v0.2.0+
-type Locker interface {
-	Lock(ctx context.Context, key string, ttl time.Duration) error
-	Unlock(ctx context.Context, key string) error
-	Refresh(ctx context.Context, key string, ttl time.Duration) error
-}
-
-type wrappedJob struct {
-	NamedJob
-	logger *elog.Component
-}
-
-// Run ...
-func (wj wrappedJob) Run() {
-	_ = wj.run()
-	return
-}
-
-func (wj wrappedJob) run() (err error) {
-	span, ctx := etrace.StartSpanFromContext(
-		context.Background(),
-		"ego-cron",
-	)
-	defer span.Finish()
-	traceID := etrace.ExtractTraceID(ctx)
-	emetric.JobHandleCounter.Inc("cron", wj.Name(), "begin")
-	var fields = []elog.Field{zap.String("name", wj.Name())}
-	// 如果设置了链路，增加链路信息
-	if opentracing.IsGlobalTracerRegistered() {
-		fields = append(fields, elog.FieldTid(traceID))
-	}
-
-	wj.logger.Info("cron start", fields...)
-	var beg = time.Now()
-	defer func() {
-		if rec := recover(); rec != nil {
-			switch rec := rec.(type) {
-			case error:
-				err = rec
-			default:
-				err = fmt.Errorf("%v", rec)
-			}
-
-			stack := make([]byte, 4096)
-			length := runtime.Stack(stack, true)
-			fields = append(fields, zap.ByteString("stack", stack[:length]))
-		}
-		if err != nil {
-			fields = append(fields, elog.FieldErr(err), elog.Duration("cost", time.Since(beg)))
-			wj.logger.Error("cron end", fields...)
-		} else {
-			wj.logger.Info("cron end", fields...)
-		}
-		emetric.JobHandleHistogram.Observe(time.Since(beg).Seconds(), "cron", wj.Name())
-	}()
-
-	return wj.NamedJob.Run(ctx)
 }
