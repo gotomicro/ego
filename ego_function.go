@@ -155,9 +155,9 @@ func (e *Ego) initLogger() error {
 		elog.EgoLogger.Info("reinit default logger", elog.FieldComponent(elog.PackageName))
 	}
 
-	if econf.Get(e.opts.configPrefix+"logger.Ego") != nil {
-		elog.EgoLogger = elog.Load(e.opts.configPrefix + "logger.Ego").Build(elog.WithFileName(elog.EgoLoggerName))
-		elog.EgoLogger.Info("reinit Ego logger", elog.FieldComponent(elog.PackageName))
+	if econf.Get(e.opts.configPrefix+"logger.ego") != nil {
+		elog.EgoLogger = elog.Load(e.opts.configPrefix + "logger.ego").Build(elog.WithFileName(elog.EgoLoggerName))
+		elog.EgoLogger.Info("reinit ego logger", elog.FieldComponent(elog.PackageName))
 	}
 	return nil
 }
