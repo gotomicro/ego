@@ -21,6 +21,7 @@ func (is *immediatelyScheduler) Next(curr time.Time) (next time.Time) {
 	return is.Schedule.Next(curr)
 }
 
+// Ecron ...
 type Ecron interface {
 	standard.Component
 }

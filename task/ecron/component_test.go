@@ -71,7 +71,7 @@ spec = "0 0 1 1 *"`
 	}
 	invoked := 0
 	comp := Load(name).Build(WithJob(func(ctx context.Context) error {
-		invoked += 1
+		invoked++
 		return nil
 	}))
 
@@ -100,9 +100,9 @@ spec = "0 0 1 1 *"`
 func TestRunDistributedJob(t *testing.T) {
 	invoked := 0
 	lastNode := ""
-	job := func (key string) FuncJob {
+	job := func(key string) FuncJob {
 		return func(ctx context.Context) error {
-			invoked += 1
+			invoked++
 			t.Logf("job invoked %dth", invoked)
 			t.Logf("%s is running", key)
 			if lastNode != "" && lastNode != key {
