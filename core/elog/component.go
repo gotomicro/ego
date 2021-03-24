@@ -85,7 +85,19 @@ const (
 	defaultAliFallbackCorePath = "ali.log"
 )
 
-// newRotateFileCore construct  a rotate file zapcore.Core
+// newStderrCore constructs a zapcore.Core with stderr syncer
+func newStderrCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
+	// Debug output to console and file by default
+	cf := noopCloseFunc
+	var ws = zapcore.AddSync(os.Stderr)
+	if config.EnableAsync {
+		ws, cf = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
+	}
+	core := zapcore.NewCore(zapcore.NewJSONEncoder(*config.encoderConfig), ws, lv)
+	return core, cf
+}
+
+// newRotateFileCore constructs a zapcore.Core with rotate file syncer
 func newRotateFileCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 	// Debug output to console and file by default
 	cf := noopCloseFunc
@@ -146,13 +158,16 @@ func newAliCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 }
 
 func newCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
-	if config.Writer == writerRotateFile {
+	switch config.Writer {
+	case writerRotateFile:
 		return newRotateFileCore(config, lv)
-	}
-	if config.Writer == writerAliSLS {
+	case writerAliSLS:
 		return newAliCore(config, lv)
+	case writerStderr:
+		return newStderrCore(config, lv)
+	default:
+		panic("unsupported writer")
 	}
-	return nil, nil
 }
 
 func newLogger(name string, config *Config) *Component {
