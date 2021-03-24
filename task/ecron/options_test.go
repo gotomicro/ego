@@ -2,15 +2,28 @@ package ecron
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/robfig/cron/v3"
+
+	"github.com/gotomicro/ego/core/econf"
 )
+
+func container() *Container {
+	err := econf.LoadFromReader(strings.NewReader(`[cron.test]
+spec = "0 0 1 1 *"`), toml.Unmarshal)
+	if err != nil {
+		panic(err.Error())
+	}
+	return Load("cron.test")
+}
 
 func TestWithLock(t *testing.T) {
 	lock := &mockLock{}
-	comp := DefaultContainer().Build(WithLock(lock))
+	comp := container().Build(WithLock(lock))
 	if comp.config.lock != lock {
 		t.Failed()
 	}
@@ -22,7 +35,7 @@ func TestWithWrappers(t *testing.T) {
 		a = 1
 		return job
 	}
-	comp := DefaultContainer().Build(WithWrappers(wrapper))
+	comp := container().Build(WithWrappers(wrapper))
 	wrapperLen := len(comp.config.wrappers)
 	comp.config.wrappers[wrapperLen-1](nil)
 	if a != 1 {

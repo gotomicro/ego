@@ -26,7 +26,8 @@ func testBuildComp(name, config string) (c *Component, err error) {
 
 func TestComponent_Name(t *testing.T) {
 	name := "cron.syncXxx"
-	comp, err := testBuildComp(name, `[cron.syncXxx]`)
+	comp, err := testBuildComp(name, `[cron.syncXxx]
+spec = "0 0 1 1 *"`)
 	if err != nil {
 		t.Errorf("load config failed. err=%s", err.Error())
 		return
@@ -38,7 +39,8 @@ func TestComponent_Name(t *testing.T) {
 }
 
 func TestComponent_PackageName(t *testing.T) {
-	comp, err := testBuildComp("test", `[test]`)
+	comp, err := testBuildComp("test", `[test]
+spec = "0 0 1 1 *"`)
 	if err != nil {
 		t.Errorf("load config failed. err=%s", err.Error())
 		return
@@ -49,7 +51,8 @@ func TestComponent_PackageName(t *testing.T) {
 }
 
 func TestComponent_Init(t *testing.T) {
-	comp, err := testBuildComp("test", `[test]`)
+	comp, err := testBuildComp("test", `[test]
+spec = "0 0 1 1 *"`)
 	if err != nil {
 		t.Errorf("load config failed. err=%s", err.Error())
 		return

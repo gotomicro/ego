@@ -1,7 +1,10 @@
 package ecron
 
 import (
+	"strings"
+
 	"github.com/robfig/cron/v3"
+	"go.uber.org/zap"
 
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
@@ -29,6 +32,7 @@ func Load(key string) *Container {
 		c.logger.Panic("parse config error", elog.FieldErr(err), elog.FieldKey(key))
 		return c
 	}
+	c.config.Spec = strings.TrimSpace(c.config.Spec)
 	c.logger = c.logger.With(elog.FieldComponentName(key))
 	c.name = key
 	return c
@@ -56,6 +60,11 @@ func (c *Container) Build(options ...Option) *Component {
 
 	if c.config.EnableDistributedTask && c.config.lock == nil {
 		c.logger.Panic("lock can not be nil", elog.FieldKey("use WithLock option to set lock"))
+	}
+
+	_, err := c.config.parser.Parse(c.config.Spec)
+	if err != nil {
+		c.logger.Panic("invalid cron spec", zap.Error(err))
 	}
 
 	return newComponent(c.name, c.config, c.logger)
