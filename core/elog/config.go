@@ -24,7 +24,7 @@ type Config struct {
 	EnableAsync               bool          // 是否异步，默认异步
 	FlushBufferSize           int           // 缓冲大小，默认256 * 1024B
 	FlushBufferInterval       time.Duration // 缓冲时间，默认5秒
-	Writer                    string        // 使用哪种Writer，可选[file|ali]
+	Writer                    string        // 使用哪种Writer，可选[file|ali|stderr]，默认file
 	AliAccessKeyID            string        // [aliWriter]阿里云sls AKID，必填
 	AliAccessKeySecret        string        // [aliWriter]阿里云sls AKSecret，必填
 	AliEndpoint               string        // [aliWriter]阿里云sls endpoint，必填
@@ -48,6 +48,7 @@ type Config struct {
 const (
 	writerRotateFile = "file"
 	writerAliSLS     = "ali"
+	writerStderr     = "stderr"
 )
 
 // filename ...
