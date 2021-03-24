@@ -42,13 +42,14 @@ type Ego struct {
 }
 
 type opts struct {
-	configPrefix    string         // 配置前缀
-	hang            bool           // 是否悬挂
-	disableBanner   bool           // 禁用banner
-	beforeStopClean []func() error // 运行停止前清理
-	afterStopClean  []func() error // 运行停止后清理
-	stopTimeout     time.Duration  // 运行停止超时时间
-	shutdownSignals []os.Signal
+	configPrefix      string         // 配置前缀
+	hang              bool           // 是否悬挂
+	disableBanner     bool           // 禁用banner
+	disableFlagConfig bool           // 禁用flag config
+	beforeStopClean   []func() error // 运行停止前清理
+	afterStopClean    []func() error // 运行停止后清理
+	stopTimeout       time.Duration  // 运行停止超时时间
+	shutdownSignals   []os.Signal
 }
 
 // New new Ego
@@ -96,7 +97,7 @@ func New(options ...Option) *Ego {
 
 	// 设置初始函数
 	e.inits = []func() error{
-		parseFlags,
+		e.parseFlags,
 		e.printBanner,
 		printLogger,
 		loadConfig,

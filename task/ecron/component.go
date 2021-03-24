@@ -12,6 +12,7 @@ import (
 	"github.com/gotomicro/ego/core/util/xstring"
 )
 
+// PackageName 包名
 const PackageName = "task.ecron"
 
 type (
@@ -68,14 +69,17 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 }
 
+// Name 名称
 func (c *Component) Name() string {
 	return c.name
 }
 
+// PackageName 包名
 func (c *Component) PackageName() string {
 	return PackageName
 }
 
+// Init Init
 func (c *Component) Init() error {
 	return nil
 }

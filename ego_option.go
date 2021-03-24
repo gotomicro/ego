@@ -22,6 +22,13 @@ func WithDisableBanner(disableBanner bool) Option {
 	}
 }
 
+// WithDisableFlagConfig 禁止config
+func WithDisableFlagConfig(disableFlagConfig bool) Option {
+	return func(a *Ego) {
+		a.opts.disableFlagConfig = disableFlagConfig
+	}
+}
+
 // WithConfigPrefix 设置配置前缀
 func WithConfigPrefix(configPrefix string) Option {
 	return func(a *Ego) {

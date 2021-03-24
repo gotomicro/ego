@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-//
+// Lock ...
 // implementations:
 //		Redis: [ecronlock](github.com/gotomicro/eredis@v0.2.0+)
 //

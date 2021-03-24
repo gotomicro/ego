@@ -88,14 +88,16 @@ func (e *Ego) startJobs() error {
 }
 
 // parseFlags init
-func parseFlags() error {
-	eflag.Register(&eflag.StringFlag{
-		Name:    "config",
-		Usage:   "--config",
-		EnvVar:  "CONFIG",
-		Default: "",
-		Action:  func(name string, fs *eflag.FlagSet) {},
-	})
+func (e *Ego) parseFlags() error {
+	if !e.opts.disableFlagConfig {
+		eflag.Register(&eflag.StringFlag{
+			Name:    "config",
+			Usage:   "--config",
+			EnvVar:  "CONFIG",
+			Default: "",
+			Action:  func(name string, fs *eflag.FlagSet) {},
+		})
+	}
 
 	eflag.Register(&eflag.BoolFlag{
 		Name:    "watch",
