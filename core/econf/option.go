@@ -9,3 +9,10 @@ func WithTagName(tag string) Option {
 		o.TagName = tag
 	}
 }
+
+// WithWeaklyTypedInput 设置WeaklyTypedInput
+func WithWeaklyTypedInput(weaklyTypedInput bool) Option {
+	return func(o *Container) {
+		o.WeaklyTypedInput = weaklyTypedInput
+	}
+}
