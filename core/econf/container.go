@@ -2,9 +2,11 @@ package econf
 
 // Container 容器
 type Container struct {
-	TagName string
+	TagName          string
+	WeaklyTypedInput bool
 }
 
 var defaultContainer = Container{
-	TagName: "mapstructure",
+	TagName:          "mapstructure",
+	WeaklyTypedInput: false,
 }
