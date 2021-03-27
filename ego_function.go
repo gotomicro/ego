@@ -120,6 +120,7 @@ func (e *Ego) parseFlags() error {
 	eflag.Register(&eflag.StringFlag{
 		Name:    "host",
 		Usage:   "--host, print host",
+		EnvVar:  constant.EnvAppHost,
 		Default: "",
 		Action:  func(string, *eflag.FlagSet) {},
 	})
