@@ -14,13 +14,10 @@ var (
 )
 
 func init() {
-	// procName := filepath.Base(os.Args[0])
-	// nfs := flag.NewFlagSet(procName, flag.ExitOnError)
 	flagset = &FlagSet{
-		FlagSet:  flag.CommandLine,
-		flags:    defaultFlags,
-		actions:  make(map[string]func(string, *FlagSet)),
-		environs: make(map[string]string),
+		FlagSet: flag.CommandLine,
+		flags:   defaultFlags,
+		actions: make(map[string]func(string, *FlagSet)),
 	}
 	testing.Init()
 }
@@ -35,11 +32,15 @@ type (
 	// FlagSet wraps a set of Flags.
 	FlagSet struct {
 		*flag.FlagSet
-		flags    []Flag
-		actions  map[string]func(string, *FlagSet)
-		environs map[string]string
+		flags   []Flag
+		actions map[string]func(string, *FlagSet)
 	}
 )
+
+// setFlagSet 设置flagSet
+func setFlagSet(fs *FlagSet) {
+	flagset = fs
+}
 
 // Register ...
 func Register(fs ...Flag) {
@@ -65,20 +66,42 @@ func Parse() error {
 }
 
 // Lookup lookup flag value by name
-// priority: flag > default > env
+// priority: flag > env > default
 func (fs *FlagSet) Lookup(name string) *flag.Flag {
-	flag := fs.FlagSet.Lookup(name)
-	if flag != nil {
-		if flag.Value.String() == "" {
-			if env, ok := fs.environs[name]; ok {
-				flag.Value.Set(env)
-			}
-		}
-		if flag.Value.String() == "" {
-			flag.Value.Set(flag.DefValue)
-		}
-	}
-	return flag
+	return fs.FlagSet.Lookup(name)
+	//flagLookup := fs.FlagSet.Lookup(name)
+	//
+	//if flagLookup != nil {
+	//	flagName, _ := flag.UnquoteUsage(flagLookup)
+	//	switch flagName {
+	//	// 空为bool类型
+	//	case "":
+	//		if flagLookup.Value.String() == "false" {
+	//			env, ok := fs.environs[name]
+	//			// 如果存在环境变量，设置环境变量数据
+	//			if ok {
+	//				flagLookup.Value.Set(env)
+	//				// 如果不存在环境变量，设置默认数据
+	//			} else {
+	//				if value, ok2 := fs.defaultValues[name]; ok2 {
+	//					flagLookup.Value.Set(value)
+	//				}
+	//			}
+	//		}
+	//	case "string":
+	//		if flagLookup.Value.String() == "" {
+	//			env, ok := fs.environs[name]
+	//			if ok {
+	//				flagLookup.Value.Set(env)
+	//			} else {
+	//				if value, ok2 := fs.defaultValues[name]; ok2 {
+	//					flagLookup.Value.Set(value)
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//return flagLookup
 }
 
 // Parse parses provided flagset.
@@ -90,19 +113,17 @@ func (fs *FlagSet) Parse() error {
 		f.Apply(fs)
 	}
 
+	// 解析命令行参数
 	if err := fs.FlagSet.Parse(os.Args[1:]); err != nil {
 		return err
 	}
 
+	// 遍历所欲flagset数据
 	fs.FlagSet.Visit(func(f *flag.Flag) {
 		if action, ok := fs.actions[f.Name]; ok && action != nil {
 			action(f.Name, fs)
 		}
-		if env, ok := fs.environs[f.Name]; ok {
-			fs.environs[f.Name] = env
-		}
 	})
-
 	return nil
 }
 
@@ -214,74 +235,6 @@ func Float64(name string) float64 { return flagset.Float64(name) }
 func (fs *FlagSet) Float64(name string) float64 {
 	ret, _ := fs.Float64E(name)
 	return ret
-}
-
-// BoolFlag is a bool flag implements of Flag interface.
-type BoolFlag struct {
-	Name     string
-	Usage    string
-	EnvVar   string
-	Default  bool
-	Variable *bool
-	Action   func(string, *FlagSet)
-}
-
-// Apply implements of Flag Apply function.
-func (f *BoolFlag) Apply(set *FlagSet) {
-	for _, field := range strings.Split(f.Name, ",") {
-		field = strings.TrimSpace(field)
-		if f.Variable != nil {
-			set.FlagSet.BoolVar(f.Variable, field, f.Default, f.Usage)
-		}
-
-		set.FlagSet.Bool(field, f.Default, f.Usage)
-		set.actions[field] = f.Action
-		set.environs[field] = os.Getenv(f.EnvVar)
-	}
-}
-
-// StringFlag is a string flag implements of Flag interface.
-type StringFlag struct {
-	Name     string
-	Usage    string
-	EnvVar   string
-	Default  string
-	Variable *string
-	Action   func(string, *FlagSet)
-}
-
-// Apply implements of Flag Apply function.
-func (f *StringFlag) Apply(set *FlagSet) {
-	for _, field := range strings.Split(f.Name, ",") {
-		field = strings.TrimSpace(field)
-		if f.Variable != nil {
-			set.FlagSet.StringVar(f.Variable, field, f.Default, f.Usage)
-		}
-		set.FlagSet.String(field, f.Default, f.Usage)
-		set.actions[field] = f.Action
-		set.environs[field] = os.Getenv(f.EnvVar)
-	}
-}
-
-// IntFlag is an int flag implements of Flag interface.
-type IntFlag struct {
-	Name     string
-	Usage    string
-	Default  int
-	Variable *int
-	Action   func(string, *FlagSet)
-}
-
-// Apply implements of Flag Apply function.
-func (f *IntFlag) Apply(set *FlagSet) {
-	for _, field := range strings.Split(f.Name, ",") {
-		field = strings.TrimSpace(field)
-		if f.Variable != nil {
-			set.FlagSet.IntVar(f.Variable, field, f.Default, f.Usage)
-		}
-		set.FlagSet.Int(field, f.Default, f.Usage)
-		set.actions[field] = f.Action
-	}
 }
 
 // UintFlag is an uint flag implements of Flag interface.
