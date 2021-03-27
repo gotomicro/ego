@@ -10,6 +10,7 @@ import (
 
 	"go.uber.org/automaxprocs/maxprocs"
 
+	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/econf/manager"
@@ -93,8 +94,8 @@ func (e *Ego) parseFlags() error {
 		eflag.Register(&eflag.StringFlag{
 			Name:    "config",
 			Usage:   "--config",
-			EnvVar:  "CONFIG",
-			Default: "",
+			EnvVar:  constant.EgoConfigPath,
+			Default: constant.DefaultConfig,
 			Action:  func(name string, fs *eflag.FlagSet) {},
 		})
 	}

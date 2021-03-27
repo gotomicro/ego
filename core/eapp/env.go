@@ -13,7 +13,6 @@ var (
 	appHost        string // 应用的ip
 	appInstance    string // 通常是实例的机器名
 	egoDebug       string
-	egoConfigPath  string
 	egoLogPath     string
 	egoLogAddApp   string
 	egoTraceIDName string
@@ -29,10 +28,6 @@ func initEnv() {
 		appInstance = HostName()
 	}
 	egoDebug = os.Getenv(constant.EgoDebug)
-	egoConfigPath = os.Getenv(constant.EgoConfigPath)
-	if egoConfigPath == "" {
-		egoConfigPath = "config/local.toml"
-	}
 	egoLogPath = os.Getenv(constant.EgoLogPath)
 	egoLogAddApp = os.Getenv(constant.EgoLogAddApp)
 	egoTraceIDName = os.Getenv(constant.EgoTraceIDName)
@@ -69,11 +64,6 @@ func AppInstance() string {
 // IsDevelopmentMode 判断是否是生产模式
 func IsDevelopmentMode() bool {
 	return egoDebug == "true"
-}
-
-// EgoConfigPath 获取应用配置路径
-func EgoConfigPath() string {
-	return egoConfigPath
 }
 
 // EgoLogPath 获取应用日志路径
