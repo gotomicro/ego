@@ -49,11 +49,10 @@ func (f FuncJob) Name() string { return xstring.FunctionName(f) }
 
 // Component ...
 type Component struct {
-	name    string
-	config  *Config
-	cron    *cron.Cron
-	entries map[string]EntryID
-	logger  *elog.Component
+	name   string
+	config *Config
+	cron   *cron.Cron
+	logger *elog.Component
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {

@@ -10,7 +10,6 @@ var (
 	appMode        string
 	appRegion      string
 	appZone        string
-	appHost        string // 应用的ip
 	appInstance    string // 通常是实例的机器名
 	egoDebug       string
 	egoLogPath     string
@@ -22,7 +21,6 @@ func initEnv() {
 	appMode = os.Getenv(constant.EnvAppMode)
 	appRegion = os.Getenv(constant.EnvAppRegion)
 	appZone = os.Getenv(constant.EnvAppZone)
-	appHost = os.Getenv(constant.EnvAppHost)
 	appInstance = os.Getenv(constant.EnvAppInstance)
 	if appInstance == "" {
 		appInstance = HostName()
@@ -49,11 +47,6 @@ func AppRegion() string {
 // AppZone 获取应用运行的可用区
 func AppZone() string {
 	return appZone
-}
-
-// AppHost 获取应用IP，默认是空
-func AppHost() string {
-	return appHost
 }
 
 // AppInstance 获取应用实例，通常是实例的机器名

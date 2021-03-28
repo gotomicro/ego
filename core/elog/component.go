@@ -202,7 +202,7 @@ func (logger *Component) AutoLevel(confKey string) {
 		lvText := strings.ToLower(config.GetString(confKey))
 		if lvText != "" {
 			logger.Info("update level", String("level", lvText), String("name", logger.config.Name))
-			logger.lv.UnmarshalText([]byte(lvText))
+			_ = logger.lv.UnmarshalText([]byte(lvText))
 		}
 	})
 }
@@ -226,7 +226,7 @@ func (logger *Component) Flush() error {
 		}
 	}
 
-	logger.desugar.Sync()
+	_ = logger.desugar.Sync()
 	return nil
 }
 
@@ -443,7 +443,7 @@ func (logger *Component) DPanicf(template string, args ...interface{}) {
 func (logger *Component) Fatal(msg string, fields ...Field) {
 	if logger.IsDebugMode() {
 		panicDetail(msg, fields...)
-		msg = normalizeMessage(msg)
+		//msg = normalizeMessage(msg)
 		return
 	}
 	logger.desugar.Fatal(msg, fields...)

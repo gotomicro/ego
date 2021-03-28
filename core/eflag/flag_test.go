@@ -17,17 +17,7 @@ const (
 )
 
 func TestFlagSet_Register_Length(t *testing.T) {
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagObj := &FlagSet{
-		FlagSet: flag.CommandLine,
-		actions: make(map[string]func(string, *FlagSet)),
-	}
-	flag.Bool("test.v", false, "verbose: print additional output")
-	flag.Bool("test.paniconexit0", false, "panic on call to os.Exit(0)")
-	flag.String("test.run", "", "run only tests and examples matching `regexp`")
-	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
-	setFlagSet(flagObj)
-
+	resetFlagSet()
 	Register(&StringFlag{
 		Name:    "config",
 		Usage:   "--config",
@@ -39,17 +29,7 @@ func TestFlagSet_Register_Length(t *testing.T) {
 }
 
 func TestFlagSet_Register_Default(t *testing.T) {
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagObj := &FlagSet{
-		FlagSet: flag.CommandLine,
-		actions: make(map[string]func(string, *FlagSet)),
-	}
-	flag.Bool("test.v", false, "verbose: print additional output")
-	flag.Bool("test.paniconexit0", false, "panic on call to os.Exit(0)")
-	flag.String("test.run", "", "run only tests and examples matching `regexp`")
-	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
-	setFlagSet(flagObj)
-
+	resetFlagSet()
 	Register(&StringFlag{
 		Name:    "config",
 		Usage:   "--config",
@@ -65,16 +45,8 @@ func TestFlagSet_Register_Default(t *testing.T) {
 
 func TestFlagSet_Register_Env(t *testing.T) {
 	os.Setenv(constant.EgoConfigPath, "config/env.toml")
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagObj := &FlagSet{
-		FlagSet: flag.CommandLine,
-		actions: make(map[string]func(string, *FlagSet)),
-	}
-	flag.Bool("test.v", false, "verbose: print additional output")
-	flag.Bool("test.paniconexit0", false, "panic on call to os.Exit(0)")
-	flag.String("test.run", "", "run only tests and examples matching `regexp`")
-	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
-	setFlagSet(flagObj)
+	defer os.Unsetenv(constant.EgoConfigPath)
+	resetFlagSet()
 
 	Register(&StringFlag{
 		Name:   "config",
@@ -90,16 +62,8 @@ func TestFlagSet_Register_Env(t *testing.T) {
 
 func TestFlagSet_Register_Flag(t *testing.T) {
 	os.Setenv(constant.EgoConfigPath, "config/env.toml")
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagObj := &FlagSet{
-		FlagSet: flag.CommandLine,
-		actions: make(map[string]func(string, *FlagSet)),
-	}
-	flag.Bool("test.v", false, "verbose: print additional output")
-	flag.Bool("test.paniconexit0", false, "panic on call to os.Exit(0)")
-	flag.String("test.run", "", "run only tests and examples matching `regexp`")
-	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
-	setFlagSet(flagObj)
+	defer os.Unsetenv(constant.EgoConfigPath)
+	resetFlagSet()
 
 	Register(&StringFlag{
 		Name:   "config",
@@ -117,7 +81,8 @@ func TestFlagSet_Register_Flag(t *testing.T) {
 
 func TestFlagSet_Register_Priority(t *testing.T) {
 	// 1 设置了 flag，env，default config，那么应该为flag config
-	os.Setenv(constant.EgoConfigPath, "config/env.toml")
+	_ = os.Setenv(constant.EgoConfigPath, "config/env.toml")
+	defer os.Unsetenv(constant.EgoConfigPath)
 	resetFlagSet()
 	Register(&StringFlag{
 		Name:    "config",
@@ -126,14 +91,14 @@ func TestFlagSet_Register_Priority(t *testing.T) {
 		Default: ConfigDefaultToml,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	Parse()
-	flag.Set("config", ConfigFlagToml)
+	_ = Parse()
+	_ = flag.Set("config", ConfigFlagToml)
 	configStr, err := StringE("config")
 	assert.NoError(t, err)
 	assert.Equal(t, ConfigFlagToml, configStr)
 
 	// 2 设置了 env，default config，那么应该为env config
-	os.Setenv(constant.EgoConfigPath, "config/env.toml")
+	_ = os.Setenv(constant.EgoConfigPath, "config/env.toml")
 	resetFlagSet()
 	Register(&StringFlag{
 		Name:    "config",
@@ -142,7 +107,7 @@ func TestFlagSet_Register_Priority(t *testing.T) {
 		Default: ConfigDefaultToml,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	Parse()
+	_ = Parse()
 	configStr, err = StringE("config")
 	assert.NoError(t, err)
 	assert.Equal(t, ConfigEnvToml, configStr)
@@ -177,6 +142,7 @@ func TestFlagSet_Register_Bool(t *testing.T) {
 	assert.Equal(t, true, boolFlag)
 
 	os.Setenv("EGO_WATCH", "false")
+	defer os.Unsetenv("EGO_WATCH")
 	resetFlagSet()
 	Register(&BoolFlag{
 		Name:    "watch",
@@ -227,5 +193,6 @@ func resetFlagSet() {
 	flag.Bool("test.paniconexit0", false, "panic on call to os.Exit(0)")
 	flag.String("test.run", "", "run only tests and examples matching `regexp`")
 	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
+	flag.String("test.testlogfile", "", "write test action log to `file` (for use only by cmd/go)")
 	setFlagSet(flagObj)
 }

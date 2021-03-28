@@ -32,7 +32,6 @@ type LogProject struct {
 	accessKeyID     string
 	accessKeySecret string
 	host            string
-	usingHTTP       bool
 	securityToken   string
 	cli             *resty.Client
 }
@@ -53,7 +52,7 @@ func (p *LogProject) ListLogStore() (storeNames []string, err error) {
 		"x-log-bodyrawsize": "0",
 	}
 
-	uri := fmt.Sprintf("/logstores")
+	uri := "/logstores"
 	r, err := p.request("GET", uri, h, nil)
 	if err != nil {
 		return

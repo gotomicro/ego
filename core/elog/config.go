@@ -42,7 +42,6 @@ type Config struct {
 	fields        []zap.Field // 日志初始化字段
 	CallerSkip    int
 	encoderConfig *zapcore.EncoderConfig
-	configKey     string
 }
 
 const (

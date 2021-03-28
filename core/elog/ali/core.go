@@ -48,9 +48,8 @@ func (e *MapObjEncoder) clone() *MapObjEncoder {
 	clone.EncoderConfig = e.EncoderConfig
 	// copy parentFields
 	clone.parentFields = make([]zapcore.Field, 0, len(e.parentFields))
-	for _, v := range e.parentFields {
-		clone.parentFields = append(clone.parentFields, v)
-	}
+	clone.parentFields = append(clone.parentFields, e.parentFields...)
+
 	// copy fields
 	for k, v := range e.MapObjectEncoder.Fields {
 		clone.MapObjectEncoder.Fields[k] = v

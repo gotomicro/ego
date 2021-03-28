@@ -69,39 +69,6 @@ func Parse() error {
 // priority: flag > env > default
 func (fs *FlagSet) Lookup(name string) *flag.Flag {
 	return fs.FlagSet.Lookup(name)
-	//flagLookup := fs.FlagSet.Lookup(name)
-	//
-	//if flagLookup != nil {
-	//	flagName, _ := flag.UnquoteUsage(flagLookup)
-	//	switch flagName {
-	//	// 空为bool类型
-	//	case "":
-	//		if flagLookup.Value.String() == "false" {
-	//			env, ok := fs.environs[name]
-	//			// 如果存在环境变量，设置环境变量数据
-	//			if ok {
-	//				flagLookup.Value.Set(env)
-	//				// 如果不存在环境变量，设置默认数据
-	//			} else {
-	//				if value, ok2 := fs.defaultValues[name]; ok2 {
-	//					flagLookup.Value.Set(value)
-	//				}
-	//			}
-	//		}
-	//	case "string":
-	//		if flagLookup.Value.String() == "" {
-	//			env, ok := fs.environs[name]
-	//			if ok {
-	//				flagLookup.Value.Set(env)
-	//			} else {
-	//				if value, ok2 := fs.defaultValues[name]; ok2 {
-	//					flagLookup.Value.Set(value)
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	//return flagLookup
 }
 
 // Parse parses provided flagset.
