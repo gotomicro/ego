@@ -2,15 +2,17 @@ package egin
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/util/xtime"
 	"time"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/gotomicro/ego/core/eflag"
+	"github.com/gotomicro/ego/core/util/xtime"
 )
 
 // Config HTTP config
 type Config struct {
-	Host                    string        // IP地址，默认127.0.0.1
+	Host                    string        // IP地址，默认0.0.0.0
 	Port                    int           // PORT端口，默认9001
 	Mode                    string        // gin的模式，默认是release模式
 	EnableMetricInterceptor bool          // 是否开启监控，默认开启
@@ -21,13 +23,8 @@ type Config struct {
 
 // DefaultConfig ...
 func DefaultConfig() *Config {
-	host := "0.0.0.0"
-	// 如果存在环境变量IP，就使用环境变量IP
-	if eapp.AppHost() != "" {
-		host = eapp.AppHost()
-	}
 	return &Config{
-		Host:                    host,
+		Host:                    eflag.String("host"),
 		Port:                    9090,
 		Mode:                    gin.ReleaseMode,
 		EnableTraceInterceptor:  true,

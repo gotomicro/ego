@@ -152,7 +152,7 @@ func (e *Ego) Job(runners ...ejob.Ejob) *Ego {
 		return e
 	}
 
-	jobMap := make(map[string]struct{}, 0)
+	jobMap := make(map[string]struct{})
 	// 逗号分割可以执行多个job
 	if strings.Contains(jobFlag, ",") {
 		jobArr := strings.Split(jobFlag, ",")
@@ -197,10 +197,10 @@ func (e *Ego) Run() error {
 	e.waitSignals() // start signal listen task in goroutine
 
 	// 启动服务
-	e.startServers()
+	_ = e.startServers()
 
 	// 启动定时任务
-	e.startCrons()
+	_ = e.startCrons()
 
 	// 阻塞，等待信号量
 	if err := <-e.cycle.Wait(e.opts.hang); err != nil {

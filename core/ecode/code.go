@@ -1,8 +1,6 @@
 package ecode
 
 import (
-	"sync"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -14,9 +12,6 @@ import (
 const EcodeNum int32 = 9999
 
 var (
-	aid              int
-	maxCustomizeCode = 9999
-	_codes           sync.Map
 	// OK ...
 	OK = &SpbStatus{
 		&spb.Status{
@@ -26,42 +21,6 @@ var (
 		},
 	}
 )
-
-//
-//func init() {
-//	// status code list
-//	egovernor.HandleFunc("/status/code/list", func(w http.ResponseWriter, r *http.Request) {
-//		var rets = make(map[int]*SpbStatus)
-//		_codes.Range(func(key, val interface{}) bool {
-//			code := key.(int)
-//			status := val.(*SpbStatus)
-//			rets[code] = status
-//			return true
-//		})
-//		_ = json.NewEncoder(w).Encode(rets)
-//	})
-//}
-//
-//// Add ...
-//func Add(code int, message string) *SpbStatus {
-//	if code > maxCustomizeCode {
-//		elog.Panic("customize code must less than 9999", elog.Any("code", code))
-//	}
-//
-//	return add(aid*10000+code, message)
-//}
-//
-//func add(code int, message string) *SpbStatus {
-//	status := &SpbStatus{
-//		&spb.Status{
-//			Code:    int32(code),
-//			Message: message,
-//			Details: make([]*any.Any, 0),
-//		},
-//	}
-//	_codes.Store(code, status)
-//	return status
-//}
 
 // ExtractCodes cause from error to ecode.
 func ExtractCodes(e error) *SpbStatus {

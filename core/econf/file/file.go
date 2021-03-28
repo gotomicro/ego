@@ -2,6 +2,7 @@ package file
 
 import (
 	"github.com/fsnotify/fsnotify"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/econf/manager"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/util/xgo"
@@ -40,7 +41,7 @@ func (fp *fileDataSource) Parse(path string, watch bool) {
 		fp.changed = make(chan struct{}, 1)
 		xgo.Go(fp.watch)
 	}
-	return
+	fp.logger = elog.EgoLogger.With(elog.FieldComponent(econf.PackageName))
 }
 
 // ReadConfig ...
@@ -63,7 +64,7 @@ func (fp *fileDataSource) IsConfigChanged() <-chan struct{} {
 func (fp *fileDataSource) watch() {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
-		elog.Fatal("new file watcher", elog.FieldComponent("file datasource"), elog.FieldErr(err))
+		fp.logger.Fatal("new file watcher", elog.FieldComponent("file datasource"), elog.FieldErr(err))
 	}
 	defer w.Close()
 	done := make(chan bool)
@@ -71,7 +72,7 @@ func (fp *fileDataSource) watch() {
 		for {
 			select {
 			case event := <-w.Events:
-				elog.Debug("read watch event",
+				fp.logger.Debug("read watch event",
 					elog.FieldComponent("file datasource"),
 					elog.String("event", filepath.Clean(event.Name)),
 					elog.String("path", filepath.Clean(fp.path)),
@@ -81,15 +82,14 @@ func (fp *fileDataSource) watch() {
 				// 2 - if the real path to the config file changed
 				const writeOrCreateMask = fsnotify.Write | fsnotify.Create
 				if event.Op&writeOrCreateMask != 0 && filepath.Clean(event.Name) == filepath.Clean(fp.path) {
-					log.Println("modified file: ", event.Name)
+					fp.logger.Info("modified file", elog.FieldName(event.Name))
 					select {
 					case fp.changed <- struct{}{}:
 					default:
 					}
 				}
 			case err := <-w.Errors:
-				// log.Println("error: ", err)
-				elog.Error("read watch error", elog.FieldComponent("file datasource"), elog.FieldErr(err))
+				fp.logger.Error("read watch error", elog.FieldComponent("file datasource"), elog.FieldErr(err))
 			}
 		}
 	}()

@@ -35,7 +35,7 @@ func (e *Ego) waitSignals() {
 		go func() {
 			stopCtx, cancel := context.WithTimeout(context.Background(), e.opts.stopTimeout)
 			defer cancel()
-			e.Stop(stopCtx, grace)
+			_ = e.Stop(stopCtx, grace)
 		}()
 		<-sig
 		os.Exit(128 + int(s.(syscall.Signal))) // second signal. Exit directly.
@@ -47,12 +47,14 @@ func (e *Ego) startServers() error {
 	for _, s := range e.servers {
 		s := s
 		e.cycle.Run(func() (err error) {
-			s.Init()
+			_ = s.Init()
 			err = e.registerer.RegisterService(context.TODO(), s.Info())
 			if err != nil {
 				e.logger.Error("register service err", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err))
 			}
-			defer e.registerer.UnregisterService(context.TODO(), s.Info())
+			defer func() {
+				_ = e.registerer.UnregisterService(context.TODO(), s.Info())
+			}()
 			e.logger.Info("start server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldAddr(s.Info().Label()))
 			defer e.logger.Info("stop server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err), elog.FieldAddr(s.Info().Label()))
 			err = s.Start()
@@ -121,7 +123,7 @@ func (e *Ego) parseFlags() error {
 		Name:    "host",
 		Usage:   "--host, print host",
 		EnvVar:  constant.EnvAppHost,
-		Default: "",
+		Default: "0.0.0.0",
 		Action:  func(string, *eflag.FlagSet) {},
 	})
 	return eflag.Parse()

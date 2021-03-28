@@ -26,12 +26,12 @@ var (
 )
 
 // PackageName 包名
-const PackageName = "server.egin"
+const PackageName = "server.egovernor"
 
 func init() {
 	// 获取全部治理路由
 	HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
-		json.NewEncoder(resp).Encode(routes)
+		_ = json.NewEncoder(resp).Encode(routes)
 	})
 	HandleFunc("/debug/pprof/", pprof.Index)
 	HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -52,10 +52,10 @@ func init() {
 		if r.URL.Query().Get("pretty") == "true" {
 			encoder.SetIndent("", "    ")
 		}
-		encoder.Encode(econf.Traverse("."))
+		_ = encoder.Encode(econf.Traverse("."))
 	})
 	HandleFunc("/config/raw", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(econf.RawConfig())
+		_, _ = w.Write(econf.RawConfig())
 	})
 	HandleFunc("/env/info", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
