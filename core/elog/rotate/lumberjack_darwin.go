@@ -189,7 +189,7 @@ func (l *Logger) run() {
 		if _, err = l.file.Write(b); err != nil {
 			panic(err)
 		}
-		_asyncBufferPool.Put(b)
+		_asyncBufferPool.Put(&b)
 	}
 }
 
@@ -411,9 +411,11 @@ func (l *Logger) millRunOnce() error {
 			// Only count the uncompressed log file or the
 			// compressed log file, not both.
 			fn := f.Name()
-			if strings.HasSuffix(fn, compressSuffix) {
-				fn = fn[:len(fn)-len(compressSuffix)]
-			}
+			//if strings.HasSuffix(fn, compressSuffix) {
+			//	fn = fn[:len(fn)-len(compressSuffix)]
+			//}
+			fn = strings.TrimSuffix(fn, compressSuffix)
+
 			preserved[fn] = true
 
 			if len(preserved) > l.MaxBackups {

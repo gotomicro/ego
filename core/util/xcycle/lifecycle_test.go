@@ -56,7 +56,7 @@ func TestCycleClose(t *testing.T) {
 
 func TestCycleDoneAndClose(t *testing.T) {
 	ch := make(chan string, 2)
-	state := "init"
+	state := ""
 	c := NewCycle()
 	c.Run(func() error {
 		time.Sleep(time.Microsecond * 100)

@@ -38,7 +38,9 @@ func TestFlagSet_Register_Default(t *testing.T) {
 		Default: ConfigDefaultToml,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	Parse()
+	err := Parse()
+	assert.NoError(t, err)
+
 	configStr, err := StringE("config")
 	assert.NoError(t, err)
 	assert.Equal(t, ConfigDefaultToml, configStr)
@@ -55,7 +57,9 @@ func TestFlagSet_Register_Env(t *testing.T) {
 		EnvVar: constant.EgoConfigPath,
 		Action: func(name string, fs *FlagSet) {},
 	})
-	Parse()
+	err := Parse()
+	assert.NoError(t, err)
+
 	configStr, err := StringE("config")
 	assert.NoError(t, err)
 	assert.Equal(t, ConfigEnvToml, configStr)
@@ -72,9 +76,11 @@ func TestFlagSet_Register_Flag(t *testing.T) {
 		EnvVar: constant.EgoConfigPath,
 		Action: func(name string, fs *FlagSet) {},
 	})
-	Parse()
+	err := Parse()
+	assert.NoError(t, err)
 
-	flag.Set("config", ConfigFlagToml)
+	err = flag.Set("config", ConfigFlagToml)
+	assert.NoError(t, err)
 	configStr, err := StringE("config")
 	assert.NoError(t, err)
 	assert.Equal(t, ConfigFlagToml, configStr)
@@ -123,7 +129,8 @@ func TestFlagSet_Register_Priority(t *testing.T) {
 		Default: ConfigDefaultToml,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	Parse()
+	err = Parse()
+	assert.NoError(t, err)
 	configStr, err = StringE("config")
 	assert.NoError(t, err)
 	assert.Equal(t, ConfigDefaultToml, configStr)
@@ -137,7 +144,8 @@ func TestFlagSet_Register_Bool(t *testing.T) {
 		Default: true,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	Parse()
+	err := Parse()
+	assert.NoError(t, err)
 	boolFlag, err := BoolE("watch")
 	assert.NoError(t, err)
 	assert.Equal(t, true, boolFlag)
@@ -152,7 +160,8 @@ func TestFlagSet_Register_Bool(t *testing.T) {
 		EnvVar:  "EGO_WATCH",
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	Parse()
+	err = Parse()
+	assert.NoError(t, err)
 	boolFlag, err = BoolE("watch")
 	assert.NoError(t, err)
 	assert.Equal(t, false, boolFlag)
@@ -164,8 +173,10 @@ func TestFlagSet_Register_Bool(t *testing.T) {
 		Default: true,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	Parse()
-	flag.Set("watch", "true")
+	err = Parse()
+	assert.NoError(t, err)
+	err = flag.Set("watch", "true")
+	assert.NoError(t, err)
 	boolFlag, err = BoolE("watch")
 	assert.NoError(t, err)
 	assert.Equal(t, true, boolFlag)
@@ -177,8 +188,10 @@ func TestFlagSet_Register_Bool(t *testing.T) {
 		Default: true,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	Parse()
-	flag.Set("watch", "false")
+	err = Parse()
+	assert.NoError(t, err)
+	err = flag.Set("watch", "false")
+	assert.NoError(t, err)
 	boolFlag, err = BoolE("watch")
 	assert.NoError(t, err)
 	assert.Equal(t, false, boolFlag)
