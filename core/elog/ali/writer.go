@@ -203,7 +203,7 @@ func (w *writer) flush() error {
 
 func (w *writer) writeToFallbackLogger(lg pb.LogGroup) {
 	for _, v := range lg.Logs {
-		fields := make([]zapcore.Field, len(v.Contents), len(v.Contents))
+		fields := make([]zapcore.Field, len(v.Contents))
 		for i, val := range v.Contents {
 			fields[i] = zap.String(val.GetKey(), val.GetValue())
 		}
