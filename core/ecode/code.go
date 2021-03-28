@@ -27,7 +27,6 @@ func ExtractCodes(e error) *SpbStatus {
 	if e == nil {
 		return OK
 	}
-	// todo 不想做code类型转换，所以全部用grpc标准码处理
 	// 如果存在标准的grpc的错误，直接返回自定义的ecode编码
 	gst, _ := status.FromError(e)
 	return &SpbStatus{
