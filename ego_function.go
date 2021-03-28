@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"go.uber.org/automaxprocs/maxprocs"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
@@ -19,7 +20,6 @@ import (
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/etrace/ejaeger"
 	"github.com/gotomicro/ego/core/util/xcolor"
-	"github.com/gotomicro/ego/core/util/xgo"
 )
 
 // waitSignals wait signal
@@ -87,7 +87,12 @@ func (e *Ego) startJobs() error {
 			return runner.Start()
 		})
 	}
-	return xgo.ParallelWithError(jobs...)()
+
+	eg := errgroup.Group{}
+	for _, fn := range jobs {
+		eg.Go(fn)
+	}
+	return eg.Wait()
 }
 
 // parseFlags init
