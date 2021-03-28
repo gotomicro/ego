@@ -3,6 +3,7 @@ package eflag
 import (
 	"flag"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -192,7 +193,21 @@ func resetFlagSet() {
 	flag.Bool("test.v", false, "verbose: print additional output")
 	flag.Bool("test.paniconexit0", false, "panic on call to os.Exit(0)")
 	flag.String("test.run", "", "run only tests and examples matching `regexp`")
-	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
 	flag.String("test.testlogfile", "", "write test action log to `file` (for use only by cmd/go)")
+	flag.String("test.coverprofile", "", "write a coverage profile to `file`")
+	flag.String("test.outputdir", "", "write profiles to `dir`")
+	flag.Uint("test.count", 1, "run tests and benchmarks `n` times")
+	flag.String("test.list", "", "list tests, examples, and benchmarks matching `regexp` then exit")
+	flag.String("test.memprofile", "", "write an allocation profile to `file`")
+	flag.Int("test.memprofilerate", 0, "set memory allocation profiling `rate` (see runtime.MemProfileRate)")
+	flag.String("test.cpuprofile", "", "write a cpu profile to `file`")
+	flag.String("test.blockprofile", "", "write a goroutine blocking profile to `file`")
+	flag.Int("test.blockprofilerate", 1, "set blocking profile `rate` (see runtime.SetBlockProfileRate)")
+	flag.String("test.mutexprofile", "", "write a mutex contention profile to the named file after execution")
+	flag.Int("test.mutexprofilefraction", 1, "if >= 0, calls runtime.SetMutexProfileFraction()")
+	flag.String("test.trace", "", "write an execution trace to `file`")
+	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
+	flag.String("test.cpu", "", "comma-separated `list` of cpu counts to run each test with")
+	flag.Int("test.parallel", runtime.GOMAXPROCS(0), "run at most `n` tests in parallel")
 	setFlagSet(flagObj)
 }
