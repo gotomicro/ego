@@ -73,6 +73,14 @@ func (fp *fileDataSource) watch() {
 	configFile := filepath.Clean(fp.path)
 	realConfigFile, _ := filepath.EvalSymlinks(fp.path)
 
+	fp.logger.Info("read watch",
+		elog.FieldComponent("file datasource"),
+		elog.String("configFile", configFile),
+		elog.String("realConfigFile", realConfigFile),
+		elog.String("dir", fp.dir),
+		elog.String("fppath", fp.path),
+	)
+
 	done := make(chan bool)
 	go func() {
 		for {
