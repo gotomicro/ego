@@ -1,17 +1,19 @@
 package file
 
 import (
-	"github.com/fsnotify/fsnotify"
-	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/econf/manager"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/util/xgo"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/fsnotify/fsnotify"
+
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/econf/manager"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/util/xgo"
 )
 
 // fileDataSource file provider.
@@ -67,6 +69,10 @@ func (fp *fileDataSource) watch() {
 		fp.logger.Fatal("new file watcher", elog.FieldComponent("file datasource"), elog.FieldErr(err))
 	}
 	defer w.Close()
+
+	configFile := filepath.Clean(fp.path)
+	realConfigFile, _ := filepath.EvalSymlinks(fp.path)
+
 	done := make(chan bool)
 	go func() {
 		for {
@@ -77,12 +83,17 @@ func (fp *fileDataSource) watch() {
 					elog.String("event", filepath.Clean(event.Name)),
 					elog.String("path", filepath.Clean(fp.path)),
 				)
+
+				currentConfigFile, _ := filepath.EvalSymlinks(fp.path)
 				// we only care about the config file with the following cases:
 				// 1 - if the config file was modified or created
 				// 2 - if the real path to the config file changed
 				const writeOrCreateMask = fsnotify.Write | fsnotify.Create
-				if event.Op&writeOrCreateMask != 0 && filepath.Clean(event.Name) == filepath.Clean(fp.path) {
-					fp.logger.Info("modified file", elog.FieldName(event.Name))
+				if (filepath.Clean(event.Name) == configFile &&
+					event.Op&writeOrCreateMask != 0) ||
+					(currentConfigFile != "" && currentConfigFile != realConfigFile) {
+					realConfigFile = currentConfigFile
+					fp.logger.Info("modified file", elog.FieldName(event.Name), elog.FieldAddr(realConfigFile))
 					select {
 					case fp.changed <- struct{}{}:
 					default:
