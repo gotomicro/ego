@@ -91,10 +91,14 @@ func newWithSymlinkedConfigFile(t *testing.T) (*econf.Configuration, string, str
 		os.RemoveAll(watchDir)
 	}
 	// now, symlink the tm `data1` dir to `data` in the baseDir
-	os.Symlink(dataDir1, path.Join(watchDir, "data"))
+	err = os.Symlink(dataDir1, path.Join(watchDir, "data"))
+	require.Nil(t, err)
+
 	// and link the `<watchdir>/datadir1/config.yaml` to `<watchdir>/config.yaml`
 	configFile := path.Join(watchDir, "config.yaml")
-	os.Symlink(path.Join(watchDir, "data", "config.yaml"), configFile)
+	err = os.Symlink(path.Join(watchDir, "data", "config.yaml"), configFile)
+	require.Nil(t, err)
+
 	t.Logf("Config file location: %s\n", path.Join(watchDir, "config.yaml"))
 
 	v := econf.New()
