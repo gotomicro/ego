@@ -63,6 +63,8 @@ func newWithConfigFile(t *testing.T) (*econf.Configuration, string, func(), *syn
 	}
 	v := econf.New()
 	provider, parser, tag, err := manager.NewDataSource(configFile, true)
+	assert.Nil(t, err)
+
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	v.OnChange(func(configuration *econf.Configuration) {
@@ -101,6 +103,8 @@ func newWithSymlinkedConfigFile(t *testing.T) (*econf.Configuration, string, str
 
 	v := econf.New()
 	provider, parser, tag, err := manager.NewDataSource(configFile, true)
+	require.Nil(t, err)
+
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	v.OnChange(func(configuration *econf.Configuration) {
