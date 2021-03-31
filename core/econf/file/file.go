@@ -39,6 +39,7 @@ func (fp *fileDataSource) Parse(path string, watch bool) {
 	fp.path = absolutePath
 	fp.dir = dir
 	fp.enableWatch = watch
+
 	if watch {
 		fp.changed = make(chan struct{}, 1)
 		xgo.Go(fp.watch)
@@ -80,22 +81,23 @@ func (fp *fileDataSource) watch() {
 		elog.String("dir", fp.dir),
 		elog.String("fppath", fp.path),
 	)
-
 	done := make(chan bool)
 	go func() {
 		for {
 			select {
 			case event := <-w.Events:
-				fp.logger.Debug("read watch event",
+				currentConfigFile, _ := filepath.EvalSymlinks(fp.path)
+
+				fp.logger.Info("read watch event",
 					elog.FieldComponent("file datasource"),
 					elog.String("event", filepath.Clean(event.Name)),
 					elog.String("path", filepath.Clean(fp.path)),
+					elog.String("currentConfigFile", currentConfigFile),
+					elog.String("realConfigFile", realConfigFile),
 				)
-
-				currentConfigFile, _ := filepath.EvalSymlinks(fp.path)
 				// we only care about the config file with the following cases:
 				// 1 - if the config file was modified or created
-				// 2 - if the real path to the config file changed
+				// 2 - if the real path to the config file changed (eg: k8s ConfigMap replacement)
 				const writeOrCreateMask = fsnotify.Write | fsnotify.Create
 				if (filepath.Clean(event.Name) == configFile &&
 					event.Op&writeOrCreateMask != 0) ||
@@ -112,7 +114,6 @@ func (fp *fileDataSource) watch() {
 			}
 		}
 	}()
-
 	err = w.Add(fp.dir)
 	if err != nil {
 		log.Fatal(err)
