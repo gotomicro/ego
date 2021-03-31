@@ -12,9 +12,9 @@ import (
 type Config struct {
 	// Required. 触发时间
 	//	默认最小单位为分钟.比如:
-	//		"* * * * * *" 代表每分钟执行
+	//		"* * * * *" 代表每分钟执行
 	//	如果 EnableSeconds = true. 那么最小单位为秒. 示例:
-	//		"*/3 * * * * * *" 代表每三秒钟执行一次
+	//		"*/3 * * * * *" 代表每三秒钟执行一次
 	Spec string
 
 	WaitLockTime   time.Duration // 抢锁等待时间，默认 4s

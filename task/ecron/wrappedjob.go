@@ -65,6 +65,7 @@ func (wj wrappedJob) run() {
 
 	err := wj.NamedJob.Run(ctx)
 	if err != nil {
+		fields = append(fields, elog.FieldErr(err))
 		wj.logger.Error("cron run failed", fields...)
 	}
 }
