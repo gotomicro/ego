@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"sync"
 	"testing"
 
@@ -33,6 +34,11 @@ func TestWatchFile(t *testing.T) {
 	})
 
 	t.Run("link to real file changed (Kubernetes)", func(t *testing.T) {
+		// skip if not executed on Linux
+		if runtime.GOOS != "linux" {
+			t.Skipf("Skipping test as symlink replacements don't work on non-linux environment...")
+		}
+
 		v, watchDir, _, _, wg := newWithSymlinkedConfigFile(t)
 		// defer cleanup()
 		// when link to another `config.yaml` file
