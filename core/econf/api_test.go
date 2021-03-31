@@ -18,6 +18,9 @@ import (
 )
 
 func TestWatchFile(t *testing.T) {
+	if runtime.GOOS == "linux" {
+		t.Skip("Skip test on Linux ...")
+	}
 	t.Run("file content changed", func(t *testing.T) {
 		// given a `config.yaml` file being watched
 		v, configFile, cleanup, wg := newWithConfigFile(t)
