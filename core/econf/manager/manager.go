@@ -10,7 +10,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v3"
 
-	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 )
@@ -39,11 +38,6 @@ func Register(scheme string, creator econf.DataSource) {
 
 // NewDataSource 根据配置地址，创建数据源
 func NewDataSource(configAddr string, watch bool) (econf.DataSource, econf.Unmarshaller, string, error) {
-	// 如果配置为空，那么赋值默认配置
-	if configAddr == "" {
-		configAddr = eapp.EgoConfigPath()
-	}
-
 	scheme := DefaultScheme
 	urlObj, err := url.Parse(configAddr)
 	if err == nil && len(urlObj.Scheme) > 1 {

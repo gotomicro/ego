@@ -2,12 +2,14 @@ package egrpc
 
 import (
 	"context"
+	"net"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
-	"net"
 )
 
 // PackageName 包名
@@ -96,7 +98,6 @@ func (c *Component) GracefulStop(ctx context.Context) error {
 			return nil
 		}
 	}
-	return nil
 }
 
 // Info returns server info, used by governor and consumer balancer

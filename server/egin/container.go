@@ -4,7 +4,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/util/xnet"
 )
@@ -43,10 +42,7 @@ func Load(key string) *Container {
 		}
 		c.config.Host = host
 	}
-	// 修改host信息
-	if eflag.String("host") != "" {
-		c.config.Host = eflag.String("host")
-	}
+
 	c.logger = c.logger.With(elog.FieldComponentName(key))
 	c.name = key
 	return c

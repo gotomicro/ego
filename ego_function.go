@@ -9,7 +9,9 @@ import (
 	"syscall"
 
 	"go.uber.org/automaxprocs/maxprocs"
+	"golang.org/x/sync/errgroup"
 
+	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/econf/manager"
@@ -18,7 +20,6 @@ import (
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/etrace/ejaeger"
 	"github.com/gotomicro/ego/core/util/xcolor"
-	"github.com/gotomicro/ego/core/util/xgo"
 )
 
 // waitSignals wait signal
@@ -34,7 +35,7 @@ func (e *Ego) waitSignals() {
 		go func() {
 			stopCtx, cancel := context.WithTimeout(context.Background(), e.opts.stopTimeout)
 			defer cancel()
-			e.Stop(stopCtx, grace)
+			_ = e.Stop(stopCtx, grace)
 		}()
 		<-sig
 		os.Exit(128 + int(s.(syscall.Signal))) // second signal. Exit directly.
@@ -46,12 +47,14 @@ func (e *Ego) startServers() error {
 	for _, s := range e.servers {
 		s := s
 		e.cycle.Run(func() (err error) {
-			s.Init()
+			_ = s.Init()
 			err = e.registerer.RegisterService(context.TODO(), s.Info())
 			if err != nil {
 				e.logger.Error("register service err", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err))
 			}
-			defer e.registerer.UnregisterService(context.TODO(), s.Info())
+			defer func() {
+				_ = e.registerer.UnregisterService(context.TODO(), s.Info())
+			}()
 			e.logger.Info("start server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldAddr(s.Info().Label()))
 			defer e.logger.Info("stop server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err), elog.FieldAddr(s.Info().Label()))
 			err = s.Start()
@@ -84,18 +87,25 @@ func (e *Ego) startJobs() error {
 			return runner.Start()
 		})
 	}
-	return xgo.ParallelWithError(jobs...)()
+
+	eg := errgroup.Group{}
+	for _, fn := range jobs {
+		eg.Go(fn)
+	}
+	return eg.Wait()
 }
 
 // parseFlags init
-func parseFlags() error {
-	eflag.Register(&eflag.StringFlag{
-		Name:    "config",
-		Usage:   "--config",
-		EnvVar:  "CONFIG",
-		Default: "",
-		Action:  func(name string, fs *eflag.FlagSet) {},
-	})
+func (e *Ego) parseFlags() error {
+	if !e.opts.disableFlagConfig {
+		eflag.Register(&eflag.StringFlag{
+			Name:    "config",
+			Usage:   "--config",
+			EnvVar:  constant.EgoConfigPath,
+			Default: constant.DefaultConfig,
+			Action:  func(name string, fs *eflag.FlagSet) {},
+		})
+	}
 
 	eflag.Register(&eflag.BoolFlag{
 		Name:    "watch",
@@ -117,7 +127,8 @@ func parseFlags() error {
 	eflag.Register(&eflag.StringFlag{
 		Name:    "host",
 		Usage:   "--host, print host",
-		Default: "",
+		EnvVar:  constant.EnvAppHost,
+		Default: "0.0.0.0",
 		Action:  func(string, *eflag.FlagSet) {},
 	})
 	return eflag.Parse()

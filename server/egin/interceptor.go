@@ -171,7 +171,6 @@ func metricServerInterceptor() gin.HandlerFunc {
 		c.Next()
 		emetric.ServerHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeHTTP, c.Request.Method+"."+c.Request.URL.Path, extractAPP(c))
 		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.Request.URL.Path, extractAPP(c), http.StatusText(c.Writer.Status()))
-		return
 	}
 }
 

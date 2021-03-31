@@ -2,8 +2,9 @@ package egrpc
 
 import (
 	"fmt"
-	"github.com/gotomicro/ego/core/eapp"
 	"time"
+
+	"github.com/gotomicro/ego/core/eflag"
 
 	"google.golang.org/grpc"
 
@@ -31,15 +32,9 @@ type Config struct {
 // DefaultConfig represents default config
 // User should construct config base on DefaultConfig
 func DefaultConfig() *Config {
-	host := "0.0.0.0"
-	// 如果存在环境变量IP，就使用环境变量IP
-	if eapp.AppHost() != "" {
-		host = eapp.AppHost()
-	}
-
 	return &Config{
 		Network:                    "tcp4",
-		Host:                       host,
+		Host:                       eflag.String("host"),
 		Port:                       9002,
 		Deployment:                 constant.DefaultDeployment,
 		EnableMetricInterceptor:    true,

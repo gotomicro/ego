@@ -46,27 +46,27 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 }
 
 // metricStreamClientInterceptor returns grpc stream request metrics collector interceptor
-func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-		beg := time.Now()
-		clientStream, err := streamer(ctx, desc, cc, method, opts...)
-
-		// 暂时用默认的grpc的默认err收敛
-		codes := ecode.ExtractCodes(err)
-		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCStream, name, method, cc.Target(), codes.GetMessage())
-		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCStream, name, method, cc.Target())
-		return clientStream, err
-	}
-}
+//func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+//	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+//		beg := time.Now()
+//		clientStream, err := streamer(ctx, desc, cc, method, opts...)
+//
+//		// 暂时用默认的grpc的默认err收敛
+//		codes := ecode.ExtractCodes(err)
+//		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCStream, name, method, cc.Target(), codes.GetMessage())
+//		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCStream, name, method, cc.Target())
+//		return clientStream, err
+//	}
+//}
 
 // debugUnaryClientInterceptor returns grpc unary request request and response details interceptor
 func debugUnaryClientInterceptor(logger *elog.Component, compName, addr string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		var p peer.Peer
-		prefix := fmt.Sprintf("[%s]", addr)
-		if remote, ok := peer.FromContext(ctx); ok && remote.Addr != nil {
-			prefix = prefix + "(" + remote.Addr.String() + ")"
-		}
+		//prefix := fmt.Sprintf("[%s]", addr)
+		//if remote, ok := peer.FromContext(ctx); ok && remote.Addr != nil {
+		//	prefix = prefix + "(" + remote.Addr.String() + ")"
+		//}
 
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, append(opts, grpc.Peer(&p))...)
@@ -77,9 +77,8 @@ func debugUnaryClientInterceptor(logger *elog.Component, compName, addr string) 
 			} else {
 				log.Println("grpc.response", xdebug.MakeReqResInfo(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
 			}
-		} else {
-			// todo log
 		}
+		// todo log
 
 		return err
 	}

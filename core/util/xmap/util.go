@@ -3,7 +3,6 @@ package xmap
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/gotomicro/ego/core/util/xcast"
 )
@@ -48,24 +47,6 @@ func ToMapStringInterface(src map[interface{}]interface{}) map[string]interface{
 		tgt[fmt.Sprintf("%v", k)] = v
 	}
 	return tgt
-}
-
-// InsensitiviseMap insensitivise map
-func InsensitiviseMap(m map[string]interface{}) {
-	for key, val := range m {
-		switch val.(type) {
-		case map[interface{}]interface{}:
-			InsensitiviseMap(xcast.ToStringMap(val))
-		case map[string]interface{}:
-			InsensitiviseMap(val.(map[string]interface{}))
-		}
-
-		lower := strings.ToLower(key)
-		if key != lower {
-			delete(m, key)
-		}
-		m[lower] = val
-	}
 }
 
 // DeepSearchInMap deep search in map

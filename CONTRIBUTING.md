@@ -36,6 +36,7 @@ git checkout -b feature/my-feature origin/master
 ## 5 Golint
 ```bash
 golint ./...
+golangci-lint run ./...
 ```
 
 ## 6 提交 commit

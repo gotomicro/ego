@@ -6,6 +6,7 @@ import (
 
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/standard"
 )
 
@@ -126,7 +127,7 @@ func defaultServiceInfo() ServiceInfo {
 		Group:      "",
 	}
 	si.Metadata["appMode"] = eapp.AppMode()
-	si.Metadata["appHost"] = eapp.AppHost()
+	si.Metadata["appHost"] = eflag.String("host")
 	si.Metadata["startTime"] = eapp.StartTime()
 	si.Metadata["buildTime"] = eapp.BuildTime()
 	si.Metadata["appVersion"] = eapp.AppVersion()

@@ -30,12 +30,12 @@ func (wj wrappedJob) run() {
 		"ego-cron",
 	)
 	defer span.Finish()
-	traceId := etrace.ExtractTraceID(ctx)
+	traceID := etrace.ExtractTraceID(ctx)
 	emetric.JobHandleCounter.Inc("cron", wj.Name(), "begin")
 	var fields = []elog.Field{zap.String("name", wj.Name())}
 	// 如果设置了链路，增加链路信息
 	if opentracing.IsGlobalTracerRegistered() {
-		fields = append(fields, elog.FieldTid(traceId))
+		fields = append(fields, elog.FieldTid(traceID))
 	}
 
 	wj.logger.Info("cron start", fields...)

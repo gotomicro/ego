@@ -38,15 +38,13 @@ type LogContent = pb.Log_Content
 
 // config is the config for Ali Log
 type config struct {
-	encoder                zapcore.Encoder
-	project                string
-	endpoint               string
-	accessKeyID            string
-	accessKeySecret        string
-	logstore               string
-	topics                 []string
-	source                 string
-	flushSize              int
+	encoder         zapcore.Encoder
+	project         string
+	endpoint        string
+	accessKeyID     string
+	accessKeySecret string
+	logstore        string
+	//flushSize              int
 	flushBufferSize        int32
 	flushBufferInterval    time.Duration
 	levelEnabler           zapcore.LevelEnabler
@@ -205,7 +203,7 @@ func (w *writer) flush() error {
 
 func (w *writer) writeToFallbackLogger(lg pb.LogGroup) {
 	for _, v := range lg.Logs {
-		fields := make([]zapcore.Field, len(v.Contents), len(v.Contents))
+		fields := make([]zapcore.Field, len(v.Contents))
 		for i, val := range v.Contents {
 			fields[i] = zap.String(val.GetKey(), val.GetValue())
 		}
@@ -232,7 +230,6 @@ func (w *writer) sync() {
 			}
 		}
 	}()
-	return
 }
 
 func (w *writer) observe() {

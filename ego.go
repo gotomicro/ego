@@ -42,13 +42,14 @@ type Ego struct {
 }
 
 type opts struct {
-	configPrefix    string         // 配置前缀
-	hang            bool           // 是否悬挂
-	disableBanner   bool           // 禁用banner
-	beforeStopClean []func() error // 运行停止前清理
-	afterStopClean  []func() error // 运行停止后清理
-	stopTimeout     time.Duration  // 运行停止超时时间
-	shutdownSignals []os.Signal
+	configPrefix      string         // 配置前缀
+	hang              bool           // 是否悬挂
+	disableBanner     bool           // 禁用banner
+	disableFlagConfig bool           // 禁用flag config
+	beforeStopClean   []func() error // 运行停止前清理
+	afterStopClean    []func() error // 运行停止后清理
+	stopTimeout       time.Duration  // 运行停止超时时间
+	shutdownSignals   []os.Signal
 }
 
 // New new Ego
@@ -96,7 +97,7 @@ func New(options ...Option) *Ego {
 
 	// 设置初始函数
 	e.inits = []func() error{
-		parseFlags,
+		e.parseFlags,
 		e.printBanner,
 		printLogger,
 		loadConfig,
@@ -151,7 +152,7 @@ func (e *Ego) Job(runners ...ejob.Ejob) *Ego {
 		return e
 	}
 
-	jobMap := make(map[string]struct{}, 0)
+	jobMap := make(map[string]struct{})
 	// 逗号分割可以执行多个job
 	if strings.Contains(jobFlag, ",") {
 		jobArr := strings.Split(jobFlag, ",")
@@ -196,10 +197,10 @@ func (e *Ego) Run() error {
 	e.waitSignals() // start signal listen task in goroutine
 
 	// 启动服务
-	e.startServers()
+	_ = e.startServers()
 
 	// 启动定时任务
-	e.startCrons()
+	_ = e.startCrons()
 
 	// 阻塞，等待信号量
 	if err := <-e.cycle.Wait(e.opts.hang); err != nil {

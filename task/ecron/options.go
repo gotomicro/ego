@@ -45,6 +45,7 @@ func skipIfStillRunning(logger *elog.Component) JobWrapper {
 	}
 }
 
+// Option ...
 type Option func(c *Container)
 
 // WithLock 设置分布式锁. 当 Config.EnableDistributedTask = true 时, 本 Option 必须设置

@@ -32,7 +32,7 @@ func GetServiceValue(s *server.ServiceInfo) string {
 //GetService ..
 func GetService(s string) *server.ServiceInfo {
 	var si server.ServiceInfo
-	json.Unmarshal([]byte(s), &si)
+	_ = json.Unmarshal([]byte(s), &si)
 	return &si
 }
 

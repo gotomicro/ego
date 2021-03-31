@@ -12,6 +12,7 @@ import (
 	"github.com/gotomicro/ego/core/util/xstring"
 )
 
+// PackageName 包名
 const PackageName = "task.ecron"
 
 type (
@@ -48,11 +49,10 @@ func (f FuncJob) Name() string { return xstring.FunctionName(f) }
 
 // Component ...
 type Component struct {
-	name    string
-	config  *Config
-	cron    *cron.Cron
-	entries map[string]EntryID
-	logger  *elog.Component
+	name   string
+	config *Config
+	cron   *cron.Cron
+	logger *elog.Component
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
@@ -68,14 +68,17 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 }
 
+// Name 名称
 func (c *Component) Name() string {
 	return c.name
 }
 
+// PackageName 包名
 func (c *Component) PackageName() string {
 	return PackageName
 }
 
+// Init Init
 func (c *Component) Init() error {
 	return nil
 }
