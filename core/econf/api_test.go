@@ -1,7 +1,6 @@
 package econf_test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -27,10 +26,9 @@ func TestWatchFile(t *testing.T) {
 		t.Logf("test config file: %s\n", configFile)
 		// when overwriting the file and waiting for the custom change notification handler to be triggered
 		err = ioutil.WriteFile(configFile, []byte("foo: baz\n"), 0640)
-		fmt.Println("write file")
+		require.Nil(t, err)
 		wg.Wait()
 		// then the config value should have changed
-		require.Nil(t, err)
 		assert.Equal(t, "baz", v.Get("foo"))
 	})
 
@@ -110,7 +108,6 @@ func newWithSymlinkedConfigFile(t *testing.T) (*econf.Configuration, string, str
 		wg.Done()
 	})
 	err = v.LoadFromDataSource(provider, parser, econf.WithTagName(tag))
-
 	require.Nil(t, err)
 	require.Equal(t, "bar", v.Get("foo"))
 	return v, watchDir, configFile, cleanup, wg
