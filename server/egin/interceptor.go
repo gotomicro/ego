@@ -48,7 +48,8 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 			fields = append(fields,
 				elog.FieldCost(cost),
 				elog.FieldType(c.Request.Method), // GET, POST
-				elog.FieldMethod(c.Request.URL.Path),
+				elog.FieldMethod(c.FullPath()),
+				elog.FieldAddr(c.Request.URL.Path),
 				elog.FieldIP(c.ClientIP()),
 				elog.FieldSize(int32(c.Writer.Size())),
 				elog.FieldPeerIP(getPeerIP(c.Request.RemoteAddr)),
@@ -81,11 +82,11 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 				}
 
 				event = "recover"
-				stack := stack(3)
+				stackInfo := stack(3)
 
 				fields = append(fields,
 					elog.FieldEvent(event),
-					zap.ByteString("stack", stack),
+					zap.ByteString("stack", stackInfo),
 					elog.FieldErrAny(rec),
 					elog.FieldCode(int32(c.Writer.Status())),
 				)
@@ -169,8 +170,8 @@ func metricServerInterceptor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		beg := time.Now()
 		c.Next()
-		emetric.ServerHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeHTTP, c.Request.Method+"."+c.Request.URL.Path, extractAPP(c))
-		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.Request.URL.Path, extractAPP(c), http.StatusText(c.Writer.Status()))
+		emetric.ServerHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c))
+		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c), http.StatusText(c.Writer.Status()))
 	}
 }
 
@@ -178,7 +179,7 @@ func traceServerInterceptor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		span, ctx := etrace.StartSpanFromContext(
 			c.Request.Context(),
-			c.Request.Method+" "+c.Request.URL.Path,
+			c.Request.Method+"."+c.FullPath(),
 			etrace.TagComponent("http"),
 			etrace.TagSpanKind("server"),
 			etrace.HeaderExtractor(c.Request.Header),
