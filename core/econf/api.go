@@ -6,9 +6,21 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
+var (
+	// ConfigTypeJSON ...
+	ConfigTypeJSON ConfigType = "json"
+	// ConfigTypeToml ...
+	ConfigTypeToml ConfigType = "toml"
+	// ConfigTypeYaml ...
+	ConfigTypeYaml ConfigType = "yaml"
+)
+
+// ConfigType 配置类型
+type ConfigType string
+
 // DataSource ...
 type DataSource interface {
-	Parse(addr string, watch bool)
+	Parse(addr string, watch bool) ConfigType
 	ReadConfig() ([]byte, error)
 	IsConfigChanged() <-chan struct{}
 	io.Closer

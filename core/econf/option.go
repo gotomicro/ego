@@ -4,9 +4,9 @@ package econf
 type Option func(o *Container)
 
 // WithTagName 设置Tag
-func WithTagName(tag string) Option {
+func WithTagName(tag ConfigType) Option {
 	return func(o *Container) {
-		o.TagName = tag
+		o.TagName = string(tag)
 	}
 }
 
