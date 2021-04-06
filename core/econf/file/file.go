@@ -30,7 +30,7 @@ func init() {
 }
 
 // Parse
-func (fp *fileDataSource) Parse(path string, watch bool) {
+func (fp *fileDataSource) Parse(path string, watch bool) econf.ConfigType {
 	absolutePath, err := filepath.Abs(path)
 	if err != nil {
 		elog.Panic("new datasource", elog.FieldErr(err))
@@ -45,6 +45,23 @@ func (fp *fileDataSource) Parse(path string, watch bool) {
 		xgo.Go(fp.watch)
 	}
 	fp.logger = elog.EgoLogger.With(elog.FieldComponent(econf.PackageName))
+
+	return extParser(path)
+}
+
+func extParser(configAddr string) econf.ConfigType {
+	ext := filepath.Ext(configAddr)
+	switch ext {
+	case ".json":
+		return econf.ConfigTypeJSON
+	case ".toml":
+		return econf.ConfigTypeToml
+	case ".yaml":
+		return econf.ConfigTypeYaml
+	default:
+		elog.EgoLogger.Panic("data source: invalid configuration type")
+	}
+	return ""
 }
 
 // ReadConfig ...

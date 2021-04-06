@@ -5,23 +5,30 @@ import (
 	"errors"
 	"net/url"
 	"os"
-	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v3"
 
 	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/elog"
 )
 
 var (
 	// ErrInvalidDataSource defines an error that the scheme has been registered
 	ErrInvalidDataSource = errors.New("invalid data source, please make sure the scheme has been registered")
+	// ErrInvalidUnmarshaller ...
+	ErrInvalidUnmarshaller = errors.New("invalid unmarshaller, please make sure the config type is right")
 	// ErrDefaultConfigNotExist 默认配置不存在
 	ErrDefaultConfigNotExist = errors.New("default config not exist")
 	registry                 map[string]econf.DataSource
 	// DefaultScheme 默认协议
 	DefaultScheme = "file"
+
+	//
+	unmarshallerMap = map[econf.ConfigType]econf.Unmarshaller{
+		econf.ConfigTypeJSON: json.Unmarshal,
+		econf.ConfigTypeToml: toml.Unmarshal,
+		econf.ConfigTypeYaml: yaml.Unmarshal,
+	}
 )
 
 // DataSourceCreatorFunc represents a dataSource creator function
@@ -37,7 +44,7 @@ func Register(scheme string, creator econf.DataSource) {
 }
 
 // NewDataSource 根据配置地址，创建数据源
-func NewDataSource(configAddr string, watch bool) (econf.DataSource, econf.Unmarshaller, string, error) {
+func NewDataSource(configAddr string, watch bool) (econf.DataSource, econf.Unmarshaller, econf.ConfigType, error) {
 	scheme := DefaultScheme
 	urlObj, err := url.Parse(configAddr)
 	if err == nil && len(urlObj.Scheme) > 1 {
@@ -56,26 +63,11 @@ func NewDataSource(configAddr string, watch bool) (econf.DataSource, econf.Unmar
 	if !exist {
 		return nil, nil, "", ErrInvalidDataSource
 	}
+	tag := creatorFunc.Parse(configAddr, watch)
 
-	creatorFunc.Parse(configAddr, watch)
-
-	parser, tag := extParser(configAddr)
-
-	return creatorFunc, parser, tag, nil
-}
-
-func extParser(configAddr string) (econf.Unmarshaller, string) {
-	ext := filepath.Ext(configAddr)
-	switch ext {
-	case ".json":
-		return json.Unmarshal, "json"
-	case ".toml":
-		return toml.Unmarshal, "toml"
-	case ".yaml":
-		return yaml.Unmarshal, "yaml"
-	default:
-		// TODO 处理configAddr为ETCD的情况？
-		elog.EgoLogger.Panic("data source: invalid configuration type")
+	parser, flag := unmarshallerMap[tag]
+	if !flag {
+		return nil, nil, "", ErrInvalidUnmarshaller
 	}
-	return nil, ""
+	return creatorFunc, parser, tag, nil
 }
