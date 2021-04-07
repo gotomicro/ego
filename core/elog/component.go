@@ -88,13 +88,7 @@ const (
 // newStderrCore constructs a zapcore.Core with stderr syncer
 func newStderrCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 	// Debug output to console and file by default
-	cf := noopCloseFunc
-	var ws = zapcore.AddSync(os.Stderr)
-	if config.EnableAsync {
-		ws, cf = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
-	}
-	core := zapcore.NewCore(zapcore.NewJSONEncoder(*config.encoderConfig), ws, lv)
-	return core, cf
+	return zapcore.NewCore(zapcore.NewJSONEncoder(*config.encoderConfig), os.Stderr, lv), noopCloseFunc
 }
 
 // newRotateFileCore constructs a zapcore.Core with rotate file syncer

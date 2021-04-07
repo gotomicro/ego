@@ -39,6 +39,21 @@ enableAsync = false
 
 var messages = fakeMessages(1000)
 
+func newStderrLogger() *Component {
+	conf := `
+[stderr]
+level = "info"
+writer = "stderr"
+`
+	var err error
+	if err = econf.LoadFromReader(strings.NewReader(conf), toml.Unmarshal); err != nil {
+		log.Println("load conf fail", err)
+		return nil
+	}
+	log.Println("start to send logs to stderr")
+	return Load("stderr").Build()
+}
+
 func newAliLogger() *Component {
 	conf := `
 [ali]
@@ -87,6 +102,19 @@ func fakeMessages(n int) []string {
 
 func getMessage(iter int) string {
 	return messages[iter%1000]
+}
+
+func BenchmarkStderrWriter(b *testing.B) {
+	b.Logf("Logging at a disabled level with some accumulated context.")
+	logger1 := newStderrLogger()
+	b.Run("stderr", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger1.Info(getMessage(0))
+			}
+		})
+	})
 }
 
 func BenchmarkAliWriter(b *testing.B) {
