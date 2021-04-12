@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"strconv"
 	"sync"
@@ -104,7 +103,6 @@ func (d *dnsRegistry) WatchServices(ctx context.Context, target eregistry.Target
 				return
 			case <-ticker.C:
 				newEndpoints, err := d.resolve(ctx, host, port, target.Scheme)
-				log.Println("[DNSRegistry] ticker count down", host, target.Scheme, newEndpoints.Nodes)
 				if err != nil {
 					elog.Warn("resolve failed", elog.FieldErr(err))
 				}

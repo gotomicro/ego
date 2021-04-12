@@ -9,23 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/resolver"
-	"google.golang.org/grpc/serviceconfig"
 
 	"github.com/gotomicro/ego/core/eregistry"
 )
-
-func mutateTbl(target string) func() {
-	hostLookupTbl.Lock()
-	oldHostTblEntry := hostLookupTbl.tbl[target]
-	hostLookupTbl.tbl[target] = hostLookupTbl.tbl[target][:len(oldHostTblEntry)-1]
-	hostLookupTbl.Unlock()
-
-	return func() {
-		hostLookupTbl.Lock()
-		hostLookupTbl.tbl[target] = oldHostTblEntry
-		hostLookupTbl.Unlock()
-	}
-}
 
 var hostLookupTbl = struct {
 	sync.Mutex
@@ -121,36 +107,6 @@ func TestDNSRegistry(t *testing.T) {
 			t.Errorf("Resolved addresses of target: %+v, want %+v\n", get, want)
 		}
 	}
-}
-
-type testClientConn struct {
-	resolver.ClientConn // For unimplemented functions
-	target              string
-	m1                  sync.Mutex
-	state               resolver.State
-	updateStateCalls    int
-	errChan             chan error
-}
-
-func (t *testClientConn) UpdateState(s resolver.State) {
-	t.m1.Lock()
-	defer t.m1.Unlock()
-	t.state = s
-	t.updateStateCalls++
-}
-
-func (t *testClientConn) getState() (resolver.State, int) {
-	t.m1.Lock()
-	defer t.m1.Unlock()
-	return t.state, t.updateStateCalls
-}
-
-func (t *testClientConn) ParseServiceConfig(s string) *serviceconfig.ParseResult {
-	return nil
-}
-
-func (t *testClientConn) ReportError(err error) {
-	t.errChan <- err
 }
 
 type testResolver struct{}
