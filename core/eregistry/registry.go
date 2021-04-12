@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gotomicro/ego/server"
 	"io"
+
+	"google.golang.org/grpc/resolver"
+
+	"github.com/gotomicro/ego/server"
 )
 
 // Registry register/unregister service
@@ -13,23 +16,40 @@ import (
 type Registry interface {
 	RegisterService(context.Context, *server.ServiceInfo) error
 	UnregisterService(context.Context, *server.ServiceInfo) error
-	ListServices(context.Context, string, string) ([]*server.ServiceInfo, error)
-	WatchServices(context.Context, string, string) (chan Endpoints, error)
+	ListServices(context.Context, Target) ([]*server.ServiceInfo, error)
+	WatchServices(context.Context, Target) (chan Endpoints, error)
+	SyncServices(context.Context, SyncServicesOptions) error
 	io.Closer
 }
 
-//GetServiceKey ..
+const (
+	ProtocolGRPC = "grpc"
+	ProtocolHTTP = "http"
+)
+
+type Target struct {
+	Protocol  string // "http"|"grpc"
+	Scheme    string // "etcd"|"k8s"|"dns"
+	Endpoint  string // "<SVC-NAME>:<PORT>"
+	Authority string
+}
+
+type SyncServicesOptions struct {
+	GrpcResolverNowOptions resolver.ResolveNowOptions
+}
+
+// GetServiceKey ..
 func GetServiceKey(prefix string, s *server.ServiceInfo) string {
 	return fmt.Sprintf("/%s/%s/%s/%s://%s", prefix, s.Name, s.Kind.String(), s.Scheme, s.Address)
 }
 
-//GetServiceValue ..
+// GetServiceValue ..
 func GetServiceValue(s *server.ServiceInfo) string {
 	val, _ := json.Marshal(s)
 	return string(val)
 }
 
-//GetService ..
+// GetService ..
 func GetService(s string) *server.ServiceInfo {
 	var si server.ServiceInfo
 	_ = json.Unmarshal([]byte(s), &si)
@@ -40,12 +60,12 @@ func GetService(s string) *server.ServiceInfo {
 type Nop struct{}
 
 // ListServices ...
-func (n Nop) ListServices(ctx context.Context, s string, s2 string) ([]*server.ServiceInfo, error) {
+func (n Nop) ListServices(ctx context.Context, target Target) ([]*server.ServiceInfo, error) {
 	panic("implement me")
 }
 
 // WatchServices ...
-func (n Nop) WatchServices(ctx context.Context, s string, s2 string) (chan Endpoints, error) {
+func (n Nop) WatchServices(ctx context.Context, target Target) (chan Endpoints, error) {
 	panic("implement me")
 }
 
@@ -54,6 +74,8 @@ func (n Nop) RegisterService(context.Context, *server.ServiceInfo) error { retur
 
 // UnregisterService ...
 func (n Nop) UnregisterService(context.Context, *server.ServiceInfo) error { return nil }
+
+func (n Nop) SyncServices(context.Context, SyncServicesOptions) error { return nil }
 
 // Close ...
 func (n Nop) Close() error { return nil }

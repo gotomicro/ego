@@ -2,11 +2,14 @@ package resolver
 
 import (
 	"context"
-	"github.com/gotomicro/ego/core/constant"
-	"github.com/gotomicro/ego/core/eregistry"
-	"github.com/gotomicro/ego/core/util/xgo"
+
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
+
+	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/eregistry"
+	"github.com/gotomicro/ego/core/util/xgo"
 )
 
 // Register ...
@@ -24,8 +27,15 @@ type baseBuilder struct {
 
 // Build ...
 func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
-	endpoints, err := b.reg.WatchServices(context.Background(), target.Endpoint, "grpc")
+	ctx, cancel := context.WithCancel(context.Background())
+	endpoints, err := b.reg.WatchServices(ctx, eregistry.Target{
+		Protocol:  eregistry.ProtocolGRPC,
+		Scheme:    target.Scheme,
+		Endpoint:  target.Endpoint,
+		Authority: target.Authority,
+	})
 	if err != nil {
+		cancel()
 		return nil, err
 	}
 
@@ -57,7 +67,9 @@ func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 	})
 
 	return &baseResolver{
-		stop: stop,
+		stop:   stop,
+		reg:    b.reg,
+		cancel: cancel,
 	}, nil
 }
 
@@ -67,11 +79,20 @@ func (b baseBuilder) Scheme() string {
 }
 
 type baseResolver struct {
-	stop chan struct{}
+	stop   chan struct{}
+	reg    eregistry.Registry
+	cancel context.CancelFunc
 }
 
 // ResolveNow ...
-func (b *baseResolver) ResolveNow(options resolver.ResolveNowOptions) {}
+func (b *baseResolver) ResolveNow(options resolver.ResolveNowOptions) {
+	if err := b.reg.SyncServices(context.Background(), eregistry.SyncServicesOptions{GrpcResolverNowOptions: options}); err != nil {
+		elog.Error("ResolveNow fail", elog.FieldErr(err))
+	}
+}
 
 // Close ...
-func (b *baseResolver) Close() { b.stop <- struct{}{} }
+func (b *baseResolver) Close() {
+	b.stop <- struct{}{}
+	b.cancel()
+}
