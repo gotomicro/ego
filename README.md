@@ -164,7 +164,10 @@ go run main.go --config=config.toml
 
 ![图片](./docs/images/version.png)
 
-## 7 加入我们
+## 7 更新日志
+[Releases](https://github.com/gotomicro/ego/releases)
+
+## 8 加入我们
 ![image](./docs/images/join.jpeg)
 
 ## Contributors
