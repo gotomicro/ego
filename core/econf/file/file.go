@@ -29,7 +29,7 @@ func init() {
 	manager.Register(manager.DefaultScheme, &fileDataSource{})
 }
 
-// Parse
+// Parse ...
 func (fp *fileDataSource) Parse(path string, watch bool) econf.ConfigType {
 	absolutePath, err := filepath.Abs(path)
 	if err != nil {
@@ -39,12 +39,12 @@ func (fp *fileDataSource) Parse(path string, watch bool) econf.ConfigType {
 	fp.path = absolutePath
 	fp.dir = dir
 	fp.enableWatch = watch
+	fp.logger = elog.EgoLogger.With(elog.FieldComponent(econf.PackageName))
 
 	if watch {
 		fp.changed = make(chan struct{}, 1)
 		xgo.Go(fp.watch)
 	}
-	fp.logger = elog.EgoLogger.With(elog.FieldComponent(econf.PackageName))
 
 	return extParser(path)
 }
