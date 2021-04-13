@@ -39,13 +39,18 @@ golint ./...
 golangci-lint run ./...
 ```
 
-## 6 提交 commit
+## 6 Go Test
+```bash
+go test -v -race $(go list ./... | grep -v /examples/) -coverprofile=coverage.txt -covermode=atomic
+```
+
+## 7 提交 commit
 ```bash
 git add .
 git commit
 git push upstream my-feature
 ```
 
-## 7 提交 PR
+## 8 提交 PR
 访问 https://github.com/gotomicro/ego, 
 点击 "Compare" 比较变更并点击 "Pull request" 提交 PR
