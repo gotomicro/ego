@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"sync"
 	"time"
 
 	"google.golang.org/grpc/grpclog"
@@ -101,16 +100,22 @@ func (d *dnsRegistry) WatchServices(ctx context.Context, target eregistry.Target
 			select {
 			case <-ctx.Done():
 				return
+			case <-d.r.rn:
+				endpointsCh <- *d.mustResolve(ctx, host, port, target).DeepCopy()
 			case <-ticker.C:
-				newEndpoints, err := d.resolve(ctx, host, port, target.Scheme)
-				if err != nil {
-					elog.Warn("resolve failed", elog.FieldErr(err))
-				}
-				endpoints = newEndpoints
+				endpointsCh <- *d.mustResolve(ctx, host, port, target).DeepCopy()
 			}
 		}
 	}()
 	return endpointsCh, err
+}
+
+func (d *dnsRegistry) mustResolve(ctx context.Context, host, port string, target eregistry.Target) *eregistry.Endpoints {
+	newEndpoints, err := d.resolve(ctx, host, port, target.Scheme)
+	if err != nil {
+		elog.Warn("resolve failed", elog.FieldErr(err))
+	}
+	return newEndpoints
 }
 
 func (d *dnsRegistry) ListServices(ctx context.Context, target eregistry.Target) (services []*server.ServiceInfo, err error) {
@@ -144,12 +149,6 @@ var EnableSRVLookups = false
 const (
 	defaultPort       = "443"
 	defaultDNSSvrPort = "53"
-	golang            = "GO"
-	// txtPrefix is the prefix string to be prepended to the host name for txt record lookup.
-	txtPrefix = "_grpc_config."
-	// In DNS, service config is encoded in a TXT record via the mechanism
-	// described in RFC-1464 using the attribute name grpc_config.
-	txtAttribute = "grpc_config="
 )
 
 var (
@@ -177,22 +176,8 @@ type netResolver interface {
 
 // dnsResolver watches for the name resolution update for a non-IP target.
 type dnsResolver struct {
-	// host     string
-	// port     string
 	resolver netResolver
-	// ctx      context.Context
-	cancel context.CancelFunc
-	// cc     resolver.ClientConn
-	// rn channel is used by ResolveNow() to force an immediate resolution of the target.
-	rn chan struct{}
-	// wg is used to enforce Close() to return after the watcher() goroutine has finished.
-	// Otherwise, data race will be possible. [Race Example] in dns_resolver_test we
-	// replace the real lookup functions with mocked ones to facilitate testing.
-	// If Close() doesn't wait for watcher() goroutine finishes, race detector sometimes
-	// will warns lookup (READ the lookup function pointers) inside watcher() goroutine
-	// has data race with replaceNetFunc (WRITE the lookup function pointers).
-	wg                   sync.WaitGroup
-	disableServiceConfig bool
+	rn       chan struct{}
 }
 
 // ResolveNow invoke an immediate resolution of the target that this dnsResolver watches.
@@ -201,12 +186,6 @@ func (d *dnsResolver) ResolveNow(resolver.ResolveNowOptions) {
 	case d.rn <- struct{}{}:
 	default:
 	}
-}
-
-// Close closes the dnsResolver.
-func (d *dnsResolver) Close() {
-	d.cancel()
-	d.wg.Wait()
 }
 
 func (d *dnsResolver) lookupSRV(ctx context.Context, host, port string) ([]resolver.Address, error) {
