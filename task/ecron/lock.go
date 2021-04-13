@@ -17,25 +17,26 @@ type Lock interface {
 }
 
 type mockLock struct {
-	key    string
-	mtx    *sync.Mutex
+	key string
+	mtx sync.Mutex
+
+	optMtx sync.Mutex
 	locked bool
 }
 
-func (m *mockLock) WithKey(key string) *mockLock {
-	return &mockLock{
-		key: key,
-		mtx: m.mtx,
-	}
-}
-
 func (m *mockLock) Lock(ctx context.Context, ttl time.Duration) error {
+	m.optMtx.Lock()
+	defer m.optMtx.Unlock()
+
 	m.mtx.Lock()
 	m.locked = true
 	return nil
 }
 
 func (m *mockLock) Unlock(ctx context.Context) error {
+	m.optMtx.Lock()
+	defer m.optMtx.Unlock()
+
 	if m.locked {
 		m.mtx.Unlock()
 		m.locked = false
