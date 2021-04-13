@@ -136,6 +136,7 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 
 			fields = append(fields,
 				elog.FieldType("stream"),
+				elog.FieldCode(ecode.ExtractCodes(err).Code),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
 				elog.FieldPeerName(getPeerName(stream.Context())),
@@ -183,6 +184,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 
 			fields = append(fields,
 				elog.FieldType("unary"),
+				elog.FieldCode(ecode.ExtractCodes(err).Code),
 				elog.FieldEvent(event),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
