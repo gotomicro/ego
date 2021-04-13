@@ -101,10 +101,15 @@ spec = "0 0 1 1 *"`
 }
 
 func TestRunDistributedJob(t *testing.T) {
+	mtx := sync.Mutex{}
 	invoked := 0
 	lastNode := ""
+
 	job := func(key string) FuncJob {
 		return func(ctx context.Context) error {
+			mtx.Lock()
+			defer mtx.Unlock()
+
 			invoked++
 			t.Logf("job invoked %dth", invoked)
 			t.Logf("%s is running", key)
@@ -116,9 +121,7 @@ func TestRunDistributedJob(t *testing.T) {
 		}
 	}
 
-	lock := &mockLock{
-		mtx: &sync.Mutex{},
-	}
+	lock := &mockLock{}
 
 	config := `[test]
 enableSeconds = true
@@ -136,7 +139,7 @@ spec = "0/1 * * * * *"
 			comp := Load("test").Build(
 				WithJob(job(key)),
 				WithParser(cron.NewParser(cron.Second)),
-				WithLock(lock.WithKey(key)),
+				WithLock(lock),
 			)
 
 			go func() {
@@ -145,7 +148,7 @@ spec = "0/1 * * * * *"
 				_ = comp.Stop()
 			}()
 
-			err = comp.Start()
+			err := comp.Start()
 			if err != nil {
 				t.Errorf("Start() returns err: %s", err.Error())
 				return err
