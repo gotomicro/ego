@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"reflect"
+	"sync"
 
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
@@ -24,9 +25,10 @@ func Register(name string, reg eregistry.Registry) {
 }
 
 type baseBuilder struct {
-	name  string
-	reg   eregistry.Registry
-	attrs map[string]*attributes.Attributes
+	name     string
+	reg      eregistry.Registry
+	attrs    map[string]*attributes.Attributes
+	attrsMtx sync.Mutex
 }
 
 // Build ...
@@ -61,7 +63,9 @@ func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 					var address resolver.Address
 					address.Addr = node.Address
 					address.ServerName = target.Endpoint
+					b.attrsMtx.Lock()
 					address.Attributes = b.attrs[key]
+					b.attrsMtx.Unlock()
 					state.Addresses = append(state.Addresses, address)
 				}
 				cc.UpdateState(state)
@@ -109,6 +113,7 @@ func attrEqual(oldAttr *attributes.Attributes, node server.ServiceInfo) bool {
 }
 
 func (b *baseBuilder) tryUpdateAttrs(nodes map[string]server.ServiceInfo) {
+	b.attrsMtx.Lock()
 	for addr, node := range nodes {
 		oldAttr, ok := b.attrs[addr]
 		if !ok || !attrEqual(oldAttr, node) {
@@ -121,4 +126,5 @@ func (b *baseBuilder) tryUpdateAttrs(nodes map[string]server.ServiceInfo) {
 			delete(b.attrs, addr)
 		}
 	}
+	b.attrsMtx.Unlock()
 }
