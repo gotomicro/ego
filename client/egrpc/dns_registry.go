@@ -18,8 +18,9 @@ import (
 
 // NOTICE: 不支持ServiceConfig
 type dnsRegistry struct {
-	r           dnsResolver
-	nameWrapper func(string) string
+	r                    dnsResolver
+	nameWrapper          func(string) string
+	forceResolveInterval time.Duration
 }
 
 type DNSRegistryOption func(c *dnsRegistry)
@@ -31,10 +32,18 @@ func WithNameWrapper(wrapper func(string) string) DNSRegistryOption {
 	}
 }
 
+// WithForceResolveInterval 指定DNS强制resolve周期
+func WithForceResolveInterval(forceResolveInterval time.Duration) DNSRegistryOption {
+	return func(c *dnsRegistry) {
+		c.forceResolveInterval = forceResolveInterval
+	}
+}
+
 // DNSRegistry 返回DNS Registry
 func DNSRegistry(opts ...DNSRegistryOption) eregistry.Registry {
 	r := &dnsRegistry{
-		nameWrapper: func(name string) string { return name },
+		nameWrapper:          func(name string) string { return name },
+		forceResolveInterval: minDNSResRate,
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -60,6 +69,7 @@ func (d *dnsRegistry) WatchServices(ctx context.Context, target eregistry.Target
 	if target.Authority == "" {
 		d.r = dnsResolver{
 			resolver: defaultResolver,
+			rn:       make(chan struct{}, 1),
 		}
 	} else {
 		ar, err := customAuthorityResolver(target.Authority)
@@ -68,6 +78,7 @@ func (d *dnsRegistry) WatchServices(ctx context.Context, target eregistry.Target
 		}
 		d.r = dnsResolver{
 			resolver: ar,
+			rn:       make(chan struct{}, 1),
 		}
 	}
 
@@ -86,7 +97,8 @@ func (d *dnsRegistry) WatchServices(ctx context.Context, target eregistry.Target
 	}
 
 	// 如果是域名，则尝试解析域名
-	endpoints, err := d.resolve(ctx, d.nameWrapper(host), port, target.Scheme)
+	host = d.nameWrapper(host)
+	endpoints, err := d.resolve(ctx, host, port, target.Scheme)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +106,7 @@ func (d *dnsRegistry) WatchServices(ctx context.Context, target eregistry.Target
 
 	// 开启定时器，定时重新解析域名，解决扩容时无法发现新实例问题
 	go func() {
-		ticker := time.NewTicker(minDNSResRate)
+		ticker := time.NewTicker(d.forceResolveInterval)
 		defer ticker.Stop()
 		for {
 			select {
@@ -165,7 +177,7 @@ var (
 	defaultResolver netResolver = net.DefaultResolver
 	// To prevent excessive re-resolution, we enforce a rate limit on DNS
 	// resolution requests
-	minDNSResRate = 10 * time.Second
+	minDNSResRate = 120 * time.Second
 )
 
 type netResolver interface {
