@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	"reflect"
 
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
@@ -10,19 +11,22 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/eregistry"
 	"github.com/gotomicro/ego/core/util/xgo"
+	"github.com/gotomicro/ego/server"
 )
 
 // Register ...
 func Register(name string, reg eregistry.Registry) {
 	resolver.Register(&baseBuilder{
-		name: name,
-		reg:  reg,
+		name:  name,
+		reg:   reg,
+		attrs: make(map[string]*attributes.Attributes),
 	})
 }
 
 type baseBuilder struct {
-	name string
-	reg  eregistry.Registry
+	name  string
+	reg   eregistry.Registry
+	attrs map[string]*attributes.Attributes
 }
 
 // Build ...
@@ -52,11 +56,12 @@ func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 						constant.KeyConsumerConfig, endpoint.ConsumerConfigs, // 服务消费方配置信息
 					),
 				}
-				for _, node := range endpoint.Nodes {
+				b.tryUpdateAttrs(endpoint.Nodes)
+				for key, node := range endpoint.Nodes {
 					var address resolver.Address
 					address.Addr = node.Address
 					address.ServerName = target.Endpoint
-					address.Attributes = attributes.New(constant.KeyServiceInfo, node)
+					address.Attributes = b.attrs[key]
 					state.Addresses = append(state.Addresses, address)
 				}
 				cc.UpdateState(state)
@@ -95,4 +100,25 @@ func (b *baseResolver) ResolveNow(options resolver.ResolveNowOptions) {
 func (b *baseResolver) Close() {
 	b.stop <- struct{}{}
 	b.cancel()
+}
+
+func attrEqual(oldAttr *attributes.Attributes, node server.ServiceInfo) bool {
+	oldNode := oldAttr.Value(constant.KeyServiceInfo)
+	// NOTICE:目前暂时未用Services和Metadata，所以可以使用reflect.DeepEqual
+	return reflect.DeepEqual(oldNode, node)
+}
+
+func (b *baseBuilder) tryUpdateAttrs(nodes map[string]server.ServiceInfo) {
+	for addr, node := range nodes {
+		oldAttr, ok := b.attrs[addr]
+		if !ok || !attrEqual(oldAttr, node) {
+			attr := attributes.New(constant.KeyServiceInfo, node)
+			b.attrs[addr] = attr
+		}
+	}
+	for addr := range b.attrs {
+		if _, ok := nodes[addr]; !ok {
+			delete(b.attrs, addr)
+		}
+	}
 }
