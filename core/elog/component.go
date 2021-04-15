@@ -391,8 +391,8 @@ func (logger *Component) Errorf(template string, args ...interface{}) {
 
 // Panic ...
 func (logger *Component) Panic(msg string, fields ...Field) {
+	panicDetail(msg, fields...)
 	if logger.IsDebugMode() {
-		panicDetail(msg, fields...)
 		msg = normalizeMessage(msg)
 	}
 	logger.desugar.Panic(msg, fields...)
@@ -475,6 +475,17 @@ func panicDetail(msg string, fields ...Field) {
 // With ...
 func (logger *Component) With(fields ...Field) *Component {
 	desugarLogger := logger.desugar.With(fields...)
+	return &Component{
+		desugar: desugarLogger,
+		lv:      logger.lv,
+		sugar:   desugarLogger.Sugar(),
+		config:  logger.config,
+	}
+}
+
+func (logger *Component) WithCaller(callerSkip int, fields ...Field) *Component {
+	logger.config.CallerSkip = callerSkip
+	desugarLogger := logger.desugar.WithOptions(zap.AddCallerSkip(callerSkip)).With(fields...)
 	return &Component{
 		desugar: desugarLogger,
 		lv:      logger.lv,

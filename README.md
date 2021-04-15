@@ -31,13 +31,14 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 * 统一组件调用API
 * 统一组件错误行为
 * 统一组件监控行为
+
 让人掌握了一种组件，就可以举一反三使用其他组件。
 
 ### 2.2 提升故障排查效率
 * 统一错误码
 * 组件错误、慢响应、链路、常规请求拦截器埋点（服务端、客户端均会拦截）
 * 收敛错误字段
-* 注入组件关键信息、包名、配置名、地址等
+* 注入组件关键信息：代码行号、配置名、目标地址、耗时、请求数据、响应数据
 * 调试阶段，错误高亮、格式化友好提示
 * 调试阶段，组件内置debug拦截器
 
@@ -99,19 +100,30 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 egin.Load("server.http").Build()
 ```
 * 友好的debug
-可以看到所有组件的请求参数和响应参数信息
+通过开启``debug``配置和命令行的``export EGO_DEBUG=true``，
+我们可以在测试环境里看到所有组件的请求里的行号、配置名、请求地址、耗时、请求数据、响应数据
 
-![](docs/images/client-grpc.png)
+![](docs/images/client_grpc1.png)
 ![](docs/images/client-http.png)
 ![](docs/images/client-mysql.png)
 ![](docs/images/client-redis.jpg)
 
+并且使用``Goland``同学，可以直接通过行号点击到对应的代码路径(gRPC、HTTP客户端支持行号)
+
 * 链路
 使用opentrace协议，自动将链路加入到日志里
-
-![](docs/images/trace.png)
+    * gRPC链路
+        * 测试代码
+        [gRPC直连查看链路id](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
+        * 服务端链路信息
+        ![image](docs/images/trace-server-grpc.png)
+        * 客户端链路信息
+        ![image](docs/images/trace-client-grpc.png)
+    * HTTP链路
+        ![](docs/images/trace.png)
 
 * [统一的错误信息](https://ego.gocn.vip/awesome/errors.html)
+  
 * 统一的监控信息      
 
 ![](docs/images/metric.png)

@@ -186,9 +186,9 @@ func (e *Ego) Job(runners ...ejob.Ejob) *Ego {
 // Run 运行程序
 func (e *Ego) Run() error {
 	if e.err != nil {
+		runSerialFuncLogError(e.opts.afterStopClean)
 		return e.err
 	}
-
 	// 如果存在短时任务，那么只执行短时任务
 	if len(e.jobs) > 0 {
 		return e.startJobs()
@@ -205,10 +205,10 @@ func (e *Ego) Run() error {
 	// 阻塞，等待信号量
 	if err := <-e.cycle.Wait(e.opts.hang); err != nil {
 		e.logger.Error("Ego shutdown with error", elog.FieldComponent("app"), elog.FieldErr(err))
+		runSerialFuncLogError(e.opts.afterStopClean)
 		return err
 	}
 	e.logger.Info("stop Ego, bye!", elog.FieldComponent("app"))
-
 	// 运行停止后清理
 	runSerialFuncLogError(e.opts.afterStopClean)
 	return nil

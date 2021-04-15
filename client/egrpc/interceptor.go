@@ -60,22 +60,17 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 //}
 
 // debugUnaryClientInterceptor returns grpc unary request request and response details interceptor
-func debugUnaryClientInterceptor(logger *elog.Component, compName, addr string) grpc.UnaryClientInterceptor {
+func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		var p peer.Peer
-		//prefix := fmt.Sprintf("[%s]", addr)
-		//if remote, ok := peer.FromContext(ctx); ok && remote.Addr != nil {
-		//	prefix = prefix + "(" + remote.Addr.String() + ")"
-		//}
-
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, append(opts, grpc.Peer(&p))...)
 		cost := time.Since(beg)
 		if eapp.IsDevelopmentMode() {
 			if err != nil {
-				log.Println("grpc.response", xdebug.MakeReqResError(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error()))
+				log.Println("grpc.response", xdebug.MakeReqResErrorV2(6, compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error()))
 			} else {
-				log.Println("grpc.response", xdebug.MakeReqResInfo(compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
+				log.Println("grpc.response", xdebug.MakeReqResInfoV2(6, compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
 			}
 		}
 		// todo log
