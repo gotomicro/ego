@@ -3,7 +3,6 @@ package resolver
 import (
 	"context"
 	"reflect"
-	"sync"
 
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
@@ -18,17 +17,14 @@ import (
 // Register ...
 func Register(name string, reg eregistry.Registry) {
 	resolver.Register(&baseBuilder{
-		name:  name,
-		reg:   reg,
-		attrs: make(map[string]*attributes.Attributes),
+		name: name,
+		reg:  reg,
 	})
 }
 
 type baseBuilder struct {
-	name     string
-	reg      eregistry.Registry
-	attrs    map[string]*attributes.Attributes
-	attrsMtx sync.Mutex
+	name string
+	reg  eregistry.Registry
 }
 
 // Build ...
@@ -45,7 +41,46 @@ func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 		return nil, err
 	}
 
-	var stop = make(chan struct{})
+	br := &baseResolver{
+		target: target,
+		cc:     cc,
+		stop:   make(chan struct{}),
+		reg:    b.reg,
+		cancel: cancel,
+		attrs:  make(map[string]*attributes.Attributes),
+	}
+	br.run(endpoints)
+	return br, nil
+}
+
+// Scheme ...
+func (b baseBuilder) Scheme() string {
+	return b.name
+}
+
+type baseResolver struct {
+	target resolver.Target
+	cc     resolver.ClientConn
+	stop   chan struct{}
+	reg    eregistry.Registry
+	cancel context.CancelFunc
+	attrs  map[string]*attributes.Attributes
+}
+
+// ResolveNow ...
+func (b *baseResolver) ResolveNow(options resolver.ResolveNowOptions) {
+	if err := b.reg.SyncServices(context.Background(), eregistry.SyncServicesOptions{GrpcResolverNowOptions: options}); err != nil {
+		elog.Error("ResolveNow fail", elog.FieldErr(err))
+	}
+}
+
+// Close ...
+func (b *baseResolver) Close() {
+	b.stop <- struct{}{}
+	b.cancel()
+}
+
+func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 	xgo.Go(func() {
 		for {
 			select {
@@ -62,48 +97,16 @@ func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 				for key, node := range endpoint.Nodes {
 					var address resolver.Address
 					address.Addr = node.Address
-					address.ServerName = target.Endpoint
-					b.attrsMtx.Lock()
+					address.ServerName = b.target.Endpoint
 					address.Attributes = b.attrs[key]
-					b.attrsMtx.Unlock()
 					state.Addresses = append(state.Addresses, address)
 				}
-				cc.UpdateState(state)
-			case <-stop:
+				b.cc.UpdateState(state)
+			case <-b.stop:
 				return
 			}
 		}
 	})
-
-	return &baseResolver{
-		stop:   stop,
-		reg:    b.reg,
-		cancel: cancel,
-	}, nil
-}
-
-// Scheme ...
-func (b baseBuilder) Scheme() string {
-	return b.name
-}
-
-type baseResolver struct {
-	stop   chan struct{}
-	reg    eregistry.Registry
-	cancel context.CancelFunc
-}
-
-// ResolveNow ...
-func (b *baseResolver) ResolveNow(options resolver.ResolveNowOptions) {
-	if err := b.reg.SyncServices(context.Background(), eregistry.SyncServicesOptions{GrpcResolverNowOptions: options}); err != nil {
-		elog.Error("ResolveNow fail", elog.FieldErr(err))
-	}
-}
-
-// Close ...
-func (b *baseResolver) Close() {
-	b.stop <- struct{}{}
-	b.cancel()
 }
 
 func attrEqual(oldAttr *attributes.Attributes, node server.ServiceInfo) bool {
@@ -112,8 +115,7 @@ func attrEqual(oldAttr *attributes.Attributes, node server.ServiceInfo) bool {
 	return reflect.DeepEqual(oldNode, node)
 }
 
-func (b *baseBuilder) tryUpdateAttrs(nodes map[string]server.ServiceInfo) {
-	b.attrsMtx.Lock()
+func (b *baseResolver) tryUpdateAttrs(nodes map[string]server.ServiceInfo) {
 	for addr, node := range nodes {
 		oldAttr, ok := b.attrs[addr]
 		if !ok || !attrEqual(oldAttr, node) {
@@ -126,5 +128,4 @@ func (b *baseBuilder) tryUpdateAttrs(nodes map[string]server.ServiceInfo) {
 			delete(b.attrs, addr)
 		}
 	}
-	b.attrsMtx.Unlock()
 }
