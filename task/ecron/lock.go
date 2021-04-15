@@ -17,7 +17,6 @@ type Lock interface {
 }
 
 type mockLock struct {
-	key string
 	mtx sync.Mutex
 
 	optMtx sync.Mutex

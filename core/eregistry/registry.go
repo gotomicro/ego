@@ -23,10 +23,13 @@ type Registry interface {
 }
 
 const (
+	// ProtocolGRPC ...
 	ProtocolGRPC = "grpc"
+	// ProtocolHTTP ...
 	ProtocolHTTP = "http"
 )
 
+// Target ...
 type Target struct {
 	Protocol  string // "http"|"grpc"
 	Scheme    string // "etcd"|"k8s"|"dns"
@@ -34,6 +37,7 @@ type Target struct {
 	Authority string
 }
 
+// SyncServicesOptions ...
 type SyncServicesOptions struct {
 	GrpcResolverNowOptions resolver.ResolveNowOptions
 }
@@ -75,6 +79,7 @@ func (n Nop) RegisterService(context.Context, *server.ServiceInfo) error { retur
 // UnregisterService ...
 func (n Nop) UnregisterService(context.Context, *server.ServiceInfo) error { return nil }
 
+// SyncServices 同步所有服务
 func (n Nop) SyncServices(context.Context, SyncServicesOptions) error { return nil }
 
 // Close ...
