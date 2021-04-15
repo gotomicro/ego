@@ -23,6 +23,7 @@ type dnsRegistry struct {
 	forceResolveInterval time.Duration
 }
 
+// DNSRegistryOption ...
 type DNSRegistryOption func(c *dnsRegistry)
 
 // WithNameWrapper 对dns:///SVC-NAME:PORT中的SVC-NAME进行处理，当SVC-NAME为IP时不做任何处理
@@ -153,8 +154,8 @@ func (d *dnsRegistry) SyncServices(ctx context.Context, opts eregistry.SyncServi
 	return nil
 }
 
-// copy from google.golang.org/grpc@v1.29.1/resolver/dns/dns_resolver.go
 // EnableSRVLookups controls whether the DNS resolver attempts to fetch gRPCLB
+// copy from google.golang.org/grpc@v1.29.1/resolver/dns/dns_resolver.go
 // addresses from SRV records.  Must not be changed after init time.
 var EnableSRVLookups = false
 

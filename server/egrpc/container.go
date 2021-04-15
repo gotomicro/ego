@@ -1,11 +1,10 @@
 package egrpc
 
 import (
-	"google.golang.org/grpc"
-
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/util/xnet"
+	"google.golang.org/grpc"
 )
 
 // Container 容器

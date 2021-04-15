@@ -42,9 +42,9 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		}
 		if eapp.IsDevelopmentMode() {
 			if err != nil {
-				log.Println("http.response", xdebug.MakeReqResError(name, config.Addr, cost, fullMethod, err.Error()))
+				log.Println("http.response", xdebug.MakeReqResErrorV2(6, name, config.Addr, cost, fullMethod, err.Error()))
 			} else {
-				log.Println("http.response", xdebug.MakeReqResInfo(name, config.Addr, cost, fullMethod, respBody))
+				log.Println("http.response", xdebug.MakeReqResInfoV2(6, name, config.Addr, cost, fullMethod, respBody))
 			}
 		}
 

@@ -41,7 +41,7 @@ func Load(key string) *Container {
 // Build 构建组件
 func (c *Container) Build(options ...Option) *Component {
 	if c.config.Debug {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.logger, c.name, c.config.Addr))))
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.name, c.config.Addr))))
 	}
 
 	if c.config.EnableAppNameInterceptor {
