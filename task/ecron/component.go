@@ -85,6 +85,10 @@ func (c *Component) Init() error {
 
 // Start ...
 func (c *Component) Start() error {
+	if !c.config.Enable {
+		return nil
+	}
+
 	if c.config.EnableDistributedTask {
 		go c.startDistributedTask()
 	} else {
