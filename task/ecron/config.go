@@ -23,6 +23,7 @@ type Config struct {
 	WaitUnlockTime time.Duration // 解锁等待时间，默认 1s
 
 	DelayExecType         string // skip，queue，concurrent，如果上一个任务执行较慢，到达了新任务执行时间，那么新任务选择跳过，排队，并发执行的策略，新任务默认选择skip策略
+	Enable                bool   // 是否启用定时任务，默认 true，代表启用. 如果为 false 则该定时任务不会运行
 	EnableDistributedTask bool   // 是否分布式任务，默认否，如果存在分布式任务，会只执行该定时人物
 	EnableImmediatelyRun  bool   // 是否立刻执行，默认否
 	EnableSeconds         bool   // 是否使用秒作解析器，默认否
@@ -43,6 +44,7 @@ func DefaultConfig() *Config {
 		RefreshGap:            xtime.Duration("4s"),
 		WaitUnlockTime:        xtime.Duration("1s"),
 		DelayExecType:         "skip",
+		Enable:                true,
 		EnableDistributedTask: false,
 		EnableImmediatelyRun:  false,
 		EnableSeconds:         false,

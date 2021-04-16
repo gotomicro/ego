@@ -16,12 +16,51 @@ import (
 )
 
 func testBuildComp(name, config string) (c *Component, err error) {
+	econf.Reset()
 	err = econf.LoadFromReader(strings.NewReader(config), toml.Unmarshal)
 	if err != nil {
 		return nil, err
 	}
 	comp := Load(name).Build()
 	return comp, nil
+}
+
+func TestConfig_Enable(t *testing.T) {
+	// enable = false
+	comp, err := testBuildComp("cron.syncXXX", `[cron.syncXXX]
+enable = false
+spec = "0 0 1 1 *"`)
+	if err != nil {
+		t.Errorf("load config failed. err=%s", err.Error())
+		return
+	}
+	// default nil
+	if comp.config.Enable != false {
+		t.Errorf("expect enable = false. got %v", comp.config.Enable)
+	}
+
+	// default enable
+	comp, err = testBuildComp("cron.syncXXX", `[cron.syncXXX]
+spec = "0 0 1 1 *"`)
+	if err != nil {
+		t.Errorf("load config failed. err=%s", err.Error())
+		return
+	}
+	if comp.config.Enable != true {
+		t.Errorf("expect enable = true. got %v", comp.config.Enable)
+	}
+
+	// enable = true
+	comp, err = testBuildComp("cron.syncXXX", `[cron.syncXXX]
+enable = true
+spec = "0 0 1 1 *"`)
+	if err != nil {
+		t.Errorf("load config failed. err=%s", err.Error())
+		return
+	}
+	if comp.config.Enable != true {
+		t.Errorf("expect enable = true. got %v", comp.config.Enable)
+	}
 }
 
 func TestComponent_Name(t *testing.T) {

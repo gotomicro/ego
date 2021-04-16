@@ -28,7 +28,7 @@ func DefaultContainer() *Container {
 // Load 加载配置key
 func Load(key string) *Container {
 	c := DefaultContainer()
-	if err := econf.UnmarshalKey(key, &c.config); err != nil {
+	if err := econf.UnmarshalKey(key, c.config); err != nil {
 		c.logger.Panic("parse config error", elog.FieldErr(err), elog.FieldKey(key))
 		return c
 	}
