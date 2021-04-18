@@ -124,7 +124,7 @@ func defaultUnaryClientInterceptor(config *Config) grpc.UnaryClientInterceptor {
 
 		md.Set("app", eapp.Name())
 
-		if config.EnableCpuUsage {
+		if config.EnableCPUUsage {
 			md.Set("enable-cpu-usage", "true")
 		}
 		ctx = metadata.NewOutgoingContext(ctx, md)

@@ -17,7 +17,6 @@ type cgroupCPU struct {
 
 	preSystem uint64
 	preTotal  uint64
-	usage     uint64
 }
 
 func newCgroupCPU() (cpu *cgroupCPU, err error) {

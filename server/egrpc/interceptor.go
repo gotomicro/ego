@@ -217,7 +217,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			logger.Info("access", fields...)
 		}()
 
-		if enableCpuUsage(ctx) {
+		if enableCPUUsage(ctx) {
 			var stat = xcpu.Stat{}
 			xcpu.ReadStat(&stat)
 
@@ -236,8 +236,8 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 	}
 }
 
-// enableCpuUsage 是否开启cpu利用率
-func enableCpuUsage(ctx context.Context) bool {
+// enableCPUUsage 是否开启cpu利用率
+func enableCPUUsage(ctx context.Context) bool {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return false
