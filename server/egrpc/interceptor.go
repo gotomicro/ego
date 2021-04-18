@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"net"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gotomicro/ego/core/util/xcpu"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
@@ -215,8 +217,38 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			logger.Info("access", fields...)
 		}()
 
+		if enableCpuUsage(ctx) {
+			var stat = xcpu.Stat{}
+			xcpu.ReadStat(&stat)
+
+			if stat.Usage > 0 {
+				pairs := metadata.Pairs("cpu-usage", strconv.Itoa(int(stat.Usage)))
+				md, ok := metadata.FromOutgoingContext(ctx)
+				if ok {
+					md = metadata.Join(md, pairs)
+				} else {
+					md = pairs
+				}
+				ctx = metadata.NewOutgoingContext(ctx, md)
+			}
+		}
 		return handler(ctx, req)
 	}
+}
+
+// enableCpuUsage 是否开启cpu利用率
+func enableCpuUsage(ctx context.Context) bool {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return false
+	}
+	val, ok2 := md["enable-cpu-usage"]
+	if !ok2 {
+		return false
+	}
+	fmt.Println(strings.Join(val, ";"))
+
+	return strings.Join(val, ";") == "true"
 }
 
 // getPeerName 获取对端应用名称

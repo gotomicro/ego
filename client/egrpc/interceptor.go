@@ -112,15 +112,20 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	}
 }
 
-// appNameUnaryClientInterceptor returns interceptor inject app name
-func appNameUnaryClientInterceptor() grpc.UnaryClientInterceptor {
+// defaultUnaryClientInterceptor returns interceptor inject app name
+func defaultUnaryClientInterceptor(config *Config) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		md, ok := metadata.FromOutgoingContext(ctx)
-		clientAppName := metadata.Pairs("app", eapp.Name())
-		if ok {
-			md = metadata.Join(md, clientAppName)
+		if !ok {
+			md = metadata.New(nil)
 		} else {
-			md = clientAppName
+			md = md.Copy()
+		}
+
+		md.Set("app", eapp.Name())
+
+		if config.EnableCpuUsage {
+			md.Set("enable-cpu-usage", "true")
 		}
 		ctx = metadata.NewOutgoingContext(ctx, md)
 		return invoker(ctx, method, req, reply, cc, opts...)
