@@ -223,7 +223,10 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			if stat.Usage > 0 {
 				// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
 				header := metadata.Pairs("cpu-usage", strconv.Itoa(int(stat.Usage)))
-				grpc.SendHeader(ctx, header)
+				err = grpc.SendHeader(ctx, header)
+				if err != nil {
+					logger.Error("set header error", elog.FieldErr(err))
+				}
 			}
 		}
 		return handler(ctx, req)
