@@ -78,11 +78,11 @@ func (c *Configuration) LoadFromDataSource(ds DataSource, unmarshaller Unmarshal
 
 	content, err := ds.ReadConfig()
 	if err != nil {
-		return err
+		return fmt.Errorf("LoadFromDataSource ReadConfig, err: %w", err)
 	}
 
 	if err := c.Load(content, unmarshaller); err != nil {
-		return err
+		return fmt.Errorf("LoadFromDataSource Load, err: %w", err)
 	}
 
 	go func() {

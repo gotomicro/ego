@@ -28,6 +28,7 @@ type Config struct {
 	EnableAccessInterceptor    bool          // 是否开启记录请求数据，默认不开启
 	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
+	EnableCPUUsage             bool          // 是否开启CPU利用率，默认开启
 
 	keepAlive   *keepalive.ClientParameters
 	dialOptions []grpc.DialOption
@@ -52,5 +53,6 @@ func DefaultConfig() *Config {
 		EnableAccessInterceptor:    false,
 		EnableAccessInterceptorReq: false,
 		EnableAccessInterceptorRes: false,
+		EnableCPUUsage:             true,
 	}
 }

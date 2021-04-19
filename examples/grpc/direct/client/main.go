@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/client/egrpc"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/examples/grpc/direct/helloworld"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 func main() {
@@ -27,13 +30,17 @@ func invokerGrpc() error {
 }
 
 func callGrpc() error {
+	var headers metadata.MD
+	var trailers metadata.MD
 	_, err := grpcComp.SayHello(context.Background(), &helloworld.HelloRequest{
 		Name: "i am client",
-	})
+	}, grpc.Header(&headers), grpc.Trailer(&trailers))
 	if err != nil {
 		return err
 	}
 
+	spew.Dump(headers)
+	spew.Dump(trailers)
 	_, err = grpcComp.SayHello(context.Background(), &helloworld.HelloRequest{
 		Name: "error",
 	})
