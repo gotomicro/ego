@@ -55,9 +55,13 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 * 组件层提供客户端、服务端、任务端里的各种组件
 * 胶水层控制了各种组件的生命周期，错误处理
 
-![](./docs/images/frame.jpeg)
+### 3.2 架构图
+![](./docs/images/ego_frame.png)
 
-### 3.2 组件分层
+### 3.3 生命周期
+![](./docs/images/ego_flow.png)
+
+### 3.4 组件分层
 我们认为一切均是组件，我们将组件分为四个部分：
 - Container 处理组件类型、组件配置、组件启动
 - Config    配置参数
@@ -77,7 +81,7 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 |调用HTTP|[代码](./client/ehttp)|[例子](./examples/http/client)|[文档](https://ego.gocn.vip/frame/client/http.html#example)|
 |直连调用gRPC|[代码](./client/egrpc)|[例子](./examples/grpc/direct)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_4-%E7%9B%B4%E8%BF%9Egrpc)|
 |通过etcd调用gRPC||[例子](https://github.com/gotomicro/ego-component/tree/master/eetcd/examples)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_5-%E4%BD%BF%E7%94%A8etcd%E7%9A%84grpc)|
-|通过k8s调用gRPC||[例子](https://github.com/gotomicro/ego-component/tree/master/eetcd/examples)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_6-%E4%BD%BF%E7%94%A8k8s%E7%9A%84grpc)|
+|通过k8s调用gRPC||[例子](https://github.com/gotomicro/ego-component/tree/master/ek8s/examples)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_6-%E4%BD%BF%E7%94%A8k8s%E7%9A%84grpc)|
 |调用MySQL|[代码](https://github.com/gotomicro/ego-component/tree/master/egorm)|[例子](https://github.com/gotomicro/ego-component/tree/master/egorm/examples/gorm)|[文档](https://ego.gocn.vip/frame/client/gorm.html#example)|
 |调用Redis|[代码](https://github.com/gotomicro/ego-component/tree/master/eredis)|[例子](https://github.com/gotomicro/ego-component/tree/master/eredis/examples/redis)|[文档](https://ego.gocn.vip/frame/client/redis.html#example)|
 |调用Redis分布式锁|[代码](https://github.com/gotomicro/ego-component/tree/master/eredis)|||
@@ -116,10 +120,13 @@ egin.Load("server.http").Build()
         * 测试代码
         [gRPC直连查看链路id](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
         * 服务端链路信息
+      
         ![image](docs/images/trace-server-grpc.png)
         * 客户端链路信息
+      
         ![image](docs/images/trace-client-grpc.png)
     * HTTP链路
+      
         ![](docs/images/trace.png)
 
 * [统一的错误信息](https://ego.gocn.vip/awesome/errors.html)
@@ -180,6 +187,8 @@ go run main.go --config=config.toml
 [Releases](https://github.com/gotomicro/ego/releases)
 
 ## 8 加入我们
+加入我们，请在验证信息里添加``ego``关键字
+
 ![image](./docs/images/join.jpeg)
 
 ## Contributors

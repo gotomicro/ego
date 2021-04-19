@@ -124,6 +124,17 @@ func defaultUnaryClientInterceptor(config *Config) grpc.UnaryClientInterceptor {
 	}
 }
 
+func defaultStreamClientInterceptor(config *Config) grpc.StreamClientInterceptor {
+	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
+		ctx = metadata.AppendToOutgoingContext(ctx, "app", eapp.Name())
+		if config.EnableCPUUsage {
+			ctx = metadata.AppendToOutgoingContext(ctx, "enable-cpu-usage", "true")
+		}
+		return streamer(ctx, desc, cc, method, opts...)
+	}
+}
+
 // timeoutUnaryClientInterceptor settings timeout
 func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duration, slowThreshold time.Duration) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {

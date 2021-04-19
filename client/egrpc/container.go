@@ -46,6 +46,7 @@ func (c *Container) Build(options ...Option) *Component {
 
 	if c.config.EnableAppNameInterceptor {
 		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(defaultUnaryClientInterceptor(c.config))))
+		options = append(options, WithDialOption(grpc.WithChainStreamInterceptor(defaultStreamClientInterceptor(c.config))))
 	}
 
 	if c.config.EnableTimeoutInterceptor {
