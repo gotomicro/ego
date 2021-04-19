@@ -115,19 +115,11 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 // defaultUnaryClientInterceptor returns interceptor inject app name
 func defaultUnaryClientInterceptor(config *Config) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		md, ok := metadata.FromOutgoingContext(ctx)
-		if !ok {
-			md = metadata.New(nil)
-		} else {
-			md = md.Copy()
-		}
-
-		md.Set("app", eapp.Name())
-
+		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
+		ctx = metadata.AppendToOutgoingContext(ctx, "app", eapp.Name())
 		if config.EnableCPUUsage {
-			md.Set("enable-cpu-usage", "true")
+			ctx = metadata.AppendToOutgoingContext(ctx, "enable-cpu-usage", "true")
 		}
-		ctx = metadata.NewOutgoingContext(ctx, md)
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }

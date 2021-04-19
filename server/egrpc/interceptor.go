@@ -220,16 +220,10 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 		if enableCPUUsage(ctx) {
 			var stat = xcpu.Stat{}
 			xcpu.ReadStat(&stat)
-
 			if stat.Usage > 0 {
-				pairs := metadata.Pairs("cpu-usage", strconv.Itoa(int(stat.Usage)))
-				md, ok := metadata.FromOutgoingContext(ctx)
-				if ok {
-					md = metadata.Join(md, pairs)
-				} else {
-					md = pairs
-				}
-				ctx = metadata.NewOutgoingContext(ctx, md)
+				// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
+				header := metadata.Pairs("cpu-usage", strconv.Itoa(int(stat.Usage)))
+				grpc.SendHeader(ctx, header)
 			}
 		}
 		return handler(ctx, req)
@@ -246,8 +240,6 @@ func enableCPUUsage(ctx context.Context) bool {
 	if !ok2 {
 		return false
 	}
-	fmt.Println(strings.Join(val, ";"))
-
 	return strings.Join(val, ";") == "true"
 }
 
