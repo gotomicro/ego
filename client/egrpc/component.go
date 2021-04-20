@@ -48,9 +48,9 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 	if err != nil {
 		if config.OnFail == "panic" {
-			logger.Panic("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
+			logger.Panic("dial grpc server", elog.FieldErrKind("request err"), elog.FieldName(name), elog.FieldErr(err))
 		} else {
-			logger.Error("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
+			logger.Error("dial grpc server", elog.FieldErrKind("request err"), elog.FieldName(name), elog.FieldErr(err))
 		}
 	}
 	logger.Info("start grpc client", elog.FieldName(name))
