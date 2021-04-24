@@ -483,8 +483,8 @@ func (logger *Component) With(fields ...Field) *Component {
 	}
 }
 
-// WithCaller ...
-func (logger *Component) WithCaller(callerSkip int, fields ...Field) *Component {
+// WithCallerSkip ...
+func (logger *Component) WithCallerSkip(callerSkip int, fields ...Field) *Component {
 	logger.config.CallerSkip = callerSkip
 	desugarLogger := logger.desugar.WithOptions(zap.AddCallerSkip(callerSkip)).With(fields...)
 	return &Component{

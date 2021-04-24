@@ -25,6 +25,7 @@ func DefaultContainer() *Container {
 // Load 加载配置key
 func Load(key string) *Container {
 	c := DefaultContainer()
+	c.logger = c.logger.With(elog.FieldComponentName(key))
 	if err := econf.UnmarshalKey(key, &c.config); err != nil {
 		c.err = err
 		return c
@@ -33,7 +34,6 @@ func Load(key string) *Container {
 	if eflag.String("host") != "" {
 		c.config.Host = eflag.String("host")
 	}
-	c.logger = c.logger.With(elog.FieldComponentName(key))
 	c.name = key
 	return c
 }

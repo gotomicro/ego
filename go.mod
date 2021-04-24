@@ -9,7 +9,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/gin-gonic/gin v1.6.3
+	github.com/gin-gonic/gin v1.7.1
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-resty/resty/v2 v2.5.0
 	github.com/golang/protobuf v1.4.2
