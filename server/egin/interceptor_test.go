@@ -1,9 +1,6 @@
 package egin
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -12,6 +9,10 @@ import (
 	"path"
 	"syscall"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPanicInHandler(t *testing.T) {
@@ -84,7 +85,9 @@ type header struct {
 
 func performRequest(r http.Handler, method, path string, headers ...header) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(method, path, nil)
-
+	for _, h := range headers {
+		req.Header.Add(h.Key, h.Value)
+	}
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	return w
