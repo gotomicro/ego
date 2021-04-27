@@ -33,24 +33,15 @@ func (c *Component) BuildWebsocket(opts ...WebSocketOption) *WebSocket {
 	return ws
 }
 
-// WebSocketFunc ..
-type WebSocketFunc func(*WebSocketConn, error)
-
 // WebSocket ..
 type WebSocket struct {
 	*websocket.Upgrader
-	header http.Header
-}
-
-// WebSocketConn ...
-type WebSocketConn struct {
-	*websocket.Conn
-	GinCtx *gin.Context
 }
 
 // Upgrade get upgrage request
 func (ws *WebSocket) Upgrade(w http.ResponseWriter, r *http.Request, c *gin.Context, handler WebSocketFunc) {
-	conn, err := ws.Upgrader.Upgrade(w, r, ws.header)
+	// todo response Header
+	conn, err := ws.Upgrader.Upgrade(w, r, nil)
 	if err == nil {
 		defer conn.Close()
 	}
@@ -59,4 +50,13 @@ func (ws *WebSocket) Upgrade(w http.ResponseWriter, r *http.Request, c *gin.Cont
 		GinCtx: c,
 	}
 	handler(wsConn, err)
+}
+
+// WebSocketFunc ..
+type WebSocketFunc func(*WebSocketConn, error)
+
+// WebSocketConn ...
+type WebSocketConn struct {
+	*websocket.Conn
+	GinCtx *gin.Context
 }
