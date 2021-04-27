@@ -19,17 +19,24 @@ type Config struct {
 	EnableTraceInterceptor  bool          // 是否开启链路追踪，默认开启
 	EnableLocalMainIP       bool          // 自动获取ip地址
 	SlowLogThreshold        time.Duration // 服务慢日志，默认500ms
+
+	WebsocketHandshakeTimeout  time.Duration // 握手时间
+	WebsocketReadBufferSize    int
+	WebsocketWriteBufferSize   int
+	EnableWebsocketCompression bool // 是否开通压缩
+	EnableWebsocketCheckOrigin bool // 是否支持跨域
 }
 
 // DefaultConfig ...
 func DefaultConfig() *Config {
 	return &Config{
-		Host:                    eflag.String("host"),
-		Port:                    9090,
-		Mode:                    gin.ReleaseMode,
-		EnableTraceInterceptor:  true,
-		EnableMetricInterceptor: true,
-		SlowLogThreshold:        xtime.Duration("500ms"),
+		Host:                       eflag.String("host"),
+		Port:                       9090,
+		Mode:                       gin.ReleaseMode,
+		EnableTraceInterceptor:     true,
+		EnableMetricInterceptor:    true,
+		SlowLogThreshold:           xtime.Duration("500ms"),
+		EnableWebsocketCheckOrigin: false,
 	}
 }
 
