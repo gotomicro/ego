@@ -18,6 +18,7 @@ type Component struct {
 	config *Config
 	logger *elog.Component
 	*grpc.ClientConn
+	err error
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
@@ -46,18 +47,27 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 	cc, err := grpc.DialContext(ctx, config.Addr, dialOptions...)
 
-	if err != nil {
-		if config.OnFail == "panic" {
-			logger.Panic("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
-		} else {
-			logger.Error("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
-		}
-	}
-	logger.Info("start grpc client", elog.FieldName(name))
-	return &Component{
+	component := &Component{
 		name:       name,
 		config:     config,
 		logger:     logger,
 		ClientConn: cc,
 	}
+
+	if err != nil {
+		component.err = err
+		if config.OnFail == "panic" {
+			logger.Panic("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
+			return component
+		}
+		logger.Error("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err))
+		return component
+	}
+	logger.Info("start grpc client", elog.FieldName(name))
+	return component
+}
+
+// Error 错误信息
+func (c *Component) Error() error {
+	return c.err
 }
