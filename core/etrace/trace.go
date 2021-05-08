@@ -3,12 +3,9 @@ package etrace
 import (
 	"context"
 
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-
-	"github.com/gotomicro/ego/core/elog"
+	"github.com/uber/jaeger-client-go"
 )
 
 var (
@@ -18,7 +15,6 @@ var (
 
 // SetGlobalTracer ...
 func SetGlobalTracer(tracer opentracing.Tracer) {
-	elog.EgoLogger.Info("set global tracer", elog.FieldComponent("trace"))
 	opentracing.SetGlobalTracer(tracer)
 }
 
