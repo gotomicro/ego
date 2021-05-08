@@ -1,8 +1,10 @@
 package elog
 
 import (
+	"context"
 	"time"
 
+	"github.com/gotomicro/ego/core/etrace"
 	"go.uber.org/zap"
 )
 
@@ -49,6 +51,11 @@ func FieldCode(value int32) Field {
 // FieldTid 设置链路id
 func FieldTid(value string) Field {
 	return String("tid", value)
+}
+
+// FieldCtxTid 设置链路id
+func FieldCtxTid(ctx context.Context) Field {
+	return String("tid", etrace.ExtractTraceID(ctx))
 }
 
 // FieldSize ...

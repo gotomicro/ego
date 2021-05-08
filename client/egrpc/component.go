@@ -44,6 +44,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 
 	dialOptions = append(dialOptions, grpc.WithBalancerName(config.BalancerName))
+	dialOptions = append(dialOptions, grpc.FailOnNonTempDialError(config.EnableFailOnNonTempDialError))
 
 	cc, err := grpc.DialContext(ctx, config.Addr, dialOptions...)
 
