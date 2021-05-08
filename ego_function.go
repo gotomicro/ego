@@ -179,6 +179,7 @@ func (e *Ego) initTracer() error {
 		container := ejaeger.Load(e.opts.configPrefix + "trace.jaeger")
 		tracer := container.Build()
 		etrace.SetGlobalTracer(tracer)
+		elog.EgoLogger.Info("set global tracer", elog.FieldComponent("trace"))
 		e.opts.afterStopClean = append(e.opts.afterStopClean, container.Stop)
 		elog.EgoLogger.Info("init trace", elog.FieldComponent("app"))
 	} else {
