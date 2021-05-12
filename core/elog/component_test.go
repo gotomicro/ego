@@ -39,6 +39,22 @@ enableAsync = false
 
 var messages = fakeMessages(1000)
 
+func newFileLogger(path string) *Component {
+	conf := `
+[file]
+level = "info"
+name = "%s"
+`
+	conf = fmt.Sprintf(conf, path)
+	var err error
+	if err = econf.LoadFromReader(strings.NewReader(conf), toml.Unmarshal); err != nil {
+		log.Println("load conf fail", err)
+		return nil
+	}
+	log.Println("start to send logs to file")
+	return Load("file").Build()
+}
+
 func newStderrLogger() *Component {
 	conf := `
 [stderr]
@@ -128,4 +144,59 @@ func BenchmarkAliWriter(b *testing.B) {
 			}
 		})
 	})
+}
+
+func TestMultiLogger(t *testing.T) {
+	os.RemoveAll("./logs")
+	fileMultiLogger := newFileLogger("multi.log")
+	fileMultiLoggers := []*Component{}
+	for i := 0; i < 10; i++ {
+		fileMultiLoggers = append(fileMultiLoggers, fileMultiLogger.With())
+	}
+	for i := 0; i < 10; i++ {
+		for j := 0; j < 100000; j++ {
+			fileMultiLoggers[i].Info(getMessage(0))
+		}
+	}
+
+	for i := 0; i < 10; i++ {
+		fileMultiLoggers[i].Flush()
+	}
+	log.Println(`done--------------->`)
+}
+
+func BenchmarkMultiLogger(b *testing.B) {
+	b.Logf("Logging at a single logger and multi child logger.")
+	os.RemoveAll("./logs")
+	fileMultiLogger := newFileLogger("child.log")
+	fileMultiLoggers := []*Component{}
+	for i := 0; i < 10; i++ {
+		fileMultiLoggers = append(fileMultiLoggers, fileMultiLogger.With())
+	}
+	b.Run("child-file-logger", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				for i := 0; i < 10; i++ {
+					fileMultiLoggers[i].Info(getMessage(0))
+				}
+			}
+		})
+	})
+
+	fileSingleLoggers := []*Component{}
+	for i := 0; i < 10; i++ {
+		fileSingleLoggers = append(fileSingleLoggers, newFileLogger(fmt.Sprintf("independent-%d.log", i)))
+	}
+	b.Run("independent-file-logger", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				for i := 0; i < 10; i++ {
+					fileSingleLoggers[i].Info(getMessage(0))
+				}
+			}
+		})
+	})
+
 }
