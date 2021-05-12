@@ -2,12 +2,16 @@ package ali
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"math"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"reflect"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,13 +19,13 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
+	"go.uber.org/zap/buffer"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog/ali/pb"
 	"github.com/gotomicro/ego/core/emetric"
-	"github.com/gotomicro/ego/core/util/xcast"
 )
 
 const (
@@ -146,12 +150,46 @@ func genLog(fields map[string]interface{}) *pb.Log {
 		Contents: make([]*LogContent, 0, len(fields)),
 	}
 	for k, v := range fields {
+		valStr, err := toStringE(v)
+		if err != nil {
+			log.Printf("toString fail, %s", err.Error())
+		}
 		l.Contents = append(l.Contents, &LogContent{
 			Key:   proto.String(k),
-			Value: proto.String(xcast.ToString(v)),
+			Value: proto.String(valStr),
 		})
 	}
 	return l
+}
+
+type jsonEncoder struct {
+	enc *json.Encoder
+}
+
+var jsonEncPool = sync.Pool{New: func() interface{} {
+	return &jsonEncoder{}
+}}
+
+var bufPool = buffer.NewPool()
+
+func objToString(obj interface{}) (string, error) {
+	enc := jsonEncPool.Get().(*jsonEncoder)
+	buf := bufPool.Get()
+	enc.enc = json.NewEncoder(buf)
+
+	defer func() {
+		buf.Reset()
+		buf.Free()
+		enc.enc = nil
+		jsonEncPool.Put(enc)
+	}()
+
+	enc.enc.SetEscapeHTML(false)
+	if err := enc.enc.Encode(obj); err != nil {
+		return "", err
+	}
+	buf.TrimNewline()
+	return buf.String(), nil
 }
 
 func (w *writer) write(fields map[string]interface{}) (err error) {
@@ -239,4 +277,80 @@ func (w *writer) observe() {
 			time.Sleep(observeInterval)
 		}
 	}()
+}
+
+// From html/template/content.go
+// Copyright 2011 The Go Authors. All rights reserved.
+// indirectToStringerOrError returns the value, after dereferencing as many times
+// as necessary to reach the base type (or nil) or an implementation of fmt.Stringer
+// or error,
+func indirectToStringerOrError(a interface{}) interface{} {
+	if a == nil {
+		return nil
+	}
+
+	var errorType = reflect.TypeOf((*error)(nil)).Elem()
+	var fmtStringerType = reflect.TypeOf((*fmt.Stringer)(nil)).Elem()
+
+	v := reflect.ValueOf(a)
+	for !v.Type().Implements(fmtStringerType) && !v.Type().Implements(errorType) && v.Kind() == reflect.Ptr && !v.IsNil() {
+		v = v.Elem()
+	}
+	return v.Interface()
+}
+
+// ToStringE casts an interface to a string type.
+func toStringE(i interface{}) (string, error) {
+	i = indirectToStringerOrError(i)
+
+	switch s := i.(type) {
+	case string:
+		return s, nil
+	case bool:
+		return strconv.FormatBool(s), nil
+	case float64:
+		return strconv.FormatFloat(s, 'f', -1, 64), nil
+	case float32:
+		return strconv.FormatFloat(float64(s), 'f', -1, 32), nil
+	case int:
+		return strconv.Itoa(s), nil
+	case int64:
+		return strconv.FormatInt(s, 10), nil
+	case int32:
+		return strconv.Itoa(int(s)), nil
+	case int16:
+		return strconv.FormatInt(int64(s), 10), nil
+	case int8:
+		return strconv.FormatInt(int64(s), 10), nil
+	case uint:
+		return strconv.FormatUint(uint64(s), 10), nil
+	case uint64:
+		return strconv.FormatUint(uint64(s), 10), nil
+	case uint32:
+		return strconv.FormatUint(uint64(s), 10), nil
+	case uint16:
+		return strconv.FormatUint(uint64(s), 10), nil
+	case uint8:
+		return strconv.FormatUint(uint64(s), 10), nil
+	case []byte:
+		return string(s), nil
+	case template.HTML:
+		return string(s), nil
+	case template.URL:
+		return string(s), nil
+	case template.JS:
+		return string(s), nil
+	case template.CSS:
+		return string(s), nil
+	case template.HTMLAttr:
+		return string(s), nil
+	case nil:
+		return "null", nil
+	case fmt.Stringer:
+		return s.String(), nil
+	case error:
+		return s.Error(), nil
+	default:
+		return objToString(i)
+	}
 }
