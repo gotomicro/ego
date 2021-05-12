@@ -45,10 +45,9 @@ aliApiRetryMaxWaitTime = "3s" # ali api retry wait max wait time
 	log.Println("start to send logs to ali sls")
 
 	logger := elog.Load("ali").Build()
-	logger.Info("aaaaaaaaa", elog.Any("maps", map[string]interface{}{"aaa": "AAA", "bbb": "BBB"}))
-	logger.Info("aaaaaaaaa", elog.Any("maps", map[string]interface{}{"ccc": "CCC"}))
+	logger.Info("aaaaaaaaa", elog.Any("map", map[string]interface{}{"aaa": "AAA", "bbb": "BBB"}), elog.Any("slice", []string{"ccc", "ddd"}))
+	logger.Info("aaaaaaaaa", elog.Any("map", map[string]interface{}{"ccc": "CCC"}))
 	defer logger.Flush()
-	return
 
 	childLogger := logger.With(elog.String("prefix", "PREFIX"))
 	defer childLogger.Flush()
