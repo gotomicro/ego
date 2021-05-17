@@ -2,6 +2,7 @@ package etrace
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -55,8 +56,8 @@ func FromIncomingContext(ctx context.Context) opentracing.StartSpanOption {
 }
 
 // HeaderExtractor ...
-func HeaderExtractor(hdr map[string][]string) opentracing.StartSpanOption {
-	sc, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, MetadataReaderWriter{MD: hdr})
+func HeaderExtractor(hdr http.Header) opentracing.StartSpanOption {
+	sc, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, HeaderReaderWriter(hdr))
 	if err != nil {
 		return NullStartSpanOption{}
 	}
@@ -66,9 +67,9 @@ func HeaderExtractor(hdr map[string][]string) opentracing.StartSpanOption {
 type hdrRequestKey struct{}
 
 // HeaderInjector ...
-func HeaderInjector(ctx context.Context, hdr map[string][]string) context.Context {
+func HeaderInjector(ctx context.Context, hdr http.Header) context.Context {
 	span := opentracing.SpanFromContext(ctx)
-	err := opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, MetadataReaderWriter{MD: hdr})
+	err := opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, HeaderReaderWriter(hdr))
 	if err != nil {
 		span.LogFields(log.String("event", "inject failed"), log.Error(err))
 		return ctx
