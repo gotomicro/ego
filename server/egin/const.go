@@ -3,7 +3,9 @@ package egin
 const (
 	// HeaderAcceptEncoding ...
 	HeaderAcceptEncoding = "Accept-Encoding"
-	HeaderContentType    = "Content-Type"
+	// HeaderContentType ...
+	HeaderContentType = "Content-Type"
+	// HeaderGRPCPROXYError ...
 	HeaderGRPCPROXYError = "GRPC-Proxy-Error"
 	charsetUTF8          = "charset=utf-8"
 
