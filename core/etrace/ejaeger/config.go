@@ -45,7 +45,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		ServiceName: eapp.Name(),
 		Sampler: &jconfig.SamplerConfig{
-			Type:  "const",
+			Type:  "probabilistic",
 			Param: 0.001,
 		},
 		Reporter: &jconfig.ReporterConfig{
