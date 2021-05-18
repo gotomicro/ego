@@ -1,6 +1,7 @@
 package econf
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -9,11 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
-
 	"github.com/gotomicro/ego/core/util/xcast"
 	"github.com/gotomicro/ego/core/util/xmap"
+	"github.com/mitchellh/mapstructure"
 )
 
 // PackageName 包名
@@ -366,7 +365,7 @@ func (c *Configuration) UnmarshalKey(key string, rawVal interface{}, opts ...Opt
 
 	value := c.Get(key)
 	if value == nil {
-		return errors.Wrap(ErrInvalidKey, key)
+		return fmt.Errorf(key+",err: %w", ErrInvalidKey)
 	}
 
 	return decoder.Decode(value)

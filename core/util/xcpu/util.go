@@ -2,18 +2,17 @@ package xcpu
 
 import (
 	"bufio"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 func readFile(path string) (string, error) {
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
-		return "", errors.Wrapf(err, "os/stat: read file(%s) failed!", path)
+		return "", fmt.Errorf("os/stat: read file("+path+") failed!,err: %w", err)
 	}
 	return strings.TrimSpace(string(contents)), nil
 }
@@ -31,7 +30,7 @@ func parseUint(s string) (uint64, error) {
 			intValue < 0 {
 			return 0, nil
 		}
-		return 0, errors.Wrapf(err, "os/stat: parseUint(%s) failed!", s)
+		return 0, fmt.Errorf("os/stat: parseUint("+s+") failed!, err: %w", err)
 	}
 	return v, nil
 }
@@ -56,7 +55,7 @@ func ParseUintList(val string) (map[int]bool, error) {
 
 	availableInts := make(map[int]bool)
 	split := strings.Split(val, ",")
-	errInvalidFormat := errors.Errorf("os/stat: invalid format: %s", val)
+	errInvalidFormat := fmt.Errorf("os/stat: invalid format: %s", val)
 	for _, r := range split {
 		if !strings.Contains(r, "-") {
 			v, err := strconv.Atoi(r)
