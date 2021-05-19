@@ -6,8 +6,6 @@
 [![goproxy.cn](https://goproxy.cn/stats/github.com/gotomicro/ego/badges/download-count.svg)](https://goproxy.cn/stats/github.com/gotomicro/ego)
 [![Release](https://img.shields.io/github/v/release/gotomicro/ego.svg?style=flat-square)](https://github.com/gotomicro/ego)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=gotomicro_ego&metric=alert_status)](https://sonarcloud.io/dashboard?id=gotomicro_ego)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=gotomicro_ego&metric=bugs)](https://sonarcloud.io/dashboard?id=gotomicro_ego)
 
 ## 1 帮助文档
 [https://ego.gocn.vip](https://ego.gocn.vip)

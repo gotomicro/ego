@@ -6,8 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 type cgroupCPU struct {
@@ -126,21 +124,21 @@ func systemCPUUsage() (usage uint64, err error) {
 	bufReader.Reset(f)
 	for err == nil {
 		if line, err = bufReader.ReadString('\n'); err != nil {
-			err = errors.WithStack(err)
+			err = fmt.Errorf("ReadString, err: %w", err)
 			return
 		}
 		parts := strings.Fields(line)
 		switch parts[0] {
 		case "cpu":
 			if len(parts) < 8 {
-				err = errors.WithStack(fmt.Errorf("bad format of cpu stats"))
+				err = fmt.Errorf("bad format of cpu stats")
 				return
 			}
 			var totalClockTicks uint64
 			for _, i := range parts[1:8] {
 				var v uint64
 				if v, err = strconv.ParseUint(i, 10, 64); err != nil {
-					err = errors.WithStack(fmt.Errorf("error parsing cpu stats"))
+					err = fmt.Errorf("error parsing cpu stats")
 					return
 				}
 				totalClockTicks += v
@@ -149,7 +147,7 @@ func systemCPUUsage() (usage uint64, err error) {
 			return
 		}
 	}
-	err = errors.Errorf("bad stats format")
+	err = fmt.Errorf("bad stats format")
 	return
 }
 

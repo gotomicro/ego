@@ -28,6 +28,8 @@ type Ego struct {
 	smu    *sync.RWMutex   // 锁
 	logger *elog.Component // 日志
 	err    error           // 错误
+	ctx    context.Context // ctx
+	cancel func()          // cancel
 
 	// 第二部分 运行程序
 	inits      []func() error       // 系统初始化函数
@@ -42,13 +44,14 @@ type Ego struct {
 }
 
 type opts struct {
-	configPrefix      string         // 配置前缀
-	hang              bool           // 是否悬挂
-	disableBanner     bool           // 禁用banner
-	disableFlagConfig bool           // 禁用flag config
-	beforeStopClean   []func() error // 运行停止前清理
-	afterStopClean    []func() error // 运行停止后清理
-	stopTimeout       time.Duration  // 运行停止超时时间
+	ctx               context.Context // ctx
+	configPrefix      string          // 配置前缀
+	hang              bool            // 是否悬挂
+	disableBanner     bool            // 禁用banner
+	disableFlagConfig bool            // 禁用flag config
+	beforeStopClean   []func() error  // 运行停止前清理
+	afterStopClean    []func() error  // 运行停止后清理
+	stopTimeout       time.Duration   // 运行停止超时时间
 	shutdownSignals   []os.Signal
 }
 
@@ -71,6 +74,7 @@ func New(options ...Option) *Ego {
 
 		// 第三部分 可选方法
 		opts: opts{
+			ctx:             context.Background(),
 			hang:            false,
 			configPrefix:    "",
 			beforeStopClean: make([]func() error, 0),
@@ -94,6 +98,10 @@ func New(options ...Option) *Ego {
 	for _, option := range options {
 		option(e)
 	}
+
+	ctx, cancel := context.WithCancel(e.opts.ctx)
+	e.ctx = ctx
+	e.cancel = cancel
 
 	// 设置初始函数
 	e.inits = []func() error{
@@ -197,7 +205,7 @@ func (e *Ego) Run() error {
 	e.waitSignals() // start signal listen task in goroutine
 
 	// 启动服务
-	_ = e.startServers()
+	_ = e.startServers(e.ctx)
 
 	// 启动定时任务
 	_ = e.startCrons()
@@ -245,8 +253,11 @@ func (e *Ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 			e.cycle.Run(w.Stop)
 		}(w)
 	}
-
 	<-e.cycle.Done()
+
+	// cancel 所有服务
+	e.cancel()
 	e.cycle.Close()
+
 	return err
 }

@@ -87,7 +87,7 @@ func GRPCProxy(h interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req = reflect.New(t.In(1).Elem()).Interface()
 		if err := c.Bind(req); err != nil {
-			protoError(c, http.StatusBadRequest, errBadRequest)
+			_ = protoError(c, http.StatusBadRequest, errBadRequest)
 			return
 		}
 		var md = metadata.MD{}
@@ -105,29 +105,28 @@ func GRPCProxy(h interface{}) gin.HandlerFunc {
 		inj.Map(req)
 		vs, err := inj.Invoke(h)
 		if err != nil {
-			protoError(c, http.StatusInternalServerError, errMicroInvoke)
+			_ = protoError(c, http.StatusInternalServerError, errMicroInvoke)
 			return
 		}
 		if len(vs) != 2 {
-			protoError(c, http.StatusInternalServerError, errMicroInvokeLen)
+			_ = protoError(c, http.StatusInternalServerError, errMicroInvokeLen)
 			return
 		}
 		repV, errV := vs[0], vs[1]
 		if !errV.IsNil() || repV.IsNil() {
 			if e, ok := errV.Interface().(error); ok {
-				protoError(c, http.StatusOK, e)
+				_ = protoError(c, http.StatusOK, e)
 				return
 			}
-			protoError(c, http.StatusInternalServerError, errMicroInvokeInvalid)
+			_ = protoError(c, http.StatusInternalServerError, errMicroInvokeInvalid)
 			return
 		}
 		if !repV.IsValid() {
-			protoError(c, http.StatusInternalServerError, errMicroResInvalid)
+			_ = protoError(c, http.StatusInternalServerError, errMicroResInvalid)
 			return
 		}
 		// todo 根据gRPC状态码转换为HTTP状态码
-		protoJSON(c, http.StatusOK, repV.Interface())
-		return
+		_ = protoJSON(c, http.StatusOK, repV.Interface())
 	}
 }
 
