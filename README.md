@@ -212,6 +212,7 @@ Thanks for these wonderful people:
     <td align="center"><a href="https://www.yuque.com/wbofeng"><img src="https://avatars.githubusercontent.com/u/54163491?v=4" width="64px;" alt=""/><br /><sub><b>Wbofeng</b></sub></a></td>
     <td align="center"><a href="https://github.com/clannadxr"><img src="https://avatars.githubusercontent.com/u/9847143?v=4" width="64px;" alt=""/><br /><sub><b>clannadxr</b></sub></a></td>
     <td align="center"><a href="https://www.duanlv.ltd"><img src="https://avatars.githubusercontent.com/u/20787331?v=4" width="64px;" alt=""/><br /><sub><b>Link Duan</b></sub></a></td>
+    <td align="center"><a href="https://cqs.es"><img src="https://avatars.githubusercontent.com/u/20419375?v=4" width="64px;" alt=""/><br /><sub><b>Costa</b></sub></a></td>
   </tr>
 </table>
 
