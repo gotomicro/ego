@@ -86,6 +86,9 @@ func GRPCProxy(h interface{}) gin.HandlerFunc {
 	}
 	return func(c *gin.Context) {
 		var req = reflect.New(t.In(1).Elem()).Interface()
+		if c.Request.Method == http.MethodGet {
+			_ = c.BindUri(req)
+		}
 		if err := c.Bind(req); err != nil {
 			_ = protoError(c, http.StatusBadRequest, errBadRequest)
 			return
