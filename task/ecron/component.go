@@ -62,6 +62,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 			cron.WithParser(config.parser),
 			cron.WithChain(config.wrappers...),
 			cron.WithLogger(&wrappedLogger{logger}),
+			cron.WithLocation(config.loc),
 		),
 		name:   name,
 		logger: logger,
