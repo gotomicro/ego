@@ -86,6 +86,7 @@ func (c *Component) Start() error {
 	}
 	c.mu.Unlock()
 	err := c.Server.Serve(c.listener)
+
 	if err == http.ErrServerClosed {
 		return nil
 	}

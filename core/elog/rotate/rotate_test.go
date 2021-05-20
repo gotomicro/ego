@@ -1,5 +1,3 @@
-// +build linux
-
 package rotate_test
 
 import (
@@ -7,12 +5,15 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/gotomicro/ego/core/elog/rotate"
 )
 
 // Example of how to rotate in response to SIGHUP.
-func ExampleLogger_Rotate() {
+func TestLoggerRotate(t *testing.T) {
 	l := &rotate.Logger{}
 	log.SetOutput(l)
 	c := make(chan os.Signal, 1)
@@ -21,7 +22,10 @@ func ExampleLogger_Rotate() {
 	go func() {
 		for {
 			<-c
-			l.Rotate()
+			err := l.Rotate()
+			assert.NoError(t, err)
 		}
 	}()
+
+	t.Log("test done")
 }

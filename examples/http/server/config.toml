@@ -2,3 +2,4 @@
     port = 9007
 [trace.jaeger]
     ServiceName = "server"
+

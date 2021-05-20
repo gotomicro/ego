@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
@@ -12,13 +14,26 @@ import (
 func main() {
 	if err := ego.New().Serve(func() *egin.Component {
 		server := egin.Load("server.http").Build()
-		server.GET("/hello", func(c *gin.Context) {
-			span, _ := etrace.StartSpanFromContext(c.Request.Context(), "Handle: /Hello")
+
+		server.GET("/panic", func(ctx *gin.Context) {
+			<-ctx.Request.Context().Done()
+			panic(ctx.Request.Context().Err())
+		})
+
+		server.GET("/200", func(ctx *gin.Context) {
+			<-ctx.Request.Context().Done()
+			fmt.Println(ctx.Request.Context().Err())
+			ctx.String(200, "hello")
+		})
+
+		server.GET("/hello", func(ctx *gin.Context) {
+			// Get traceId from Request's context
+			span, _ := etrace.StartSpanFromContext(ctx.Request.Context(), "Handle: /Hello")
 			defer span.Finish()
 
-			c.JSON(200, "Hello client: "+c.GetHeader("app"))
-			return
+			ctx.JSON(200, "Hello client: "+ctx.GetHeader("app"))
 		})
+
 		return server
 	}()).Run(); err != nil {
 		elog.Panic("startup", elog.FieldErr(err))

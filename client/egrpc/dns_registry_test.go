@@ -73,7 +73,8 @@ func TestDNSRegistry(t *testing.T) {
 
 	for _, a := range tests {
 		b := DNSRegistry()
-		ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
 		r, err := b.WatchServices(ctx, eregistry.Target{Endpoint: a.target})
 		if err != nil {
 			t.Fatalf("%v\n", err)

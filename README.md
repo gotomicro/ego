@@ -6,8 +6,6 @@
 [![goproxy.cn](https://goproxy.cn/stats/github.com/gotomicro/ego/badges/download-count.svg)](https://goproxy.cn/stats/github.com/gotomicro/ego)
 [![Release](https://img.shields.io/github/v/release/gotomicro/ego.svg?style=flat-square)](https://github.com/gotomicro/ego)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=gotomicro_ego&metric=alert_status)](https://sonarcloud.io/dashboard?id=gotomicro_ego)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=gotomicro_ego&metric=bugs)](https://sonarcloud.io/dashboard?id=gotomicro_ego)
 
 ## 1 帮助文档
 [https://ego.gocn.vip](https://ego.gocn.vip)
@@ -214,6 +212,7 @@ Thanks for these wonderful people:
     <td align="center"><a href="https://www.yuque.com/wbofeng"><img src="https://avatars.githubusercontent.com/u/54163491?v=4" width="64px;" alt=""/><br /><sub><b>Wbofeng</b></sub></a></td>
     <td align="center"><a href="https://github.com/clannadxr"><img src="https://avatars.githubusercontent.com/u/9847143?v=4" width="64px;" alt=""/><br /><sub><b>clannadxr</b></sub></a></td>
     <td align="center"><a href="https://www.duanlv.ltd"><img src="https://avatars.githubusercontent.com/u/20787331?v=4" width="64px;" alt=""/><br /><sub><b>Link Duan</b></sub></a></td>
+    <td align="center"><a href="https://cqs.es"><img src="https://avatars.githubusercontent.com/u/20419375?v=4" width="64px;" alt=""/><br /><sub><b>Costa</b></sub></a></td>
   </tr>
 </table>
 

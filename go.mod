@@ -20,7 +20,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pierrec/lz4 v2.6.0+incompatible
-	github.com/pkg/errors v0.9.1
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.6.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil v3.21.3+incompatible

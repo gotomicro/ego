@@ -2,6 +2,7 @@ package ego
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -29,31 +30,44 @@ func (e *Ego) waitSignals() {
 		sig,
 		e.opts.shutdownSignals...,
 	)
+
 	go func() {
 		s := <-sig
+		// 区分强制退出、优雅退出
 		grace := s != syscall.SIGQUIT
 		go func() {
+			// todo 父节点传context待考虑
 			stopCtx, cancel := context.WithTimeout(context.Background(), e.opts.stopTimeout)
-			defer cancel()
+			defer func() {
+				signal.Stop(sig)
+				cancel()
+			}()
 			_ = e.Stop(stopCtx, grace)
+			<-stopCtx.Done()
+			// 记录服务器关闭时候，由于关闭过慢，无法正常关闭，被强制cancel
+			if errors.Is(stopCtx.Err(), context.DeadlineExceeded) {
+				elog.Error("waitSignals stop context err", elog.FieldErr(stopCtx.Err()))
+			}
 		}()
 		<-sig
+		elog.Error("waitSignals quit")
+		// 因为os.Signal长度为2，那么这里会阻塞住，如果发送两次信号量，强制退出
 		os.Exit(128 + int(s.(syscall.Signal))) // second signal. Exit directly.
 	}()
 }
 
-func (e *Ego) startServers() error {
+func (e *Ego) startServers(ctx context.Context) error {
 	// start multi servers
 	for _, s := range e.servers {
 		s := s
 		e.cycle.Run(func() (err error) {
 			_ = s.Init()
-			err = e.registerer.RegisterService(context.TODO(), s.Info())
+			err = e.registerer.RegisterService(ctx, s.Info())
 			if err != nil {
 				e.logger.Error("register service err", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err))
 			}
 			defer func() {
-				_ = e.registerer.UnregisterService(context.TODO(), s.Info())
+				_ = e.registerer.UnregisterService(ctx, s.Info())
 			}()
 			e.logger.Info("start server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldAddr(s.Info().Label()))
 			defer e.logger.Info("stop server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err), elog.FieldAddr(s.Info().Label()))
@@ -190,7 +204,7 @@ func (e *Ego) initTracer() error {
 
 // initMaxProcs init
 func initMaxProcs() error {
-	if maxProcs := econf.GetInt("Ego.maxProc"); maxProcs != 0 {
+	if maxProcs := econf.GetInt("ego.maxProc"); maxProcs != 0 {
 		runtime.GOMAXPROCS(maxProcs)
 	} else {
 		if _, err := maxprocs.Set(); err != nil {
@@ -203,7 +217,7 @@ func initMaxProcs() error {
 
 func printLogger() error {
 	elog.EgoLogger.Info("init default logger", elog.FieldComponent(elog.PackageName))
-	elog.EgoLogger.Info("init Ego logger", elog.FieldComponent(elog.PackageName))
+	elog.EgoLogger.Info("init ego logger", elog.FieldComponent(elog.PackageName))
 	return nil
 }
 
