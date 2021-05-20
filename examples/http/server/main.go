@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/server/egin"
 )
 
@@ -11,8 +12,11 @@ import (
 func main() {
 	if err := ego.New().Serve(func() *egin.Component {
 		server := egin.Load("server.http").Build()
-		server.GET("/hello", func(ctx *gin.Context) {
-			ctx.JSON(200, "Hello client: "+ctx.GetHeader("app"))
+		server.GET("/hello", func(c *gin.Context) {
+			span, _ := etrace.StartSpanFromContext(c.Request.Context(), "Handle: /Hello")
+			defer span.Finish()
+
+			c.JSON(200, "Hello client: "+c.GetHeader("app"))
 			return
 		})
 		return server
