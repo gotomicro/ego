@@ -127,6 +127,7 @@ func newAliCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 		ali.WithAccessKeySecret(config.AliAccessKeySecret),
 		ali.WithProject(config.AliProject),
 		ali.WithLogstore(config.AliLogstore),
+		ali.WithMaxQueueSize(config.AliMaxQueueSize),
 		ali.WithLevelEnabler(lv),
 		ali.WithFlushBufferSize(config.FlushBufferSize),
 		ali.WithFlushBufferInterval(config.FlushBufferInterval),

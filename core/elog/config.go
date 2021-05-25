@@ -30,6 +30,7 @@ type Config struct {
 	AliEndpoint               string        // [aliWriter]阿里云sls endpoint，必填
 	AliProject                string        // [aliWriter]阿里云sls Project名称，必填
 	AliLogstore               string        // [aliWriter]阿里云sls logstore名称，必填
+	AliMaxQueueSize           int           // [aliWriter]阿里云sls单实例logs等待队列最大值，默认4096
 	AliAPIBulkSize            int           // [aliWriter]阿里云sls API单次请求发送最大日志条数，最少256条，默认256条
 	AliAPITimeout             time.Duration // [aliWriter]阿里云sls API接口超时，默认3秒
 	AliAPIRetryCount          int           // [aliWriter]阿里云sls API接口重试次数，默认3次
@@ -76,6 +77,7 @@ func DefaultConfig() *Config {
 		EnableAsync:               true,
 		encoderConfig:             defaultZapConfig(),
 		Writer:                    writerRotateFile,
+		AliMaxQueueSize:           4096,
 		AliAPIBulkSize:            256,
 		AliAPITimeout:             3 * time.Second,
 		AliAPIRetryCount:          3,
