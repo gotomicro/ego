@@ -51,6 +51,13 @@ func WithLogstore(logStore string) Option {
 	}
 }
 
+// WithMaxQueueSize ...
+func WithMaxQueueSize(maxQueueSize int) Option {
+	return func(c *config) {
+		c.maxQueueSize = maxQueueSize
+	}
+}
+
 // WithLevelEnabler ...
 func WithLevelEnabler(lv zapcore.LevelEnabler) Option {
 	return func(c *config) {

@@ -29,8 +29,6 @@ import (
 )
 
 const (
-	// entryChanSize sets the logs size
-	entryChanSize int = 4096
 	// observe interval
 	observeInterval = 5 * time.Second
 	// apiBulkMinSize sets bulk minimal size
@@ -42,13 +40,13 @@ type LogContent = pb.Log_Content
 
 // config is the config for Ali Log
 type config struct {
-	encoder         zapcore.Encoder
-	project         string
-	endpoint        string
-	accessKeyID     string
-	accessKeySecret string
-	logstore        string
-	//flushSize              int
+	encoder                zapcore.Encoder
+	project                string
+	endpoint               string
+	accessKeyID            string
+	accessKeySecret        string
+	logstore               string
+	maxQueueSize           int
 	flushBufferSize        int32
 	flushBufferInterval    time.Duration
 	levelEnabler           zapcore.LevelEnabler
@@ -76,23 +74,18 @@ type writer struct {
 }
 
 func retryCondition(r *resty.Response, err error) bool {
-	code := r.StatusCode()
-	if code == 500 || code == 502 || code == 503 {
-		return true
-	}
-	return false
+	return r.StatusCode() != 200
 }
 
 // newWriter creates a new ali writer
 func newWriter(c config) (*writer, error) {
-	entryChanSize := entryChanSize
-	if c.apiBulkSize >= entryChanSize {
-		c.apiBulkSize = entryChanSize
+	if c.apiBulkSize >= c.maxQueueSize {
+		c.apiBulkSize = c.maxQueueSize
 	}
 	if c.apiBulkSize < apiBulkMinSize {
 		c.apiBulkSize = apiBulkMinSize
 	}
-	w := &writer{config: c, ch: make(chan *pb.Log, entryChanSize), curBufSize: new(int32)}
+	w := &writer{config: c, ch: make(chan *pb.Log, c.maxQueueSize), curBufSize: new(int32)}
 	p := &LogProject{
 		name:            w.project,
 		endpoint:        w.endpoint,
@@ -228,6 +221,7 @@ func (w *writer) flush() error {
 			}
 			lg := pb.LogGroup{Logs: waitedEntries[start:end]}
 			if e := w.store.PutLogs(&lg); e != nil {
+				log.Println("[sls] PutLogs to sls fail,try to write to fallback logger now,", e)
 				// if error occurs we put logs to fallback logger
 				w.writeToFallbackLogger(lg)
 			}
@@ -246,7 +240,7 @@ func (w *writer) writeToFallbackLogger(lg pb.LogGroup) {
 			fields[i] = zap.String(val.GetKey(), val.GetValue())
 		}
 		if e := w.fallbackCore.Write(zapcore.Entry{Time: time.Now()}, fields); e != nil {
-			log.Println("fallbackCore write fail", e)
+			log.Println("[sls] fallbackCore write fail,", e)
 		}
 	}
 }
@@ -261,7 +255,7 @@ func (w *writer) sync() {
 			select {
 			case <-ticker.C:
 				if err := w.flush(); err != nil {
-					log.Printf("writer flush fail, %s\n", err)
+					log.Printf("[sls] writer flush fail, %s\n", err)
 				}
 			case <-ctx.Done():
 				return
