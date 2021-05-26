@@ -74,11 +74,7 @@ type writer struct {
 }
 
 func retryCondition(r *resty.Response, err error) bool {
-	code := r.StatusCode()
-	if code != 200 {
-		return true
-	}
-	return false
+	return r.StatusCode() != 200
 }
 
 // newWriter creates a new ali writer
