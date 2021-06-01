@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
@@ -156,7 +157,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		err := invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
 		spbStatus := ecode.ExtractCodes(err)
-		var fields = make([]elog.Field, 0, 15)
+		var fields = make([]elog.Field, 0, 20)
 		fields = append(fields,
 			elog.FieldType("unary"),
 			elog.FieldCode(spbStatus.Code),
@@ -176,6 +177,18 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		}
 		if config.EnableAccessInterceptorRes {
 			fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
+		}
+
+		if value := getContextValue(eapp.EgoLoggerKey1(), ctx); value != "" {
+			fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey1(), value))
+		}
+
+		if value := getContextValue(eapp.EgoLoggerKey2(), ctx); value != "" {
+			fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey2(), value))
+		}
+
+		if value := getContextValue(eapp.EgoLoggerKey3(), ctx); value != "" {
+			fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey3(), value))
 		}
 
 		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
@@ -201,4 +214,19 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		}
 		return nil
 	}
+}
+
+func getContextValue(key string, ctx context.Context) string {
+	if key == "" {
+		return ""
+	}
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ""
+	}
+	val, ok2 := md[key]
+	if !ok2 {
+		return ""
+	}
+	return strings.Join(val, ";")
 }
