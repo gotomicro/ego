@@ -12,14 +12,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
-	"go.uber.org/zap"
-
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
+	"github.com/opentracing/opentracing-go"
+	"github.com/spf13/cast"
+	"github.com/uber/jaeger-client-go"
+	"go.uber.org/zap"
 )
 
 var (
@@ -39,7 +39,7 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var beg = time.Now()
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
-		var fields = make([]elog.Field, 0, 15)
+		var fields = make([]elog.Field, 0, 20)
 		var brokenPipe bool
 		var event = "normal"
 		defer func() {
@@ -57,6 +57,18 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 
 			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(c.Request.Context())))
+			}
+
+			if value := getContextValue(eapp.EgoLoggerKey1(), c); value != "" {
+				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey1(), value))
+			}
+
+			if value := getContextValue(eapp.EgoLoggerKey2(), c); value != "" {
+				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey2(), value))
+			}
+
+			if value := getContextValue(eapp.EgoLoggerKey3(), c); value != "" {
+				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey3(), value))
 			}
 
 			// slow log
@@ -202,4 +214,17 @@ func getPeerIP(addr string) string {
 		return addSlice[0]
 	}
 	return ""
+}
+
+func getContextValue(key string, c *gin.Context) string {
+	if key == "" {
+		return ""
+	}
+	// 用Request.Context，因为这个是原生的HTTP，会往下传递链路，所以复用该Context，传递的信息
+	valueInterface := c.Request.Context().Value(eapp.EgoLoggerKey1())
+	valueStr := cast.ToString(valueInterface)
+	if valueStr == "" {
+		return c.GetHeader(eapp.EgoLoggerKey1())
+	}
+	return valueStr
 }

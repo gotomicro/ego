@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/util/xcpu"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -164,7 +165,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
 		var beg = time.Now()
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
-		var fields = make([]elog.Field, 0, 15)
+		var fields = make([]elog.Field, 0, 20)
 		var event = "normal"
 
 		// 此处必须使用defer来recover handler内部可能出现的panic
@@ -203,6 +204,18 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			}
 			if config.EnableAccessInterceptorRes {
 				fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
+			}
+
+			if value := getContextValue(eapp.EgoLoggerKey1(), ctx); value != "" {
+				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey1(), value))
+			}
+
+			if value := getContextValue(eapp.EgoLoggerKey2(), ctx); value != "" {
+				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey2(), value))
+			}
+
+			if value := getContextValue(eapp.EgoLoggerKey3(), ctx); value != "" {
+				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey3(), value))
 			}
 
 			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
@@ -248,15 +261,7 @@ func enableCPUUsage(ctx context.Context) bool {
 
 // getPeerName 获取对端应用名称
 func getPeerName(ctx context.Context) string {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return ""
-	}
-	val, ok2 := md["app"]
-	if !ok2 {
-		return ""
-	}
-	return strings.Join(val, ";")
+	return getContextValue("app", ctx)
 }
 
 // getPeerIP 获取对端ip
@@ -282,4 +287,19 @@ func getPeerIP(ctx context.Context) string {
 		return addSlice[0]
 	}
 	return ""
+}
+
+func getContextValue(key string, ctx context.Context) string {
+	if key == "" {
+		return ""
+	}
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ""
+	}
+	val, ok2 := md[key]
+	if !ok2 {
+		return ""
+	}
+	return strings.Join(val, ";")
 }
