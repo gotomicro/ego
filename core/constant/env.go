@@ -23,6 +23,10 @@ const (
 	EgoLogAddApp = "EGO_LOG_ADD_APP"
 	// EgoTraceIDName 应用链路ID环境变量，不配置，默认x-trace-id
 	EgoTraceIDName = "EGO_TRACE_ID_NAME"
+	// EgoLoggerKey1 日志扩展字段，通常用于，配置uid信息，用户Uid，例如x-ego-uid
+	EgoLoggerKey1 = "EGO_LOGGER_KEY1"
+	EgoLoggerKey2 = "EGO_LOGGER_KEY2"
+	EgoLoggerKey3 = "EGO_LOGGER_KEY3"
 	// DefaultDeployment ...
 	DefaultDeployment = ""
 )

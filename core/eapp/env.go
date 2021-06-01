@@ -15,6 +15,9 @@ var (
 	egoLogPath     string
 	egoLogAddApp   string
 	egoTraceIDName string
+	egoLoggerKey1  string
+	egoLoggerKey2  string
+	egoLoggerKey3  string
 )
 
 func initEnv() {
@@ -32,6 +35,9 @@ func initEnv() {
 	if egoTraceIDName == "" {
 		egoTraceIDName = "x-trace-id"
 	}
+	egoLoggerKey1 = os.Getenv(constant.EgoLoggerKey1)
+	egoLoggerKey2 = os.Getenv(constant.EgoLoggerKey2)
+	egoLoggerKey3 = os.Getenv(constant.EgoLoggerKey3)
 }
 
 // AppMode 获取应用运行的环境
@@ -72,4 +78,19 @@ func EnableLoggerAddApp() bool {
 // EgoTraceIDName 获取链路名称
 func EgoTraceIDName() string {
 	return egoTraceIDName
+}
+
+// EgoLoggerKey1 获取链路名称
+func EgoLoggerKey1() string {
+	return egoLoggerKey1
+}
+
+// EgoLoggerKey2 获取链路名称
+func EgoLoggerKey2() string {
+	return egoLoggerKey2
+}
+
+// EgoLoggerKey3 获取链路名称
+func EgoLoggerKey3() string {
+	return egoLoggerKey3
 }

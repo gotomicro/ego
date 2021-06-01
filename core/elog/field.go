@@ -2,6 +2,7 @@ package elog
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/gotomicro/ego/core/etrace"
@@ -136,4 +137,9 @@ func FieldPeerIP(value string) Field {
 // FieldPeerName ...
 func FieldPeerName(value string) Field {
 	return String("peerName", value)
+}
+
+// FieldCustomKeyValue 设置自定义日志
+func FieldCustomKeyValue(key string, value string) Field {
+	return String(strings.ToLower(key), value)
 }

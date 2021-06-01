@@ -189,16 +189,27 @@ func (e *Ego) initLogger() error {
 
 // initTracer init global tracer
 func (e *Ego) initTracer() error {
+	var (
+		container *ejaeger.Config
+	)
+
 	if econf.Get(e.opts.configPrefix+"trace.jaeger") != nil {
-		container := ejaeger.Load(e.opts.configPrefix + "trace.jaeger")
-		tracer := container.Build()
-		etrace.SetGlobalTracer(tracer)
-		elog.EgoLogger.Info("set global tracer", elog.FieldComponent("trace"))
-		e.opts.afterStopClean = append(e.opts.afterStopClean, container.Stop)
-		elog.EgoLogger.Info("init trace", elog.FieldComponent("app"))
+		container = ejaeger.Load(e.opts.configPrefix + "trace.jaeger")
 	} else {
-		elog.EgoLogger.Warn("not init trace", elog.FieldValue("need trace config: [trace.jaeger] in config"), elog.FieldComponent("app"))
+		// 设置默认trace
+		container = ejaeger.DefaultConfig()
 	}
+
+	// 禁用trace
+	if econf.GetBool(e.opts.configPrefix + "trace.jaeger.disable") {
+		elog.EgoLogger.Info("disable trace", elog.FieldComponent("app"))
+		return nil
+	}
+
+	tracer := container.Build()
+	etrace.SetGlobalTracer(tracer)
+	e.opts.afterStopClean = append(e.opts.afterStopClean, container.Stop)
+	elog.EgoLogger.Info("init trace", elog.FieldComponent("app"))
 	return nil
 }
 
