@@ -1,6 +1,7 @@
 package egin
 
 import (
+	healthcheck "github.com/RaMin0/gin-health-check"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/gotomicro/ego/core/econf"
@@ -53,6 +54,7 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 	server := newComponent(c.name, c.config, c.logger)
+	server.Use(healthcheck.Default())
 	server.Use(recoverMiddleware(c.logger, c.config))
 
 	if c.config.EnableMetricInterceptor {

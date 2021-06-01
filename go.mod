@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
+	github.com/RaMin0/gin-health-check v0.0.0-20180807004848-a677317b3f01 // indirect
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
 	github.com/davecgh/go-spew v1.1.1
