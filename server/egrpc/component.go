@@ -5,6 +5,8 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/gotomicro/ego/core/constant"
@@ -29,6 +31,7 @@ type Component struct {
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
 	newServer := grpc.NewServer(config.serverOptions...)
 	reflection.Register(newServer)
+	healthpb.RegisterHealthServer(newServer, health.NewServer())
 
 	return &Component{
 		name:       name,
