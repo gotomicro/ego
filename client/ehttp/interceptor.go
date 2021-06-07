@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -102,15 +103,16 @@ func logInterceptor(name string, config *Config, logger *elog.Component) (resty.
 }
 
 func metricInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
+	addr := strings.TrimRight(config.Addr, "/")
 	afterFn := func(cli *resty.Client, res *resty.Response) error {
-		uri := res.Request.RawRequest.URL.RequestURI()
-		emetric.ClientHandleCounter.Inc(emetric.TypeHTTP, name, res.Request.Method, uri, http.StatusText(res.StatusCode()))
+		uri := res.Request.Method + "." + res.Request.RawRequest.URL.RequestURI()
+		emetric.ClientHandleCounter.Inc(emetric.TypeHTTP, name, uri, addr, http.StatusText(res.StatusCode()))
 		emetric.ClientHandleHistogram.Observe(res.Time().Seconds(), emetric.TypeHTTP, name, res.Request.Method, uri)
 		return nil
 	}
 	errorFn := func(req *resty.Request, err error) {
-		uri := req.RawRequest.URL.RequestURI()
-		emetric.ClientHandleCounter.Inc(emetric.TypeHTTP, name, req.Method, uri, "biz error")
+		uri := req.Method + "." + req.RawRequest.URL.RequestURI()
+		emetric.ClientHandleCounter.Inc(emetric.TypeHTTP, name, uri, addr, "biz error")
 		emetric.ClientHandleHistogram.Observe(time.Since(beg(req.Context())).Seconds(), emetric.TypeHTTP, name, req.Method, uri)
 	}
 	return nil, afterFn, errorFn
