@@ -2,7 +2,6 @@ package egrpc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"runtime"
@@ -10,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/util/xcpu"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
@@ -20,10 +17,12 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/util/xcpu"
 	"github.com/gotomicro/ego/core/util/xstring"
 )
 
@@ -200,22 +199,24 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			}
 
 			if config.EnableAccessInterceptorReq {
-				fields = append(fields, elog.Any("req", json.RawMessage(xstring.JSON(req))))
+				var req = map[string]interface{}{
+					"body": xstring.JSON(req),
+				}
+				if md, ok := metadata.FromIncomingContext(ctx); ok {
+					req["metadata"] = md
+				}
+				fields = append(fields, elog.Any("req", req))
 			}
 			if config.EnableAccessInterceptorRes {
-				fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
+				fields = append(fields, elog.Any("res", map[string]interface{}{
+					"body": xstring.JSON(res),
+				}))
 			}
 
-			if value := getContextValue(eapp.EgoLoggerKey1(), ctx); value != "" {
-				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey1(), value))
-			}
-
-			if value := getContextValue(eapp.EgoLoggerKey2(), ctx); value != "" {
-				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey2(), value))
-			}
-
-			if value := getContextValue(eapp.EgoLoggerKey3(), ctx); value != "" {
-				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey3(), value))
+			for _, key := range eapp.EgoLoggerKeys() {
+				if value := getContextValue(key, ctx); value != "" {
+					fields = append(fields, elog.FieldCustomKeyValue(key, value))
+				}
 			}
 
 			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
@@ -236,7 +237,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			if stat.Usage > 0 {
 				// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
 				header := metadata.Pairs("cpu-usage", strconv.Itoa(int(stat.Usage)))
-				err = grpc.SendHeader(ctx, header)
+				err = grpc.SetHeader(ctx, header)
 				if err != nil {
 					logger.Error("set header error", elog.FieldErr(err))
 				}

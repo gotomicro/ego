@@ -47,18 +47,18 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 }
 
 // metricStreamClientInterceptor returns grpc stream request metrics collector interceptor
-//func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-//	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-//		beg := time.Now()
-//		clientStream, err := streamer(ctx, desc, cc, method, opts...)
+// func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+// 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+// 		beg := time.Now()
+// 		clientStream, err := streamer(ctx, desc, cc, method, opts...)
 //
-//		// 暂时用默认的grpc的默认err收敛
-//		codes := ecode.ExtractCodes(err)
-//		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCStream, name, method, cc.Target(), codes.GetMessage())
-//		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCStream, name, method, cc.Target())
-//		return clientStream, err
-//	}
-//}
+// 		// 暂时用默认的grpc的默认err收敛
+// 		codes := ecode.ExtractCodes(err)
+// 		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCStream, name, method, cc.Target(), codes.GetMessage())
+// 		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCStream, name, method, cc.Target())
+// 		return clientStream, err
+// 	}
+// }
 
 // debugUnaryClientInterceptor returns grpc unary request request and response details interceptor
 func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientInterceptor {
@@ -179,16 +179,10 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 			fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
 		}
 
-		if value := getContextValue(eapp.EgoLoggerKey1(), ctx); value != "" {
-			fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey1(), value))
-		}
-
-		if value := getContextValue(eapp.EgoLoggerKey2(), ctx); value != "" {
-			fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey2(), value))
-		}
-
-		if value := getContextValue(eapp.EgoLoggerKey3(), ctx); value != "" {
-			fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey3(), value))
+		for _, key := range eapp.EgoLoggerKeys() {
+			if value := getContextValue(key, ctx); value != "" {
+				fields = append(fields, elog.FieldCustomKeyValue(key, value))
+			}
 		}
 
 		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {

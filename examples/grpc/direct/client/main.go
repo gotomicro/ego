@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/davecgh/go-spew/spew"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/client/egrpc"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/examples/grpc/direct/helloworld"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 func main() {

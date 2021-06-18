@@ -2,13 +2,18 @@ package main
 
 import (
 	"context"
+	"fmt"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/examples/grpc/direct/helloworld"
 	"github.com/gotomicro/ego/server"
 	"github.com/gotomicro/ego/server/egrpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 //  export EGO_DEBUG=true && go run main.go --config=config.toml
@@ -32,7 +37,11 @@ func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequ
 	if request.Name == "error" {
 		return nil, status.Error(codes.Unavailable, "error")
 	}
-
+	header := metadata.Pairs("x-header-key", "val")
+	err := grpc.SendHeader(context, header)
+	if err != nil {
+		return nil, fmt.Errorf("set header fail, %w", err)
+	}
 	return &helloworld.HelloReply{
 		Message: "Hello EGO, I'm " + g.server.Address(),
 	}, nil
