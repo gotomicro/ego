@@ -42,8 +42,19 @@ type resWriter struct {
 }
 
 func (g *resWriter) Write(data []byte) (int, error) {
-	g.ResponseWriter.Write(data)
-	return g.body.Write(data)
+	n, e := g.body.Write(data)
+	if e != nil {
+		return n, e
+	}
+	return g.ResponseWriter.Write(data)
+}
+
+func (g *resWriter) WriteString(s string) (int, error) {
+	n, e := g.body.WriteString(s)
+	if e != nil {
+		return n, e
+	}
+	return g.ResponseWriter.WriteString(s)
 }
 
 func copyHeaders(headers http.Header) http.Header {
