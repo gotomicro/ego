@@ -1,18 +1,21 @@
 package egin
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path"
+	"strings"
 	"syscall"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gotomicro/ego/core/elog"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/gotomicro/ego/core/elog"
 )
 
 func TestPanicInHandler(t *testing.T) {
@@ -32,10 +35,14 @@ func TestPanicInHandler(t *testing.T) {
 	assert.Nil(t, err)
 	// TEST
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, string(logged), `"event":"recover"`)
+	var m map[string]interface{}
+	n := strings.Index(string(logged), "{")
+	err = json.Unmarshal(logged[n:], &m)
+	assert.NoError(t, err)
+	assert.Contains(t, m["event"], `recover`)
 	assert.Contains(t, string(logged), "we have a panic")
 	assert.Contains(t, string(logged), t.Name())
-	assert.Contains(t, string(logged), `"type":"GET","method":"/recovery"`)
+	assert.Contains(t, m["method"], `GET./recovery`)
 	os.Remove(path.Join(logger.GetConfigDir(), logger.GetConfigName()))
 }
 
