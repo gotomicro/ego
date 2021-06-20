@@ -41,8 +41,8 @@ func TestPanicInHandler(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, m["event"], `recover`)
 	assert.Contains(t, string(logged), "we have a panic")
-	assert.Contains(t, string(logged), t.Name())
 	assert.Contains(t, m["method"], `GET./recovery`)
+	assert.Contains(t, string(logged), t.Name())
 	os.Remove(path.Join(logger.GetConfigDir(), logger.GetConfigName()))
 }
 
