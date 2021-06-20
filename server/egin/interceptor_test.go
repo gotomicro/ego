@@ -22,7 +22,7 @@ func TestPanicInHandler(t *testing.T) {
 		elog.WithEnableAddCaller(true),
 		elog.WithEnableAsync(false),
 	)
-	router.Use(recoverMiddleware(logger, DefaultConfig()))
+	router.Use(defaultServerInterceptor(logger, DefaultConfig()))
 	router.GET("/recovery", func(_ *gin.Context) {
 		panic("we have a panic")
 	})
@@ -55,7 +55,7 @@ func TestPanicWithBrokenPipe(t *testing.T) {
 				elog.WithEnableAddCaller(true),
 				elog.WithEnableAsync(false),
 			)
-			router.Use(recoverMiddleware(logger, DefaultConfig()))
+			router.Use(defaultServerInterceptor(logger, DefaultConfig()))
 			router.GET("/recovery", func(c *gin.Context) {
 				// Start writing response
 				c.Header("X-Test", "Value")
