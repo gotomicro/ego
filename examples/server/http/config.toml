@@ -1,2 +1,5 @@
 [server.http]
+    host = "0.0.0.0"
     port = 9007
+    enableAccessInterceptorReq = true
+    enableAccessInterceptorRes = true

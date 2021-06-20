@@ -23,10 +23,11 @@ const (
 	EgoLogAddApp = "EGO_LOG_ADD_APP"
 	// EgoTraceIDName 应用链路ID环境变量，不配置，默认x-trace-id
 	EgoTraceIDName = "EGO_TRACE_ID_NAME"
-	// EgoLoggerKey1 日志扩展字段，通常用于，配置uid信息，用户Uid，例如x-ego-uid
-	EgoLoggerKey1 = "EGO_LOGGER_KEY1"
-	EgoLoggerKey2 = "EGO_LOGGER_KEY2"
-	EgoLoggerKey3 = "EGO_LOGGER_KEY3"
+	// EgoExtraTraceKeys 扩展追踪字段，通常用于追踪自定义业务字段。如用户ID(X-Ego-Uid)、订单ID(X-Ego-Order-Id)等。
+	// 配置格式 {key1},{key2},{key3}...，多个 key 之间通过 "," 分割。
+	// 比如 export EGO_EXTRA_TRACE_KEYS=X-Ego-Uid,X-Ego-Order-Id
+	// 这些扩展的追踪字段会根据配置的 key1、key2、key3 等键名，通过 Headers(HTTP) 或 metadata(gRPC) 进行存取，并往下游传递
+	EgoExtraTraceKeys = "EGO_EXTRA_TRACE_KEYS"
 	// DefaultDeployment ...
 	DefaultDeployment = ""
 )

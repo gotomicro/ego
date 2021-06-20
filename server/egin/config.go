@@ -12,14 +12,15 @@ import (
 
 // Config HTTP config
 type Config struct {
-	Host                    string        // IP地址，默认0.0.0.0
-	Port                    int           // PORT端口，默认9001
-	Mode                    string        // gin的模式，默认是release模式
-	EnableMetricInterceptor bool          // 是否开启监控，默认开启
-	EnableTraceInterceptor  bool          // 是否开启链路追踪，默认开启
-	EnableLocalMainIP       bool          // 自动获取ip地址
-	SlowLogThreshold        time.Duration // 服务慢日志，默认500ms
-
+	Host                       string        // IP地址，默认0.0.0.0
+	Port                       int           // PORT端口，默认9001
+	Mode                       string        // gin的模式，默认是release模式
+	EnableMetricInterceptor    bool          // 是否开启监控，默认开启
+	EnableTraceInterceptor     bool          // 是否开启链路追踪，默认开启
+	EnableLocalMainIP          bool          // 自动获取ip地址
+	SlowLogThreshold           time.Duration // 服务慢日志，默认500ms
+	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
+	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
 	WebsocketHandshakeTimeout  time.Duration // 握手时间
 	WebsocketReadBufferSize    int
 	WebsocketWriteBufferSize   int

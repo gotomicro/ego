@@ -3,6 +3,7 @@ package egin
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -12,14 +13,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/emetric"
-	"github.com/gotomicro/ego/core/etrace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/cast"
 	"github.com/uber/jaeger-client-go"
 	"go.uber.org/zap"
+
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/etrace"
 )
 
 var (
@@ -34,22 +36,64 @@ func extractAPP(ctx *gin.Context) string {
 	return ctx.Request.Header.Get("app")
 }
 
-// recoverMiddleware 恢复拦截器，记录500信息，以及慢日志信息
-func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
+type resWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (g *resWriter) Write(data []byte) (int, error) {
+	n, e := g.body.Write(data)
+	if e != nil {
+		return n, e
+	}
+	return g.ResponseWriter.Write(data)
+}
+
+func (g *resWriter) WriteString(s string) (int, error) {
+	n, e := g.body.WriteString(s)
+	if e != nil {
+		return n, e
+	}
+	return g.ResponseWriter.WriteString(s)
+}
+
+func copyHeaders(headers http.Header) http.Header {
+	nh := http.Header{}
+	for k, v := range headers {
+		nh[k] = v
+	}
+	return nh
+}
+
+// defaultServerInterceptor 默认拦截器，包含日志记录、Recover等功能
+func defaultServerInterceptor(logger *elog.Component, config *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var beg = time.Now()
+		var rw *resWriter
+		var rb bytes.Buffer
+
+		// 只有开启了EnableAccessInterceptorRes时拷贝request body
+		if config.EnableAccessInterceptorReq {
+			c.Request.Body = ioutil.NopCloser(io.TeeReader(c.Request.Body, &rb))
+		}
+		// 只有开启了EnableAccessInterceptorRes时才替换response writer
+		if config.EnableAccessInterceptorRes {
+			rw = &resWriter{c.Writer, &bytes.Buffer{}}
+			c.Writer = rw
+		}
+
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
-		var fields = make([]elog.Field, 0, 20)
+		loggerKeys := eapp.EgoLoggerKeys()
+		var fields = make([]elog.Field, 0, 20+len(loggerKeys))
 		var brokenPipe bool
 		var event = "normal"
 		defer func() {
 			cost := time.Since(beg)
-
 			fields = append(fields,
+				elog.FieldType("http"), // GET, POST
 				elog.FieldCost(cost),
-				elog.FieldType(c.Request.Method), // GET, POST
-				elog.FieldMethod(c.FullPath()),
-				elog.FieldAddr(c.Request.URL.Path),
+				elog.FieldMethod(c.Request.Method+"."+c.FullPath()),
+				elog.FieldAddr(c.Request.URL.RequestURI()),
 				elog.FieldIP(c.ClientIP()),
 				elog.FieldSize(int32(c.Writer.Size())),
 				elog.FieldPeerIP(getPeerIP(c.Request.RemoteAddr)),
@@ -59,16 +103,24 @@ func recoverMiddleware(logger *elog.Component, config *Config) gin.HandlerFunc {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(c.Request.Context())))
 			}
 
-			if value := getContextValue(eapp.EgoLoggerKey1(), c); value != "" {
-				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey1(), value))
+			if config.EnableAccessInterceptorReq {
+				fields = append(fields, elog.Any("req", map[string]interface{}{
+					"metadata": copyHeaders(c.Request.Header),
+					"body":     rb.String(),
+				}))
 			}
 
-			if value := getContextValue(eapp.EgoLoggerKey2(), c); value != "" {
-				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey2(), value))
+			if config.EnableAccessInterceptorRes {
+				fields = append(fields, elog.Any("res", map[string]interface{}{
+					"metadata": copyHeaders(c.Writer.Header()),
+					"body":     rw.body.String(),
+				}))
 			}
 
-			if value := getContextValue(eapp.EgoLoggerKey3(), c); value != "" {
-				fields = append(fields, elog.FieldCustomKeyValue(eapp.EgoLoggerKey3(), value))
+			for _, v := range loggerKeys {
+				if value := getContextValue(v, c); value != "" {
+					fields = append(fields, elog.FieldCustomKeyValue(v, value))
+				}
 			}
 
 			// slow log
@@ -220,11 +272,10 @@ func getContextValue(key string, c *gin.Context) string {
 	if key == "" {
 		return ""
 	}
-	// 用Request.Context，因为这个是原生的HTTP，会往下传递链路，所以复用该Context，传递的信息
-	valueInterface := c.Request.Context().Value(eapp.EgoLoggerKey1())
-	valueStr := cast.ToString(valueInterface)
-	if valueStr == "" {
-		return c.GetHeader(eapp.EgoLoggerKey1())
+	// 用Request.Context，因为这个是原生的HTTP，会往下传递链路，所以复用该Context传递的信息
+	val := cast.ToString(c.Request.Context().Value(key))
+	if val == "" {
+		return c.GetHeader(key)
 	}
-	return valueStr
+	return val
 }

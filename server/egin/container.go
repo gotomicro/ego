@@ -55,7 +55,7 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 	server := newComponent(c.name, c.config, c.logger)
 	server.Use(healthcheck.Default())
-	server.Use(recoverMiddleware(c.logger, c.config))
+	server.Use(defaultServerInterceptor(c.logger, c.config))
 
 	if c.config.EnableMetricInterceptor {
 		server.Use(metricServerInterceptor())
