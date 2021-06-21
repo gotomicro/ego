@@ -83,7 +83,7 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 		}
 
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
-		loggerKeys := eapp.EgoLoggerKeys()
+		loggerKeys := eapp.EgoLogExtraKeys()
 		var fields = make([]elog.Field, 0, 20+len(loggerKeys))
 		var brokenPipe bool
 		var event = "normal"
@@ -117,9 +117,9 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 				}))
 			}
 
-			for _, v := range loggerKeys {
-				if value := getContextValue(v, c); value != "" {
-					fields = append(fields, elog.FieldCustomKeyValue(v, value))
+			for _, key := range loggerKeys {
+				if value := getContextValue(key, c); value != "" {
+					fields = append(fields, elog.FieldCustomKeyValue(key, value))
 				}
 			}
 

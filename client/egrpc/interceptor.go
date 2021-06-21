@@ -179,7 +179,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 			fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
 		}
 
-		for _, key := range eapp.EgoLoggerKeys() {
+		for _, key := range eapp.EgoLogExtraKeys() {
 			if value := getContextValue(key, ctx); value != "" {
 				fields = append(fields, elog.FieldCustomKeyValue(key, value))
 			}
