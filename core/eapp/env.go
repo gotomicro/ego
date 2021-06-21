@@ -8,15 +8,15 @@ import (
 )
 
 var (
-	appMode        string
-	appRegion      string
-	appZone        string
-	appInstance    string // 通常是实例的机器名
-	egoDebug       string
-	egoLogPath     string
-	egoLogAddApp   string
-	egoTraceIDName string
-	egoLoggerKeys  []string
+	appMode         string
+	appRegion       string
+	appZone         string
+	appInstance     string // 通常是实例的机器名
+	egoDebug        string
+	egoLogPath      string
+	egoLogAddApp    string
+	egoTraceIDName  string
+	egoLogExtraKeys []string
 )
 
 func initEnv() {
@@ -34,7 +34,7 @@ func initEnv() {
 	if egoTraceIDName == "" {
 		egoTraceIDName = "x-trace-id"
 	}
-	egoLoggerKeys = strings.Split(os.Getenv(constant.EgoExtraTraceKeys), ",")
+	egoLogExtraKeys = strings.Split(os.Getenv(constant.EgoLogExtraKeys), ",")
 }
 
 // AppMode 获取应用运行的环境
@@ -77,7 +77,7 @@ func EgoTraceIDName() string {
 	return egoTraceIDName
 }
 
-// EgoLoggerKeys 获取自定义loggerKeys
-func EgoLoggerKeys() []string {
-	return egoLoggerKeys
+// EgoLogExtraKeys 获取自定义loggerKeys
+func EgoLogExtraKeys() []string {
+	return egoLogExtraKeys
 }
