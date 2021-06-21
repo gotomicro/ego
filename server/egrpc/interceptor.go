@@ -200,7 +200,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 
 			if config.EnableAccessInterceptorReq {
 				var req = map[string]interface{}{
-					"body": xstring.JSON(req),
+					"payload": xstring.JSON(req),
 				}
 				if md, ok := metadata.FromIncomingContext(ctx); ok {
 					req["metadata"] = md
@@ -209,7 +209,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			}
 			if config.EnableAccessInterceptorRes {
 				fields = append(fields, elog.Any("res", map[string]interface{}{
-					"body": xstring.JSON(res),
+					"payload": xstring.JSON(res),
 				}))
 			}
 

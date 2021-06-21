@@ -106,14 +106,14 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 			if config.EnableAccessInterceptorReq {
 				fields = append(fields, elog.Any("req", map[string]interface{}{
 					"metadata": copyHeaders(c.Request.Header),
-					"body":     rb.String(),
+					"payload":  rb.String(),
 				}))
 			}
 
 			if config.EnableAccessInterceptorRes {
 				fields = append(fields, elog.Any("res", map[string]interface{}{
 					"metadata": copyHeaders(c.Writer.Header()),
-					"body":     rw.body.String(),
+					"payload":  rw.body.String(),
 				}))
 			}
 
