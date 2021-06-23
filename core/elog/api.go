@@ -21,14 +21,6 @@ const (
 	EgoLoggerName = "ego.sys"
 )
 
-// Auto ...
-func Auto(err error) Func {
-	if err != nil {
-		return DefaultLogger.With(FieldErr(err)).Error
-	}
-	return DefaultLogger.Info
-}
-
 // Info ...
 func Info(msg string, fields ...Field) {
 	DefaultLogger.Info(msg, fields...)
@@ -132,11 +124,6 @@ func DPanicf(msg string, args ...interface{}) {
 // Fatalf ...
 func Fatalf(msg string, args ...interface{}) {
 	DefaultLogger.Fatalf(msg, args...)
-}
-
-// Log ...
-func (fn Func) Log(msg string, fields ...Field) {
-	fn(msg, fields...)
 }
 
 // With ...

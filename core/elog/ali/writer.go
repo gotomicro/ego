@@ -35,8 +35,8 @@ const (
 	apiBulkMinSize = 256
 )
 
-// LogContent ...
-type LogContent = pb.Log_Content
+// logContent ...
+type logContent = pb.Log_Content
 
 // config is the config for Ali Log
 type config struct {
@@ -65,7 +65,7 @@ type config struct {
 // Writes messages in keep-live tcp connection.
 type writer struct {
 	fallbackCore zapcore.Core
-	store        *LogStore
+	store        *logStore
 	ch           chan *pb.Log
 	lock         sync.Mutex
 	curBufSize   *int32
@@ -86,7 +86,7 @@ func newWriter(c config) (*writer, error) {
 		c.apiBulkSize = apiBulkMinSize
 	}
 	w := &writer{config: c, ch: make(chan *pb.Log, c.maxQueueSize), curBufSize: new(int32)}
-	p := &LogProject{
+	p := &logProject{
 		name:            w.project,
 		endpoint:        w.endpoint,
 		accessKeyID:     w.accessKeyID,
@@ -105,7 +105,7 @@ func newWriter(c config) (*writer, error) {
 		SetRetryWaitTime(c.apiRetryWaitTime).
 		SetRetryMaxWaitTime(c.apiRetryMaxWaitTime).
 		AddRetryCondition(retryCondition)
-	store, err := p.GetLogStore(w.logstore)
+	store, err := p.getLogStore(w.logstore)
 	if err != nil {
 		return nil, fmt.Errorf("getlogstroe fail,%w", err)
 	}
@@ -140,14 +140,14 @@ func createTransport(c config) *http.Transport {
 func genLog(fields map[string]interface{}) *pb.Log {
 	l := &pb.Log{
 		Time:     proto.Uint32(uint32(time.Now().Unix())),
-		Contents: make([]*LogContent, 0, len(fields)),
+		Contents: make([]*logContent, 0, len(fields)),
 	}
 	for k, v := range fields {
 		valStr, err := toStringE(v)
 		if err != nil {
 			log.Printf("toString fail, %s", err.Error())
 		}
-		l.Contents = append(l.Contents, &LogContent{
+		l.Contents = append(l.Contents, &logContent{
 			Key:   proto.String(k),
 			Value: proto.String(valStr),
 		})
@@ -220,8 +220,8 @@ func (w *writer) flush() error {
 				end = len(waitedEntries)
 			}
 			lg := pb.LogGroup{Logs: waitedEntries[start:end]}
-			if e := w.store.PutLogs(&lg); e != nil {
-				log.Println("[sls] PutLogs to sls fail,try to write to fallback logger now,", e)
+			if e := w.store.putLogs(&lg); e != nil {
+				log.Println("[sls] putLogs to sls fail,try to write to fallback logger now,", e)
 				// if error occurs we put logs to fallback logger
 				w.writeToFallbackLogger(lg)
 			}

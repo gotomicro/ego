@@ -28,10 +28,10 @@ type CloseFunc func() error
 
 var noopCloseFunc = func() error { return nil }
 
-// Buffer wraps a WriteSyncer in a buffer to improve performance,
+// bufferWriteSyncer wraps a WriteSyncer in a buffer to improve performance,
 // if bufferSize = 0, we set it to defaultBufferSize
 // if flushInterval = 0, we set it to defaultFlushInterval
-func Buffer(ws zapcore.WriteSyncer, bufferSize int, flushInterval time.Duration) (zapcore.WriteSyncer, CloseFunc) {
+func bufferWriteSyncer(ws zapcore.WriteSyncer, bufferSize int, flushInterval time.Duration) (zapcore.WriteSyncer, CloseFunc) {
 	if _, ok := ws.(*bufferWriterSyncer); ok {
 		// no need to layer on another buffer
 		return ws, func() error { return nil }

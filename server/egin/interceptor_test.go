@@ -31,7 +31,7 @@ func TestPanicInHandler(t *testing.T) {
 	})
 	// RUN
 	w := performRequest(router, "GET", "/recovery")
-	logged, err := ioutil.ReadFile(path.Join(logger.GetConfigDir(), logger.GetConfigName()))
+	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
 	// TEST
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
@@ -43,7 +43,7 @@ func TestPanicInHandler(t *testing.T) {
 	assert.Contains(t, string(logged), "we have a panic")
 	assert.Contains(t, m["method"], `GET./recovery`)
 	assert.Contains(t, string(logged), t.Name())
-	os.Remove(path.Join(logger.GetConfigDir(), logger.GetConfigName()))
+	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
 func TestPanicWithBrokenPipe(t *testing.T) {
@@ -74,13 +74,13 @@ func TestPanicWithBrokenPipe(t *testing.T) {
 			})
 			// RUN
 			w := performRequest(router, "GET", "/recovery")
-			logged, err := ioutil.ReadFile(path.Join(logger.GetConfigDir(), logger.GetConfigName()))
+			logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 			assert.Nil(t, err)
 			// TEST
 			assert.Equal(t, expectCode, w.Code)
 			assert.Contains(t, string(logged), `"code":204`)
 			assert.Contains(t, string(logged), expectMsg)
-			os.Remove(path.Join(logger.GetConfigDir(), logger.GetConfigName()))
+			os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 		})
 	}
 }

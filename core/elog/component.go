@@ -35,8 +35,6 @@ const (
 )
 
 type (
-	// Func ...
-	Func func(string, ...zap.Field)
 	// Field ...
 	Field = zap.Field
 	// Level ...
@@ -100,7 +98,7 @@ func newRotateFileCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseF
 		ws = zap.CombineWriteSyncers(os.Stdout, ws)
 	}
 	if config.EnableAsync {
-		ws, cf = Buffer(ws, config.FlushBufferSize, config.FlushBufferInterval)
+		ws, cf = bufferWriteSyncer(ws, config.FlushBufferSize, config.FlushBufferInterval)
 	}
 	core := zapcore.NewCore(
 		func() zapcore.Encoder {
@@ -250,15 +248,15 @@ func defaultDebugConfig() *zapcore.EncoderConfig {
 		MessageKey:     "msg",
 		StacktraceKey:  "stack",
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    DebugEncodeLevel,
+		EncodeLevel:    debugEncodeLevel,
 		EncodeTime:     timeDebugEncoder,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 }
 
-// DebugEncodeLevel ...
-func DebugEncodeLevel(lv zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+// debugEncodeLevel ...
+func debugEncodeLevel(lv zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
 	var colorize = xcolor.Red
 	switch lv {
 	case zapcore.DebugLevel:
@@ -496,12 +494,12 @@ func (logger *Component) WithCallerSkip(callerSkip int, fields ...Field) *Compon
 	}
 }
 
-// GetConfigDir 获取日志路径
-func (logger *Component) GetConfigDir() string {
+// ConfigDir 获取日志路径
+func (logger *Component) ConfigDir() string {
 	return logger.config.Dir
 }
 
-// GetConfigName 获取日志名称
-func (logger *Component) GetConfigName() string {
+// ConfigName 获取日志名称
+func (logger *Component) ConfigName() string {
 	return logger.config.Name
 }
