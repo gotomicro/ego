@@ -78,7 +78,7 @@ func newClientError(err error) *cliError {
 
 // request sends a request to alibaba cloud Log Service.
 // @note if error is nil, you must call http.Response.Body.Close() to finalize reader
-func (p *LogProject) request(method, uri string, headers map[string]string, body []byte) (*resty.Response, error) {
+func (p *logProject) request(method, uri string, headers map[string]string, body []byte) (*resty.Response, error) {
 	// The caller should provide 'x-log-bodyrawsize' header
 	if _, ok := headers["x-log-bodyrawsize"]; !ok {
 		return nil, newClientError(fmt.Errorf("can't find 'x-log-bodyrawsize' header"))

@@ -45,7 +45,7 @@ func init() {
 	}
 	hostName = name
 	startTime = xtime.TS.Format(time.Now())
-	SetBuildTime(buildTime)
+	setBuildTime(buildTime)
 	goVersion = runtime.Version()
 	initEnv()
 
@@ -66,7 +66,7 @@ func Name() string {
 	return appName
 }
 
-//AppVersion get buildAppVersion
+// AppVersion get buildAppVersion
 func AppVersion() string {
 	return buildAppVersion
 }
@@ -76,23 +76,23 @@ func EgoVersion() string {
 	return egoVersion
 }
 
-//BuildTime get buildTime
+// BuildTime get buildTime
 func BuildTime() string {
 	return buildTime
 }
 
-//BuildUser get buildUser
+// BuildUser get buildUser
 func BuildUser() string {
 	return buildUser
 }
 
-//BuildHost get buildHost
+// BuildHost get buildHost
 func BuildHost() string {
 	return buildHost
 }
 
-//SetBuildTime set buildTime
-func SetBuildTime(param string) {
+// setBuildTime set buildTime
+func setBuildTime(param string) {
 	buildTime = strings.Replace(param, "--", " ", 1)
 }
 
@@ -101,12 +101,12 @@ func HostName() string {
 	return hostName
 }
 
-//StartTime get start time
+// StartTime get start time
 func StartTime() string {
 	return startTime
 }
 
-//GoVersion get go version
+// GoVersion get go version
 func GoVersion() string {
 	return goVersion
 }

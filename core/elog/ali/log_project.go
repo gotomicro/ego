@@ -25,8 +25,8 @@ type errorMessage struct {
 	Message string `json:"errorMessage"`
 }
 
-// LogProject defines the Ali project detail
-type LogProject struct {
+// logProject defines the Ali project detail
+type logProject struct {
 	name            string // project name
 	endpoint        string // IP or hostname of SLS endpoint
 	accessKeyID     string
@@ -36,18 +36,18 @@ type LogProject struct {
 	cli             *resty.Client
 }
 
-// LogStore stores the logs
-type LogStore struct {
+// logStore stores the logs
+type logStore struct {
 	Name           string `json:"logstoreName"`
 	TTL            int
 	ShardCount     int
 	CreateTime     uint32
 	LastModifyTime uint32
-	project        *LogProject
+	project        *logProject
 }
 
-// ListLogStore returns all logstore names of project p.
-func (p *LogProject) ListLogStore() (storeNames []string, err error) {
+// listLogStore returns all logstore names of project p.
+func (p *logProject) listLogStore() (storeNames []string, err error) {
 	h := map[string]string{
 		"x-log-bodyrawsize": "0",
 	}
@@ -78,7 +78,7 @@ func (p *LogProject) ListLogStore() (storeNames []string, err error) {
 	return
 }
 
-func (p *LogProject) initHost() {
+func (p *logProject) initHost() {
 	scheme := httpScheme // default to http scheme
 	host := p.endpoint
 
@@ -96,8 +96,8 @@ func (p *LogProject) initHost() {
 	}
 }
 
-// GetLogStore returns logstore according by logstore name.
-func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
+// getLogStore returns logstore according by logstore name.
+func (p *logProject) getLogStore(name string) (s *logStore, err error) {
 	h := map[string]string{"x-log-bodyrawsize": "0"}
 	r, err := p.request("GET", "/logstores/"+name, h, nil)
 	if err != nil {
@@ -112,7 +112,7 @@ func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
 		return nil, fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
 	}
 
-	s = &LogStore{}
+	s = &logStore{}
 	if err = json.Unmarshal(r.Body(), s); err != nil {
 		return
 	}
@@ -120,9 +120,9 @@ func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
 	return
 }
 
-// PutLogs puts logs into logstore.
+// putLogs puts logs into logstore.
 // The callers should transform user logs into LogGroup.
-func (s *LogStore) PutLogs(lg *pb.LogGroup) (err error) {
+func (s *logStore) putLogs(lg *pb.LogGroup) (err error) {
 	body, err := proto.Marshal(lg)
 	if err != nil {
 		return
