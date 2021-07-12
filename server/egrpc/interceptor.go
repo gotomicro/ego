@@ -214,7 +214,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			}
 
 			for _, key := range eapp.EgoLogExtraKeys() {
-				if value := getContextValue(key, ctx); value != "" {
+				if value := getContextValue(ctx, key); value != "" {
 					fields = append(fields, elog.FieldCustomKeyValue(key, value))
 				}
 			}
@@ -262,7 +262,7 @@ func enableCPUUsage(ctx context.Context) bool {
 
 // getPeerName 获取对端应用名称
 func getPeerName(ctx context.Context) string {
-	return getContextValue("app", ctx)
+	return getContextValue(ctx, "app")
 }
 
 // getPeerIP 获取对端ip
@@ -290,7 +290,7 @@ func getPeerIP(ctx context.Context) string {
 	return ""
 }
 
-func getContextValue(key string, ctx context.Context) string {
+func getContextValue(ctx context.Context, key string) string {
 	if key == "" {
 		return ""
 	}

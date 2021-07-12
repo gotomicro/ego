@@ -180,7 +180,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		}
 
 		for _, key := range eapp.EgoLogExtraKeys() {
-			if value := getContextValue(key, ctx); value != "" {
+			if value := getContextValue(ctx, key); value != "" {
 				fields = append(fields, elog.FieldCustomKeyValue(key, value))
 			}
 		}
@@ -210,7 +210,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 	}
 }
 
-func getContextValue(key string, ctx context.Context) string {
+func getContextValue(ctx context.Context, key string) string {
 	if key == "" {
 		return ""
 	}

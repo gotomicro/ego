@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/examples/helloworld"
 	"github.com/gotomicro/ego/server/egin"
-	"google.golang.org/grpc/examples/helloworld/helloworld"
 )
 
 //  export EGO_DEBUG=true && go run main.go --config=config.toml
@@ -20,7 +20,8 @@ func main() {
 			return
 		})
 		mock := &GreeterMock{}
-		server.GET("/grpcproxy", egin.GRPCProxy(mock.SayHello))
+		server.GET("/grpcproxyok", egin.GRPCProxy(mock.SayHelloOK))
+		server.GET("/grpcproxyerr", egin.GRPCProxy(mock.SayHelloErr))
 		return server
 	}()).Run(); err != nil {
 		elog.Panic("startup", elog.FieldErr(err))
@@ -29,8 +30,14 @@ func main() {
 
 type GreeterMock struct{}
 
-func (mock GreeterMock) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
+func (mock GreeterMock) SayHelloOK(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
 	return &helloworld.HelloReply{
 		Message: "hello",
-	}, fmt.Errorf("error say hello")
+	}, nil
+}
+
+func (mock GreeterMock) SayHelloErr(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
+	return &helloworld.HelloReply{
+		Message: "hello",
+	}, fmt.Errorf("say hello err")
 }

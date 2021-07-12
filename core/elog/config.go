@@ -32,8 +32,8 @@ type Config struct {
 }
 
 // Filename ...
-func (config *Config) Filename() string {
-	return fmt.Sprintf("%s/%s", config.Dir, config.Name)
+func (c *Config) Filename() string {
+	return fmt.Sprintf("%s/%s", c.Dir, c.Name)
 }
 
 // DefaultConfig ...
@@ -55,6 +55,7 @@ func DefaultConfig() *Config {
 	}
 }
 
-func (c *Config) GetEncoderConfig() *zapcore.EncoderConfig {
+// EncoderConfig 获取zap encoder配置
+func (c *Config) EncoderConfig() *zapcore.EncoderConfig {
 	return c.encoderConfig
 }

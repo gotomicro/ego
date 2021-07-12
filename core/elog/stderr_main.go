@@ -13,5 +13,5 @@ type stderrLogger struct{}
 // Load constructs a zapcore.Core with stderr syncer
 func (*stderrLogger) Load(key string, commonConfig *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
 	// Debug output to console and file by default
-	return zapcore.NewCore(zapcore.NewJSONEncoder(*commonConfig.GetEncoderConfig()), os.Stderr, lv), noopCloseFunc
+	return zapcore.NewCore(zapcore.NewJSONEncoder(*commonConfig.EncoderConfig()), os.Stderr, lv), noopCloseFunc
 }

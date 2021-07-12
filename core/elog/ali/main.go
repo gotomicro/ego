@@ -66,7 +66,7 @@ func (*aliLogger) Load(key string, commonConfig *elog.Config, lv zap.AtomicLevel
 	commonConfig.Name = defaultAliFallbackCorePath
 	fallbackCore, fallbackCoreCf := elog.Provider("file").Load(key, commonConfig, lv)
 	core, cf := NewCore(
-		WithEncoder(NewMapObjEncoder(*commonConfig.GetEncoderConfig())),
+		WithEncoder(newMapObjEncoder(*commonConfig.EncoderConfig())),
 		WithEndpoint(c.AliEndpoint),
 		WithAccessKeyID(c.AliAccessKeyID),
 		WithAccessKeySecret(c.AliAccessKeySecret),

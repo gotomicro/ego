@@ -30,8 +30,8 @@ type mapObjEncoder struct {
 	*zapcore.MapObjectEncoder
 }
 
-// NewMapObjEncoder ...
-func NewMapObjEncoder(cfg zapcore.EncoderConfig) *mapObjEncoder {
+// newMapObjEncoder ...
+func newMapObjEncoder(cfg zapcore.EncoderConfig) *mapObjEncoder {
 	return &mapObjEncoder{
 		EncoderConfig:    &cfg,
 		MapObjectEncoder: zapcore.NewMapObjectEncoder(),

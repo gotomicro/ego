@@ -60,9 +60,9 @@ func (*rotateLogger) Load(key string, commonConfig *Config, lv zap.AtomicLevel) 
 	core := zapcore.NewCore(
 		func() zapcore.Encoder {
 			if commonConfig.Debug {
-				return zapcore.NewConsoleEncoder(*commonConfig.GetEncoderConfig())
+				return zapcore.NewConsoleEncoder(*commonConfig.EncoderConfig())
 			}
-			return zapcore.NewJSONEncoder(*commonConfig.GetEncoderConfig())
+			return zapcore.NewJSONEncoder(*commonConfig.EncoderConfig())
 		}(),
 		ws,
 		lv,

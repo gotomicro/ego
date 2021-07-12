@@ -47,36 +47,36 @@ type logStore struct {
 }
 
 // listLogStore returns all logstore names of project p.
-func (p *logProject) listLogStore() (storeNames []string, err error) {
-	h := map[string]string{
-		"x-log-bodyrawsize": "0",
-	}
-
-	uri := "/logstores"
-	r, err := p.request("GET", uri, h, nil)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode() != http.StatusOK {
-		errMsg := &errorMessage{}
-		if err = json.Unmarshal(r.Body(), errMsg); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal logstore response, %w", err)
-		}
-		return nil, fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-	}
-
-	type Body struct {
-		Count     int
-		LogStores []string
-	}
-	body := &Body{}
-	if err = json.Unmarshal(r.Body(), body); err != nil {
-		return
-	}
-	storeNames = body.LogStores
-	return
-}
+//func (p *logProject) listLogStore() (storeNames []string, err error) {
+//	h := map[string]string{
+//		"x-log-bodyrawsize": "0",
+//	}
+//
+//	uri := "/logstores"
+//	r, err := p.request("GET", uri, h, nil)
+//	if err != nil {
+//		return
+//	}
+//
+//	if r.StatusCode() != http.StatusOK {
+//		errMsg := &errorMessage{}
+//		if err = json.Unmarshal(r.Body(), errMsg); err != nil {
+//			return nil, fmt.Errorf("failed to unmarshal logstore response, %w", err)
+//		}
+//		return nil, fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
+//	}
+//
+//	type Body struct {
+//		Count     int
+//		LogStores []string
+//	}
+//	body := &Body{}
+//	if err = json.Unmarshal(r.Body(), body); err != nil {
+//		return
+//	}
+//	storeNames = body.LogStores
+//	return
+//}
 
 func (p *logProject) initHost() {
 	scheme := httpScheme // default to http scheme
