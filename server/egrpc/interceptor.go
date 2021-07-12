@@ -32,10 +32,10 @@ func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info
 	code := ecode.ExtractCodes(err)
 	// 收敛err错误，将err过滤后，可以知道err是否为系统错误码
 	// 只记录系统级别错误
-	if code.Code < ecode.EcodeNum {
+	if code.Code() < ecode.EcodeNum {
 		// 只记录系统级别的详细错误码
 		emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
-		emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), code.GetMessage())
+		emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), code.Message())
 	} else {
 		emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
 		emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), "biz error")
@@ -49,7 +49,7 @@ func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, in
 	err := handler(srv, ss)
 	code := ecode.ExtractCodes(err)
 	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()), code.GetMessage())
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()), code.Message())
 	return err
 }
 
@@ -138,7 +138,7 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 
 			fields = append(fields,
 				elog.FieldType("stream"),
-				elog.FieldCode(ecode.ExtractCodes(err).Code),
+				elog.FieldCode(int32(ecode.ExtractCodes(err).Code())),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
 				elog.FieldPeerName(getPeerName(stream.Context())),
@@ -186,7 +186,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 
 			fields = append(fields,
 				elog.FieldType("unary"),
-				elog.FieldCode(ecode.ExtractCodes(err).Code),
+				elog.FieldCode(int32(ecode.ExtractCodes(err).Code())),
 				elog.FieldEvent(event),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
