@@ -3,7 +3,6 @@ package elog
 import (
 	"fmt"
 	"log"
-	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -12,7 +11,6 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/elog/ali"
 	"github.com/gotomicro/ego/core/util/xcolor"
 )
 
@@ -79,91 +77,7 @@ var (
 	ByteString = zap.ByteString
 )
 
-const (
-	defaultAliFallbackCorePath = "ali.log"
-)
-
-// newStderrCore constructs a zapcore.Core with stderr syncer
-func newStderrCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
-	// Debug output to console and file by default
-	return zapcore.NewCore(zapcore.NewJSONEncoder(*config.encoderConfig), os.Stderr, lv), noopCloseFunc
-}
-
-// newRotateFileCore constructs a zapcore.Core with rotate file syncer
-func newRotateFileCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
-	// Debug output to console and file by default
-	cf := noopCloseFunc
-	var ws = zapcore.AddSync(newRotate(config))
-	if config.Debug {
-		ws = zap.CombineWriteSyncers(os.Stdout, ws)
-	}
-	if config.EnableAsync {
-		ws, cf = bufferWriteSyncer(ws, config.FlushBufferSize, config.FlushBufferInterval)
-	}
-	core := zapcore.NewCore(
-		func() zapcore.Encoder {
-			if config.Debug {
-				return zapcore.NewConsoleEncoder(*config.encoderConfig)
-			}
-			return zapcore.NewJSONEncoder(*config.encoderConfig)
-		}(),
-		ws,
-		lv,
-	)
-	return core, cf
-}
-
-// newAliCore construct a ali SLS zapcore.Core
-func newAliCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
-	c := *config
-	c.Name = defaultAliFallbackCorePath
-	fallbackCore, fallbackCoreCf := newRotateFileCore(&c, lv)
-	core, cf := ali.NewCore(
-		ali.WithEncoder(ali.NewMapObjEncoder(*config.encoderConfig)),
-		ali.WithEndpoint(config.AliEndpoint),
-		ali.WithAccessKeyID(config.AliAccessKeyID),
-		ali.WithAccessKeySecret(config.AliAccessKeySecret),
-		ali.WithProject(config.AliProject),
-		ali.WithLogstore(config.AliLogstore),
-		ali.WithMaxQueueSize(config.AliMaxQueueSize),
-		ali.WithLevelEnabler(lv),
-		ali.WithFlushBufferSize(config.FlushBufferSize),
-		ali.WithFlushBufferInterval(config.FlushBufferInterval),
-		ali.WithAPIBulkSize(config.AliAPIBulkSize),
-		ali.WithAPITimeout(config.AliAPITimeout),
-		ali.WithAPIRetryCount(config.AliAPIRetryCount),
-		ali.WithAPIRetryWaitTime(config.AliAPIRetryWaitTime),
-		ali.WithAPIRetryMaxWaitTime(config.AliAPIRetryMaxWaitTime),
-		ali.WithAPIMaxIdleConns(config.AliAPIMaxIdleConns),
-		ali.WithAPIIdleConnTimeout(config.AliAPIIdleConnTimeout),
-		ali.WithAPIMaxIdleConnsPerHost(config.AliAPIMaxIdleConnsPerHost),
-		ali.WithFallbackCore(fallbackCore),
-	)
-	return core, func() (err error) {
-		if e := cf(); e != nil {
-			err = fmt.Errorf("exec close func fail, %w ", e)
-		}
-		if e := fallbackCoreCf(); e != nil {
-			err = fmt.Errorf("exec fallbackCore close func fail, %w", e)
-		}
-		return
-	}
-}
-
-func newCore(config *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
-	switch config.Writer {
-	case writerRotateFile:
-		return newRotateFileCore(config, lv)
-	case writerAliSLS:
-		return newAliCore(config, lv)
-	case writerStderr:
-		return newStderrCore(config, lv)
-	default:
-		panic("unsupported writer")
-	}
-}
-
-func newLogger(name string, config *Config) *Component {
+func newLogger(name string, key string, config *Config) *Component {
 	zapOptions := make([]zap.Option, 0)
 	zapOptions = append(zapOptions, zap.AddStacktrace(zap.DPanicLevel))
 	if config.EnableAddCaller {
@@ -173,20 +87,33 @@ func newLogger(name string, config *Config) *Component {
 		zapOptions = append(zapOptions, zap.Fields(config.fields...))
 	}
 
+	// 默认日志级别
 	lv := zap.NewAtomicLevelAt(zapcore.InfoLevel)
 	if err := lv.UnmarshalText([]byte(config.Level)); err != nil {
 		panic(err)
 	}
-	core, asyncStopFunc := newCore(config, lv)
-	zapLogger := zap.New(core, zapOptions...)
-	return &Component{
+
+	// 如果用户没有设置core。那么就选择官方默认的core。
+	if config.core == nil {
+		config.core, config.asyncStopFunc = Provider(config.Writer).Load(key, config, lv)
+	}
+
+	zapLogger := zap.New(config.core, zapOptions...)
+	l := &Component{
 		desugar:       zapLogger,
 		lv:            &lv,
 		config:        config,
 		sugar:         zapLogger.Sugar(),
 		name:          name,
-		asyncStopFunc: asyncStopFunc,
+		asyncStopFunc: config.asyncStopFunc,
 	}
+
+	// 如果名字不为空，加载动态配置
+	if l.name != "" {
+		l.AutoLevel(name + ".level")
+	}
+	return l
+
 }
 
 // AutoLevel ...

@@ -73,16 +73,19 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 	}
 }
 
-const begKey = "__RESTY_BEG__"
+// https://stackoverflow.com/questions/40891345/fix-should-not-use-basic-type-string-as-key-in-context-withvalue-golint
+// https://blog.golang.org/context#TOC_3.2.
+// https://golang.org/pkg/context/#WithValue ，这边文章说明了用struct，可以避免分配
+type begKey struct{}
 
 func beg(ctx context.Context) time.Time {
-	beg, _ := ctx.Value(begKey).(time.Time)
-	return beg
+	begTime, _ := ctx.Value(begKey{}).(time.Time)
+	return begTime
 }
 
 func fixedInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
 	return func(cli *resty.Client, req *resty.Request) error {
-		req.SetContext(context.WithValue(req.Context(), begKey, time.Now()))
+		req.SetContext(context.WithValue(req.Context(), begKey{}, time.Now()))
 		return nil
 	}, nil, nil
 }

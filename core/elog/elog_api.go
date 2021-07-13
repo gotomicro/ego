@@ -10,16 +10,12 @@ var DefaultLogger *Component
 var EgoLogger *Component
 
 func init() {
+	registry = make(map[string]Writer)
+	Register("stderr", &stderrLogger{})
+	Register("file", &rotateLogger{})
 	DefaultLogger = DefaultContainer().Build(WithFileName(DefaultLoggerName))
 	EgoLogger = DefaultContainer().Build(WithFileName(EgoLoggerName))
 }
-
-const (
-	// DefaultLoggerName 业务日志名
-	DefaultLoggerName = "default.log"
-	// EgoLoggerName 系统文件名
-	EgoLoggerName = "ego.sys"
-)
 
 // Info ...
 func Info(msg string, fields ...Field) {

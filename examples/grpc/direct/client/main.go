@@ -10,7 +10,7 @@ import (
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/client/egrpc"
 	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/examples/grpc/direct/helloworld"
+	"github.com/gotomicro/ego/examples/helloworld"
 )
 
 func main() {

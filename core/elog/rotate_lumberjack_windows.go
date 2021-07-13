@@ -20,9 +20,9 @@
 // Using the same rotate configuration from multiple processes on the same
 // machine will result in improper behavior.
 
-// +build linux
+// +build windows
 
-package rotate
+package elog
 
 import (
 	"os"
@@ -36,6 +36,5 @@ func ctime(file *os.File) (time.Time, error) {
 		return time.Now(), err
 	}
 
-	stat := fi.Sys().(*syscall.Stat_t)
-	return time.Unix(int64(stat.Ctim.Sec), int64(stat.Ctim.Nsec)), nil
+	return time.Unix(0, fi.Sys().(*syscall.Win32FileAttributeData).CreationTime.Nanoseconds()), nil
 }

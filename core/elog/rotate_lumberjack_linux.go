@@ -20,9 +20,9 @@
 // Using the same rotate configuration from multiple processes on the same
 // machine will result in improper behavior.
 
-// +build darwin
+// +build linux
 
-package rotate
+package elog
 
 import (
 	"os"
@@ -37,5 +37,5 @@ func ctime(file *os.File) (time.Time, error) {
 	}
 
 	stat := fi.Sys().(*syscall.Stat_t)
-	return time.Unix(int64(stat.Ctimespec.Sec), int64(stat.Ctimespec.Nsec)), nil
+	return time.Unix(int64(stat.Ctim.Sec), int64(stat.Ctim.Nsec)), nil
 }

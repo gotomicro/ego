@@ -101,7 +101,7 @@ func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 					address.Attributes = b.attrs[key]
 					state.Addresses = append(state.Addresses, address)
 				}
-				b.cc.UpdateState(state)
+				_ = b.cc.UpdateState(state)
 			case <-b.stop:
 				return
 			}

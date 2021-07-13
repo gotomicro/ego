@@ -1,6 +1,6 @@
 // +build !linux
 
-package rotate
+package elog
 
 import (
 	"os"

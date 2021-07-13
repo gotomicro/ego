@@ -11,18 +11,18 @@ import (
 
 	"github.com/codegangsta/inject"
 	"github.com/gin-gonic/gin"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	rpcstatus "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
-	jsonpbMarshaler = jsonpb.Marshaler{
-		EmitDefaults: true,
+	opts = protojson.MarshalOptions{
+		EmitUnpopulated: true,
 	}
 	statusMSDefault *rpcstatus.Status
 )
@@ -43,9 +43,12 @@ func init() {
 }
 
 // protoError ...
-func protoError(c *gin.Context, code int, e error) error {
+func protoError(c *gin.Context, code int, e error) ([]byte, error) {
 	s, ok := status.FromError(e)
 	c.Header(HeaderGRPCPROXYError, "true")
+	if e != nil {
+		c.Header("Error", e.Error())
+	}
 	if ok {
 		if de, ok := statusFromString(s.Message()); ok {
 			return protoJSON(c, code, de.Proto())
@@ -55,7 +58,7 @@ func protoError(c *gin.Context, code int, e error) error {
 }
 
 // protoJSON sends a Protobuf JSON response with status code and data.
-func protoJSON(c *gin.Context, code int, i interface{}) error {
+func protoJSON(c *gin.Context, code int, i interface{}) ([]byte, error) {
 	var acceptEncoding = c.Request.Header.Get(HeaderAcceptEncoding)
 	var ok bool
 	var m proto.Message
@@ -69,13 +72,13 @@ func protoJSON(c *gin.Context, code int, i interface{}) error {
 		c.Writer.WriteHeader(code)
 		bs, _ := proto.Marshal(m)
 		_, err := c.Writer.Write(bs)
-		return err
+		return []byte{}, err
 	}
 
 	c.Header(HeaderContentType, MIMEApplicationJSONCharsetUTF8)
 	c.Writer.WriteHeader(code)
 
-	return jsonpbMarshaler.Marshal(c.Writer, m)
+	return opts.Marshal(m)
 }
 
 // GRPCProxy experimental
@@ -90,7 +93,8 @@ func GRPCProxy(h interface{}) gin.HandlerFunc {
 			_ = c.BindUri(req)
 		}
 		if err := c.Bind(req); err != nil {
-			_ = protoError(c, http.StatusBadRequest, errBadRequest)
+			output, _ := protoError(c, http.StatusBadRequest, errBadRequest)
+			_, _ = c.Writer.Write(output)
 			return
 		}
 		var md = metadata.MD{}
@@ -108,28 +112,34 @@ func GRPCProxy(h interface{}) gin.HandlerFunc {
 		inj.Map(req)
 		vs, err := inj.Invoke(h)
 		if err != nil {
-			_ = protoError(c, http.StatusInternalServerError, errMicroInvoke)
+			output, _ := protoError(c, http.StatusInternalServerError, errMicroInvoke)
+			_, _ = c.Writer.Write(output)
 			return
 		}
 		if len(vs) != 2 {
-			_ = protoError(c, http.StatusInternalServerError, errMicroInvokeLen)
+			output, _ := protoError(c, http.StatusInternalServerError, errMicroInvokeLen)
+			_, _ = c.Writer.Write(output)
 			return
 		}
 		repV, errV := vs[0], vs[1]
 		if !errV.IsNil() || repV.IsNil() {
 			if e, ok := errV.Interface().(error); ok {
-				_ = protoError(c, http.StatusOK, e)
+				output, _ := protoError(c, http.StatusOK, e)
+				_, _ = c.Writer.Write(output)
 				return
 			}
-			_ = protoError(c, http.StatusInternalServerError, errMicroInvokeInvalid)
+			output, _ := protoError(c, http.StatusInternalServerError, errMicroInvokeInvalid)
+			_, _ = c.Writer.Write(output)
 			return
 		}
 		if !repV.IsValid() {
-			_ = protoError(c, http.StatusInternalServerError, errMicroResInvalid)
+			output, _ := protoError(c, http.StatusInternalServerError, errMicroResInvalid)
+			_, _ = c.Writer.Write(output)
 			return
 		}
 		// todo 根据gRPC状态码转换为HTTP状态码
-		_ = protoJSON(c, http.StatusOK, repV.Interface())
+		output, _ := protoJSON(c, http.StatusOK, repV.Interface())
+		_, _ = c.Writer.Write(output)
 	}
 }
 

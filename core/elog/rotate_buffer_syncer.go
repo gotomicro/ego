@@ -23,9 +23,6 @@ const (
 	defaultFlushInterval = 5 * time.Second
 )
 
-// CloseFunc should be called when the caller exits to clean up buffers.
-type CloseFunc func() error
-
 var noopCloseFunc = func() error { return nil }
 
 // bufferWriteSyncer wraps a WriteSyncer in a buffer to improve performance,

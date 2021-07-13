@@ -11,7 +11,7 @@ import (
 
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/examples/grpc/direct/helloworld"
+	"github.com/gotomicro/ego/examples/helloworld"
 	"github.com/gotomicro/ego/server"
 	"github.com/gotomicro/ego/server/egrpc"
 )
@@ -30,6 +30,7 @@ func main() {
 // Greeter ...
 type Greeter struct {
 	server *egrpc.Component
+	helloworld.UnimplementedGreeterServer
 }
 
 // SayHello ...

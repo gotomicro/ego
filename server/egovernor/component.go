@@ -9,12 +9,12 @@ import (
 	"os"
 	"runtime/debug"
 
+	"github.com/gotomicro/ego/core/econf"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
 )
@@ -47,16 +47,22 @@ func init() {
 			_ = encoder.Encode(info)
 		})
 	}
-	HandleFunc("/config/json", func(w http.ResponseWriter, r *http.Request) {
-		encoder := json.NewEncoder(w)
-		if r.URL.Query().Get("pretty") == "true" {
-			encoder.SetIndent("", "    ")
-		}
-		_ = encoder.Encode(econf.Traverse("."))
-	})
-	HandleFunc("/config/raw", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write(econf.RawConfig())
-	})
+
+	// 调试模式开启配置输出
+	if eapp.IsDevelopmentMode() {
+		HandleFunc("/config/json", func(w http.ResponseWriter, r *http.Request) {
+			encoder := json.NewEncoder(w)
+			if r.URL.Query().Get("pretty") == "true" {
+				encoder.SetIndent("", "    ")
+			}
+			_ = encoder.Encode(econf.Traverse("."))
+		})
+
+		HandleFunc("/config/raw", func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write(econf.RawConfig())
+		})
+	}
+
 	HandleFunc("/env/info", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		_ = jsoniter.NewEncoder(w).Encode(os.Environ())

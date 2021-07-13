@@ -1,5 +1,9 @@
 package elog
 
+import (
+	"go.uber.org/zap/zapcore"
+)
+
 // Option 可选项
 type Option func(c *Container)
 
@@ -35,5 +39,12 @@ func WithEnableAsync(enableAsync bool) Option {
 func WithEnableAddCaller(enableAddCaller bool) Option {
 	return func(c *Container) {
 		c.config.EnableAddCaller = enableAddCaller
+	}
+}
+
+// WithZapCore 添加ZapCore
+func WithZapCore(core zapcore.Core) Option {
+	return func(c *Container) {
+		c.config.core = core
 	}
 }
