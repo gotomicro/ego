@@ -228,7 +228,7 @@ func (d *dnsResolver) lookupSRV(ctx context.Context, host, port string) ([]resol
 				return nil, fmt.Errorf("dns: error parsing A record IP address %v", a)
 			}
 			addr := ip + ":" + strconv.Itoa(int(s.Port))
-			newAddrs = append(newAddrs, resolver.Address{Addr: addr, Type: resolver.GRPCLB, ServerName: s.Target})
+			newAddrs = append(newAddrs, resolver.Address{Addr: addr, Type: resolver.GRPCLB, ServerName: s.Target}) //nolint
 		}
 	}
 	return newAddrs, nil
