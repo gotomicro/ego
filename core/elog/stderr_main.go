@@ -1,17 +1,35 @@
 package elog
 
 import (
+	"io"
 	"os"
 
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-// fileDataSource file provider.
-type stderrLogger struct{}
+const (
+	writerStderr = "stderr"
+)
+
+var _ WriterBuilder = &stderrWriterBuilder{}
+
+// fileDataSource file Provider.
+type stderrWriterBuilder struct{}
+
+type stderrWriter struct {
+	zapcore.Core
+	io.Closer
+}
 
 // Load constructs a zapcore.Core with stderr syncer
-func (*stderrLogger) Load(key string, commonConfig *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
+func (s *stderrWriterBuilder) Build(key string, c *Config) Writer {
 	// Debug output to console and file by default
-	return zapcore.NewCore(zapcore.NewJSONEncoder(*commonConfig.EncoderConfig()), os.Stderr, lv), noopCloseFunc
+	w := &stderrWriter{}
+	w.Core = zapcore.NewCore(zapcore.NewJSONEncoder(*c.EncoderConfig()), os.Stderr, c.AtomicLevel())
+	w.Closer = CloseFunc(noopCloseFunc)
+	return w
+}
+
+func (*stderrWriterBuilder) Scheme() string {
+	return writerStderr
 }

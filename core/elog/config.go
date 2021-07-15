@@ -29,6 +29,7 @@ type Config struct {
 	fields          []zap.Field // 日志初始化字段
 	CallerSkip      int
 	encoderConfig   *zapcore.EncoderConfig
+	al              zap.AtomicLevel
 }
 
 // Filename ...
@@ -58,4 +59,9 @@ func DefaultConfig() *Config {
 // EncoderConfig 获取zap encoder配置
 func (c *Config) EncoderConfig() *zapcore.EncoderConfig {
 	return c.encoderConfig
+}
+
+// AtomicLevel 获取AtomicLevel配置
+func (c *Config) AtomicLevel() zap.AtomicLevel {
+	return c.al
 }

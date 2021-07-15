@@ -88,20 +88,22 @@ func newLogger(name string, key string, config *Config) *Component {
 	}
 
 	// 默认日志级别
-	lv := zap.NewAtomicLevelAt(zapcore.InfoLevel)
-	if err := lv.UnmarshalText([]byte(config.Level)); err != nil {
+	config.al = zap.NewAtomicLevelAt(zapcore.InfoLevel)
+	if err := config.al.UnmarshalText([]byte(config.Level)); err != nil {
 		panic(err)
 	}
 
 	// 如果用户没有设置core。那么就选择官方默认的core。
 	if config.core == nil {
-		config.core, config.asyncStopFunc = Provider(config.Writer).Load(key, config, lv)
+		w := Provider(config.Writer).Build(key, config)
+		config.core = w
+		config.asyncStopFunc = w.Close
 	}
 
 	zapLogger := zap.New(config.core, zapOptions...)
 	l := &Component{
 		desugar:       zapLogger,
-		lv:            &lv,
+		lv:            &config.al,
 		config:        config,
 		sugar:         zapLogger.Sugar(),
 		name:          name,
