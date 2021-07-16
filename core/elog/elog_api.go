@@ -10,9 +10,9 @@ var DefaultLogger *Component
 var EgoLogger *Component
 
 func init() {
-	registry = make(map[string]Writer)
-	Register("stderr", &stderrLogger{})
-	Register("file", &rotateLogger{})
+	registry = make(map[string]WriterBuilder)
+	Register(&stderrWriterBuilder{})
+	Register(&rotateWriterBuilder{})
 	DefaultLogger = DefaultContainer().Build(WithFileName(DefaultLoggerName))
 	EgoLogger = DefaultContainer().Build(WithFileName(EgoLoggerName))
 }

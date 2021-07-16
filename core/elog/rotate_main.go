@@ -1,15 +1,24 @@
 package elog
 
 import (
+	"io"
 	"os"
 	"time"
 
-	"github.com/gotomicro/ego/core/econf"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/gotomicro/ego/core/econf"
 )
 
-type rotateLogger struct{}
+type rotateWriterBuilder struct{}
+
+type rotateWriter struct {
+	zapcore.Core
+	io.Closer
+}
+
+var _ WriterBuilder = &rotateWriterBuilder{}
 
 // config ...
 type config struct {
@@ -32,8 +41,16 @@ func defaultConfig() *config {
 	}
 }
 
+const (
+	writerRotateLogger = "file"
+)
+
+func (*rotateWriterBuilder) Scheme() string {
+	return writerRotateLogger
+}
+
 // Load constructs a zapcore.Core with stderr syncer
-func (*rotateLogger) Load(key string, commonConfig *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc) {
+func (r *rotateWriterBuilder) Build(key string, commonConfig *Config) Writer {
 	c := defaultConfig()
 	if err := econf.UnmarshalKey(key, &c); err != nil {
 		panic(err)
@@ -57,7 +74,9 @@ func (*rotateLogger) Load(key string, commonConfig *Config, lv zap.AtomicLevel) 
 	if commonConfig.EnableAsync {
 		ws, cf = bufferWriteSyncer(ws, c.FlushBufferSize, c.FlushBufferInterval)
 	}
-	core := zapcore.NewCore(
+	w := &rotateWriter{}
+	w.Closer = CloseFunc(cf)
+	w.Core = zapcore.NewCore(
 		func() zapcore.Encoder {
 			if commonConfig.Debug {
 				return zapcore.NewConsoleEncoder(*commonConfig.EncoderConfig())
@@ -65,7 +84,7 @@ func (*rotateLogger) Load(key string, commonConfig *Config, lv zap.AtomicLevel) 
 			return zapcore.NewJSONEncoder(*commonConfig.EncoderConfig())
 		}(),
 		ws,
-		lv,
+		commonConfig.AtomicLevel(),
 	)
-	return core, cf
+	return w
 }
