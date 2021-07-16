@@ -10,6 +10,7 @@ import (
 	"runtime/debug"
 
 	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/task/ejob"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
@@ -82,6 +83,7 @@ func init() {
 		}
 		_ = jsoniter.NewEncoder(w).Encode(serverStats)
 	})
+	HandleFunc("/jobs", ejob.Handle)
 }
 
 // Component ...

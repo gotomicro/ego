@@ -2,12 +2,17 @@ package ejob
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/standard"
+	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -28,6 +33,13 @@ type Component struct {
 	name   string
 	config *Config
 	logger *elog.Component
+}
+
+// Context Job Context
+type Context struct {
+	Ctx     context.Context
+	Writer  http.ResponseWriter
+	Request *http.Request
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
@@ -54,22 +66,44 @@ func (c *Component) Init() error {
 }
 
 // Start 启动
-func (c *Component) Start() error {
+func (c *Component) Start() (err error) {
 	span, ctx := etrace.StartSpanFromContext(
 		context.Background(),
 		"ego-job",
 	)
 	defer span.Finish()
 	traceID := etrace.ExtractTraceID(ctx)
-	beg := time.Now()
-	c.logger.Info("start ejob", elog.FieldName(c.name), elog.FieldTid(traceID))
-	err := c.config.startFunc(ctx)
-	if err != nil {
-		c.logger.Error("stop ejob", elog.FieldName(c.name), elog.FieldErr(err), elog.FieldCost(time.Since(beg)), elog.FieldTid(traceID))
-	} else {
-		c.logger.Info("stop ejob", elog.FieldName(c.name), elog.FieldCost(time.Since(beg)), elog.FieldTid(traceID))
+	var fields = []elog.Field{elog.FieldName(c.name)}
+	// 如果设置了链路，增加链路信息
+	if opentracing.IsGlobalTracerRegistered() {
+		fields = append(fields, elog.FieldTid(traceID))
 	}
-	return err
+	beg := time.Now()
+	c.logger.Info("start ejob", fields...)
+	defer func() {
+		if rec := recover(); rec != nil {
+			switch rec := rec.(type) {
+			case error:
+				err = rec
+			default:
+				err = fmt.Errorf("%v", rec)
+			}
+
+			stack := make([]byte, 4096)
+			length := runtime.Stack(stack, true)
+			fields = append(fields, zap.ByteString("stack", stack[:length]))
+		}
+		if err != nil {
+			fields = append(fields, elog.FieldErr(err), elog.FieldCost(time.Since(beg)))
+			c.logger.Error("stop ejob", fields...)
+		} else {
+			fields = append(fields, elog.FieldCost(time.Since(beg)))
+			c.logger.Info("stop ejob", fields...)
+		}
+	}()
+	return c.config.startFunc(Context{
+		Ctx: ctx,
+	})
 }
 
 // Stop ...
