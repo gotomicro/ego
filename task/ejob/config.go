@@ -1,17 +1,14 @@
 package ejob
 
-import (
-	"context"
-)
-
 // Config ...
 type Config struct {
-	Name      string
-	startFunc func(ctx context.Context) error
+	Name string
+	// context.Context 替换为 ejob.Context
+	startFunc func(ctx Context) error
 }
 
-// DefaultConfig 默认配置
-func DefaultConfig() *Config {
+// defaultConfig 默认配置
+func defaultConfig() *Config {
 	return &Config{
 		Name:      "",
 		startFunc: nil,

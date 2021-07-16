@@ -1,9 +1,5 @@
 package ejob
 
-import (
-	"context"
-)
-
 // Option 选项
 type Option func(c *Container)
 
@@ -15,7 +11,7 @@ func WithName(name string) Option {
 }
 
 // WithStartFunc 设置Job的函数
-func WithStartFunc(startFunc func(ctx context.Context) error) Option {
+func WithStartFunc(startFunc func(ctx Context) error) Option {
 	return func(c *Container) {
 		c.config.startFunc = startFunc
 	}

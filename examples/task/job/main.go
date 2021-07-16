@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -15,20 +14,20 @@ import (
 
 // export EGO_DEBUG=true && go run main.go --job=jobrunner  --config=config.toml
 func main() {
-	if err := ego.New().Job(NewJobRunner()).Run(); err != nil {
+	if err := ego.New().Job(
+		ejob.Job("jobrunner", runner),
+		ejob.Job("job1", job1),
+	).Run(); err != nil {
 		elog.Error("start up", zap.Error(err))
 	}
 }
 
-// NewJobRunner 创建新的job
-func NewJobRunner() *ejob.Component {
-	return ejob.DefaultContainer().Build(
-		ejob.WithName("jobrunner"),
-		ejob.WithStartFunc(runner),
-	)
+func runner(ctx ejob.Context) error {
+	fmt.Println("i am job runner, traceId: ", etrace.ExtractTraceID(ctx.Ctx))
+	return errors.New("i am error")
 }
 
-func runner(ctx context.Context) error {
-	fmt.Println("i am job runner, traceId: ", etrace.ExtractTraceID(ctx))
+func job1(ctx ejob.Context) error {
+	fmt.Println("i am job runner, traceId: ", etrace.ExtractTraceID(ctx.Ctx))
 	return errors.New("i am error")
 }
