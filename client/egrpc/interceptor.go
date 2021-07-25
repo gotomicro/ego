@@ -10,6 +10,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -210,17 +211,26 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 	}
 }
 
+func customHeader() grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		for _, key := range eapp.EgoLogExtraKeys() {
+			if value := getContextValue(ctx, key); value != "" {
+				ctx = metadata.AppendToOutgoingContext(ctx, key, value)
+			}
+		}
+		return invoker(ctx, method, req, res, cc, opts...)
+	}
+}
+
 func getContextValue(ctx context.Context, key string) string {
 	if key == "" {
 		return ""
 	}
 	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return ""
+
+	if ok {
+		return strings.Join(md.Get(key), ";")
 	}
-	val, ok2 := md[key]
-	if !ok2 {
-		return ""
-	}
-	return strings.Join(val, ";")
+
+	return cast.ToString(ctx.Value(key))
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -253,11 +254,7 @@ func enableCPUUsage(ctx context.Context) bool {
 	if !ok {
 		return false
 	}
-	val, ok2 := md["enable-cpu-usage"]
-	if !ok2 {
-		return false
-	}
-	return strings.Join(val, ";") == "true"
+	return strings.Join(md.Get("enable-cpu-usage"), ";") == "true"
 }
 
 // getPeerName 获取对端应用名称
@@ -268,13 +265,11 @@ func getPeerName(ctx context.Context) string {
 // getPeerIP 获取对端ip
 func getPeerIP(ctx context.Context) string {
 	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return ""
-	}
 	// 从metadata里取对端ip
-	if val, ok := md["client-ip"]; ok {
-		return strings.Join(val, ";")
+	if ok {
+		return strings.Join(md.Get("client-ip"), ";")
 	}
+
 	// 从grpc里取对端ip
 	pr, ok2 := peer.FromContext(ctx)
 	if !ok2 {
@@ -295,12 +290,10 @@ func getContextValue(ctx context.Context, key string) string {
 		return ""
 	}
 	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return ""
+
+	if ok {
+		// 小写
+		return strings.Join(md.Get(key), ";")
 	}
-	val, ok2 := md[key]
-	if !ok2 {
-		return ""
-	}
-	return strings.Join(val, ";")
+	return cast.ToString(ctx.Value(key))
 }
