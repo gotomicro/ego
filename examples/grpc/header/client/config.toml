@@ -1,0 +1,10 @@
+[trace.jaeger]
+
+[grpc.test]
+    debug = true # 开启后并加上export EGO_DEBUG=true，可以看到每次grpc请求，配置名、地址、耗时、请求数据、响应数据
+    addr = "127.0.0.1:9002"
+    enableAccessInterceptor = true
+    enableAccessInterceptorReq = true
+    enableAccessInterceptorRes = true
+
+

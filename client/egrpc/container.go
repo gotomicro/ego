@@ -59,9 +59,11 @@ func (c *Container) Build(options ...Option) *Component {
 		)
 	}
 
-	options = append(options,
-		WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config))),
-	)
+	// 默认日志
+	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config))))
+
+	// 自定义header头
+	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(customHeader())))
 
 	if c.config.EnableMetricInterceptor {
 		options = append(options,
