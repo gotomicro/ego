@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
+	"github.com/gotomicro/ego/internal/tools"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -64,18 +63,20 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 // debugUnaryClientInterceptor returns grpc unary request request and response details interceptor
 func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		// 如果不是调试模式，跳出
+		if !eapp.IsDevelopmentMode() {
+			return nil
+		}
+
 		var p peer.Peer
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, append(opts, grpc.Peer(&p))...)
 		cost := time.Since(beg)
-		if eapp.IsDevelopmentMode() {
-			if err != nil {
-				log.Println("grpc.response", xdebug.MakeReqResErrorV2(6, compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error()))
-			} else {
-				log.Println("grpc.response", xdebug.MakeReqResInfoV2(6, compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
-			}
+		if err != nil {
+			log.Println("grpc.response", xdebug.MakeReqResErrorV2(6, compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error()))
+		} else {
+			log.Println("grpc.response", xdebug.MakeReqResInfoV2(6, compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
 		}
-		// todo log
 
 		return err
 	}
@@ -181,7 +182,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		}
 
 		for _, key := range eapp.EgoLogExtraKeys() {
-			if value := getContextValue(ctx, key); value != "" {
+			if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
 				fields = append(fields, elog.FieldCustomKeyValue(key, value))
 			}
 		}
@@ -211,26 +212,14 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 	}
 }
 
-func customHeader() grpc.UnaryClientInterceptor {
+// customHeader 自定义header头
+func customHeader(egoLogExtraKeys []string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		for _, key := range eapp.EgoLogExtraKeys() {
-			if value := getContextValue(ctx, key); value != "" {
+		for _, key := range egoLogExtraKeys {
+			if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
 				ctx = metadata.AppendToOutgoingContext(ctx, key, value)
 			}
 		}
 		return invoker(ctx, method, req, res, cc, opts...)
 	}
-}
-
-func getContextValue(ctx context.Context, key string) string {
-	if key == "" {
-		return ""
-	}
-	md, ok := metadata.FromIncomingContext(ctx)
-
-	if ok {
-		return strings.Join(md.Get(key), ";")
-	}
-
-	return cast.ToString(ctx.Value(key))
 }
