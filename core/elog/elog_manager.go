@@ -17,11 +17,13 @@ type WriterBuilder interface {
 	Scheme() string
 }
 
+// Writer 日志interface
 type Writer interface {
 	zapcore.Core
 	io.Closer
 }
 
+// Close 关闭
 func (c CloseFunc) Close() error {
 	return c()
 }

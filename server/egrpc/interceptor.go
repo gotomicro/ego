@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gotomicro/ego/internal/tools"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -200,13 +200,13 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			}
 
 			if config.EnableAccessInterceptorReq {
-				var req = map[string]interface{}{
+				var reqMap = map[string]interface{}{
 					"payload": xstring.JSON(req),
 				}
 				if md, ok := metadata.FromIncomingContext(ctx); ok {
-					req["metadata"] = md
+					reqMap["metadata"] = md
 				}
-				fields = append(fields, elog.Any("req", req))
+				fields = append(fields, elog.Any("req", reqMap))
 			}
 			if config.EnableAccessInterceptorRes {
 				fields = append(fields, elog.Any("res", map[string]interface{}{
@@ -215,7 +215,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			}
 
 			for _, key := range eapp.EgoLogExtraKeys() {
-				if value := getContextValue(ctx, key); value != "" {
+				if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
 					fields = append(fields, elog.FieldCustomKeyValue(key, value))
 				}
 			}
@@ -250,24 +250,19 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 
 // enableCPUUsage 是否开启cpu利用率
 func enableCPUUsage(ctx context.Context) bool {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return false
-	}
-	return strings.Join(md.Get("enable-cpu-usage"), ";") == "true"
+	return tools.GetContextValue(ctx, "enable-cpu-usage") == "true"
 }
 
 // getPeerName 获取对端应用名称
 func getPeerName(ctx context.Context) string {
-	return getContextValue(ctx, "app")
+	return tools.GetContextValue(ctx, "app")
 }
 
 // getPeerIP 获取对端ip
 func getPeerIP(ctx context.Context) string {
-	md, ok := metadata.FromIncomingContext(ctx)
-	// 从metadata里取对端ip
-	if ok {
-		return strings.Join(md.Get("client-ip"), ";")
+	clientIP := tools.GetContextValue(ctx, "client-ip")
+	if clientIP != "" {
+		return clientIP
 	}
 
 	// 从grpc里取对端ip
@@ -283,17 +278,4 @@ func getPeerIP(ctx context.Context) string {
 		return addSlice[0]
 	}
 	return ""
-}
-
-func getContextValue(ctx context.Context, key string) string {
-	if key == "" {
-		return ""
-	}
-	md, ok := metadata.FromIncomingContext(ctx)
-
-	if ok {
-		// 小写
-		return strings.Join(md.Get(key), ";")
-	}
-	return cast.ToString(ctx.Value(key))
 }
