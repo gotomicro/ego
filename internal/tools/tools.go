@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// GetContextValue 获取context value
 func GetContextValue(ctx context.Context, key string) string {
 	if key == "" {
 		return ""
@@ -20,6 +21,7 @@ func GetContextValue(ctx context.Context, key string) string {
 	return strings.Join(md.Get(key), ";")
 }
 
+// LoggerGrpcContextValue gRPC日志获取context value
 func LoggerGrpcContextValue(ctx context.Context, key string) string {
 	value := GetContextValue(ctx, key)
 	if value != "" {

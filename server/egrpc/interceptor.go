@@ -260,9 +260,9 @@ func getPeerName(ctx context.Context) string {
 
 // getPeerIP 获取对端ip
 func getPeerIP(ctx context.Context) string {
-	clientIp := tools.GetContextValue(ctx, "client-ip")
-	if clientIp != "" {
-		return clientIp
+	clientIP := tools.GetContextValue(ctx, "client-ip")
+	if clientIP != "" {
+		return clientIP
 	}
 
 	// 从grpc里取对端ip

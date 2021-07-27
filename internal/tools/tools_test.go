@@ -27,7 +27,7 @@ func TestLoggerContextValueByHeader(t *testing.T) {
 }
 
 func TestLoggerContextValueByCtxValue(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "X-Ego-Uid", 9527)
+	ctx := context.WithValue(context.Background(), "X-Ego-Uid", 9527) //nolint
 	value := LoggerGrpcContextValue(ctx, "X-Ego-Uid")
 	assert.Equal(t, "9527", value)
 }
