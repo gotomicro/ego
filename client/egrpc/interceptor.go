@@ -226,7 +226,6 @@ func customHeader(egoLogExtraKeys []string) grpc.UnaryClientInterceptor {
 				ctx = transport.WithValue(ctx, key, value)
 			}
 		}
-		invoker(ctx, method, req, res, cc, opts...)
-		return nil
+		return invoker(ctx, method, req, res, cc, opts...)
 	}
 }
