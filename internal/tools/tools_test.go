@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func TestGetContextValue(t *testing.T) {
+func TestGrpcHeaderValue(t *testing.T) {
 	md := metadata.New(map[string]string{
 		"X-Ego-Uid": "9527",
 	})
@@ -18,16 +18,7 @@ func TestGetContextValue(t *testing.T) {
 	assert.Equal(t, "9527", value)
 }
 
-func TestLoggerContextValueByHeader(t *testing.T) {
-	md := metadata.New(map[string]string{
-		"X-Ego-Uid": "9527",
-	})
-	ctx := metadata.NewIncomingContext(context.Background(), md)
-	value := ContextValue(ctx, "X-Ego-Uid")
-	assert.Equal(t, "9527", value)
-}
-
-func TestLoggerContextValueByCtxValue(t *testing.T) {
+func TestContextValue(t *testing.T) {
 	transport.Set([]string{"X-Ego-Uid"})
 
 	ctx := transport.WithValue(context.Background(), "X-Ego-Uid", 9527)
