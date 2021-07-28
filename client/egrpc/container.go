@@ -41,6 +41,19 @@ func Load(key string) *Container {
 
 // Build 构建组件
 func (c *Container) Build(options ...Option) *Component {
+	// 最先执行trace
+	if c.config.EnableTraceInterceptor {
+		options = append(options,
+			WithDialOption(grpc.WithChainUnaryInterceptor(traceUnaryClientInterceptor())),
+		)
+	}
+
+	// 其次执行，自定义header头，这样才能赋值到ctx里
+	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(customHeader(transport.CustomContextKeys()))))
+
+	// 默认日志
+	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config))))
+
 	if c.config.Debug {
 		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.name, c.config.Addr))))
 	}
@@ -53,18 +66,6 @@ func (c *Container) Build(options ...Option) *Component {
 	if c.config.EnableTimeoutInterceptor {
 		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(timeoutUnaryClientInterceptor(c.logger, c.config.ReadTimeout, c.config.SlowLogThreshold))))
 	}
-
-	if c.config.EnableTraceInterceptor {
-		options = append(options,
-			WithDialOption(grpc.WithChainUnaryInterceptor(traceUnaryClientInterceptor())),
-		)
-	}
-
-	// 默认日志
-	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config))))
-
-	// 自定义header头
-	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(customHeader(transport.CustomContextKeys()))))
 
 	if c.config.EnableMetricInterceptor {
 		options = append(options,

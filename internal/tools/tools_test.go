@@ -23,7 +23,7 @@ func TestLoggerContextValueByHeader(t *testing.T) {
 		"X-Ego-Uid": "9527",
 	})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
-	value := LoggerGrpcContextValue(ctx, "X-Ego-Uid")
+	value := ContextValue(ctx, "X-Ego-Uid")
 	assert.Equal(t, "9527", value)
 }
 
@@ -31,10 +31,10 @@ func TestLoggerContextValueByCtxValue(t *testing.T) {
 	transport.Set([]string{"X-Ego-Uid"})
 
 	ctx := transport.WithValue(context.Background(), "X-Ego-Uid", 9527)
-	value := LoggerGrpcContextValue(ctx, "X-Ego-Uid")
+	value := ContextValue(ctx, "X-Ego-Uid")
 	assert.Equal(t, "9527", value)
 
 	ctx = transport.WithValue(context.Background(), "X-Ego-Uid", 9528)
-	value = LoggerGrpcContextValue(ctx, "X-Ego-Uid")
+	value = ContextValue(ctx, "X-Ego-Uid")
 	assert.Equal(t, "9528", value)
 }

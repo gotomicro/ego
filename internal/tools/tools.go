@@ -22,11 +22,10 @@ func GrpcHeaderValue(ctx context.Context, key string) string {
 	return strings.Join(md.Get(key), ";")
 }
 
-// LoggerGrpcContextValue gRPC日志获取context value
-func LoggerGrpcContextValue(ctx context.Context, key string) string {
-	value := GrpcHeaderValue(ctx, key)
-	if value != "" {
-		return value
+// ContextValue gRPC日志获取context value
+func ContextValue(ctx context.Context, key string) string {
+	if key == "" {
+		return ""
 	}
 	return cast.ToString(transport.Value(ctx, key))
 }

@@ -171,10 +171,8 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 
 		// 必须在defer外层，因为要赋值，替换ctx
 		for _, key := range loggerKeys {
-			if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
-				// todo 优化，判断是否存在，如果存在不在设置
+			if value := tools.GrpcHeaderValue(ctx, key); value != "" {
 				ctx = transport.WithValue(ctx, key, value)
-				fields = append(fields, elog.FieldCustomKeyValue(key, value))
 			}
 		}
 
@@ -182,9 +180,9 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 		defer func() {
 			cost := time.Since(beg)
 			if rec := recover(); rec != nil {
-				switch rec := rec.(type) {
+				switch recType := rec.(type) {
 				case error:
-					err = rec
+					err = recType
 				default:
 					err = fmt.Errorf("%v", rec)
 				}
@@ -204,6 +202,12 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				elog.FieldPeerName(getPeerName(ctx)),
 				elog.FieldPeerIP(getPeerIP(ctx)),
 			)
+
+			for _, key := range loggerKeys {
+				if value := tools.ContextValue(ctx, key); value != "" {
+					fields = append(fields, elog.FieldCustomKeyValue(key, value))
+				}
+			}
 
 			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
