@@ -21,6 +21,7 @@ type Config struct {
 	SlowLogThreshold           time.Duration // 服务慢日志，默认500ms
 	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
+	EnableTrustedCustomHeader  bool          // 是否开启自定义header头，记录数据往链路后传递，默认不开启
 	WebsocketHandshakeTimeout  time.Duration // 握手时间
 	WebsocketReadBufferSize    int
 	WebsocketWriteBufferSize   int

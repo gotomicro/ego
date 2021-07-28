@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/internal/tools"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -181,7 +182,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 			fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
 		}
 
-		for _, key := range eapp.EgoLogExtraKeys() {
+		for _, key := range transport.CustomContextKeys() {
 			if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
 				fields = append(fields, elog.FieldCustomKeyValue(key, value))
 			}
@@ -217,7 +218,7 @@ func customHeader(egoLogExtraKeys []string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		for _, key := range egoLogExtraKeys {
 			if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
-				ctx = context.WithValue(ctx, key, value)
+				ctx = transport.WithValue(ctx, key, value)
 				ctx = metadata.AppendToOutgoingContext(ctx, key, value)
 			}
 		}

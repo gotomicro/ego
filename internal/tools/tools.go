@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/spf13/cast"
 	"google.golang.org/grpc/metadata"
 )
@@ -27,5 +28,5 @@ func LoggerGrpcContextValue(ctx context.Context, key string) string {
 	if value != "" {
 		return value
 	}
-	return cast.ToString(ctx.Value(key))
+	return cast.ToString(transport.Value(ctx, key))
 }

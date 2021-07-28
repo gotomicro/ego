@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/cast"
 	"github.com/uber/jaeger-client-go"
@@ -83,7 +84,7 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 		}
 
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
-		loggerKeys := eapp.EgoLogExtraKeys()
+		loggerKeys := transport.CustomContextKeys()
 		var fields = make([]elog.Field, 0, 20+len(loggerKeys))
 		var brokenPipe bool
 		var event = "normal"
@@ -118,7 +119,7 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 			}
 
 			for _, key := range loggerKeys {
-				if value := getContextValue(key, c); value != "" {
+				if value := getContextValue(c, key, config.EnableTrustedCustomHeader); value != "" {
 					fields = append(fields, elog.FieldCustomKeyValue(key, value))
 				}
 			}
@@ -268,14 +269,21 @@ func getPeerIP(addr string) string {
 	return ""
 }
 
-func getContextValue(key string, c *gin.Context) string {
+func getContextValue(c *gin.Context, key string, enableTrustedCustomHeader bool) string {
 	if key == "" {
 		return ""
 	}
 	// 用Request.Context，因为这个是原生的HTTP，会往下传递链路，所以复用该Context传递的信息
 	val := cast.ToString(c.Request.Context().Value(key))
 	if val == "" {
-		return c.GetHeader(key)
+		if !enableTrustedCustomHeader {
+			return ""
+		}
+		value := c.GetHeader(key)
+		if value != "" {
+			c.Request = c.Request.WithContext(transport.WithValue(c.Request.Context(), key, value))
+		}
+		return value
 	}
 	return val
 }
