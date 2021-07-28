@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// GetContextValue 获取context value
-func GetContextValue(ctx context.Context, key string) string {
+// GrpcHeaderValue 获取context value
+func GrpcHeaderValue(ctx context.Context, key string) string {
 	if key == "" {
 		return ""
 	}
@@ -24,7 +24,7 @@ func GetContextValue(ctx context.Context, key string) string {
 
 // LoggerGrpcContextValue gRPC日志获取context value
 func LoggerGrpcContextValue(ctx context.Context, key string) string {
-	value := GetContextValue(ctx, key)
+	value := GrpcHeaderValue(ctx, key)
 	if value != "" {
 		return value
 	}
