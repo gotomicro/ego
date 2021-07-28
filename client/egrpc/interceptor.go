@@ -217,6 +217,7 @@ func customHeader(egoLogExtraKeys []string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		for _, key := range egoLogExtraKeys {
 			if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
+				ctx = context.WithValue(ctx, key, value)
 				ctx = metadata.AppendToOutgoingContext(ctx, key, value)
 			}
 		}
