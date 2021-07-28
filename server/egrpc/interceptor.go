@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/internal/tools"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -18,7 +19,6 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
-	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/ecode"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
@@ -214,8 +214,9 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				}))
 			}
 
-			for _, key := range eapp.EgoLogExtraKeys() {
+			for _, key := range transport.CustomContextKeys() {
 				if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
+					ctx = transport.WithValue(ctx, key, value)
 					fields = append(fields, elog.FieldCustomKeyValue(key, value))
 				}
 			}

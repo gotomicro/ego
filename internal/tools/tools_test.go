@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
 )
@@ -27,7 +28,13 @@ func TestLoggerContextValueByHeader(t *testing.T) {
 }
 
 func TestLoggerContextValueByCtxValue(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "X-Ego-Uid", 9527) //nolint
+	transport.Set([]string{"X-Ego-Uid"})
+
+	ctx := transport.WithValue(context.Background(), "X-Ego-Uid", 9527)
 	value := LoggerGrpcContextValue(ctx, "X-Ego-Uid")
 	assert.Equal(t, "9527", value)
+
+	ctx = transport.WithValue(context.Background(), "X-Ego-Uid", 9528)
+	value = LoggerGrpcContextValue(ctx, "X-Ego-Uid")
+	assert.Equal(t, "9528", value)
 }

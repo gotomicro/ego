@@ -1,7 +1,7 @@
 package egrpc
 
 import (
-	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/transport"
 	"google.golang.org/grpc"
 
 	"github.com/gotomicro/ego/core/econf"
@@ -64,7 +64,7 @@ func (c *Container) Build(options ...Option) *Component {
 	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config))))
 
 	// 自定义header头
-	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(customHeader(eapp.EgoLogExtraKeys()))))
+	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(customHeader(transport.CustomContextKeys()))))
 
 	if c.config.EnableMetricInterceptor {
 		options = append(options,

@@ -1,13 +1,13 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/server/egin"
 )
 
@@ -28,7 +28,7 @@ func main() {
 		})
 
 		server.GET("/hello", func(ctx *gin.Context) {
-			pCtx := context.WithValue(ctx.Request.Context(), "X-Ego-Uid", 9527)
+			pCtx := transport.WithValue(ctx.Request.Context(), "X-Ego-Uid", 9527)
 			ctx.Request = ctx.Request.WithContext(pCtx)
 			// Get traceId from Request's context
 			span, _ := etrace.StartSpanFromContext(ctx.Request.Context(), "Handle: /Hello")
