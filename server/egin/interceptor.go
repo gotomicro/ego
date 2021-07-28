@@ -88,6 +88,14 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 		var fields = make([]elog.Field, 0, 20+len(loggerKeys))
 		var brokenPipe bool
 		var event = "normal"
+
+		// 必须在defer外层，因为要赋值，替换ctx
+		for _, key := range loggerKeys {
+			if value := getContextValue(c, key, config.EnableTrustedCustomHeader); value != "" {
+				fields = append(fields, elog.FieldCustomKeyValue(key, value))
+			}
+		}
+
 		defer func() {
 			cost := time.Since(beg)
 			fields = append(fields,
@@ -116,12 +124,6 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 					"metadata": copyHeaders(c.Writer.Header()),
 					"payload":  rw.body.String(),
 				}))
-			}
-
-			for _, key := range loggerKeys {
-				if value := getContextValue(c, key, config.EnableTrustedCustomHeader); value != "" {
-					fields = append(fields, elog.FieldCustomKeyValue(key, value))
-				}
 			}
 
 			// slow log
@@ -276,11 +278,13 @@ func getContextValue(c *gin.Context, key string, enableTrustedCustomHeader bool)
 	// 用Request.Context，因为这个是原生的HTTP，会往下传递链路，所以复用该Context传递的信息
 	val := cast.ToString(c.Request.Context().Value(key))
 	if val == "" {
+		// 通常HTTP在外网，例如自定义Header： X-Ego-Uid 不可信任
 		if !enableTrustedCustomHeader {
 			return ""
 		}
 		value := c.GetHeader(key)
 		if value != "" {
+			// 如果信任该Header，将header数据赋值到context上
 			c.Request = c.Request.WithContext(transport.WithValue(c.Request.Context(), key, value))
 		}
 		return value

@@ -14,7 +14,7 @@ func TestGetContextValue(t *testing.T) {
 		"X-Ego-Uid": "9527",
 	})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
-	value := GetContextValue(ctx, "X-Ego-Uid")
+	value := GrpcHeaderValue(ctx, "X-Ego-Uid")
 	assert.Equal(t, "9527", value)
 }
 

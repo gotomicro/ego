@@ -165,8 +165,18 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
 		var beg = time.Now()
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
-		var fields = make([]elog.Field, 0, 20)
+		loggerKeys := transport.CustomContextKeys()
+		var fields = make([]elog.Field, 0, 20+len(loggerKeys))
 		var event = "normal"
+
+		// 必须在defer外层，因为要赋值，替换ctx
+		for _, key := range loggerKeys {
+			if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
+				// todo 优化，判断是否存在，如果存在不在设置
+				ctx = transport.WithValue(ctx, key, value)
+				fields = append(fields, elog.FieldCustomKeyValue(key, value))
+			}
+		}
 
 		// 此处必须使用defer来recover handler内部可能出现的panic
 		defer func() {
@@ -214,13 +224,6 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				}))
 			}
 
-			for _, key := range transport.CustomContextKeys() {
-				if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
-					ctx = transport.WithValue(ctx, key, value)
-					fields = append(fields, elog.FieldCustomKeyValue(key, value))
-				}
-			}
-
 			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
 				logger.Warn("slow", fields...)
 			}
@@ -251,17 +254,17 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 
 // enableCPUUsage 是否开启cpu利用率
 func enableCPUUsage(ctx context.Context) bool {
-	return tools.GetContextValue(ctx, "enable-cpu-usage") == "true"
+	return tools.GrpcHeaderValue(ctx, "enable-cpu-usage") == "true"
 }
 
 // getPeerName 获取对端应用名称
 func getPeerName(ctx context.Context) string {
-	return tools.GetContextValue(ctx, "app")
+	return tools.GrpcHeaderValue(ctx, "app")
 }
 
 // getPeerIP 获取对端ip
 func getPeerIP(ctx context.Context) string {
-	clientIP := tools.GetContextValue(ctx, "client-ip")
+	clientIP := tools.GrpcHeaderValue(ctx, "client-ip")
 	if clientIP != "" {
 		return clientIP
 	}
