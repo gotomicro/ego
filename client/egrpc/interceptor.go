@@ -157,10 +157,21 @@ func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duratio
 func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
+		loggerKeys := transport.CustomContextKeys()
+		var fields = make([]elog.Field, 0, 20+len(loggerKeys))
+
+		for _, key := range loggerKeys {
+			if value := tools.ContextValue(ctx, key); value != "" {
+				fields = append(fields, elog.FieldCustomKeyValue(key, value))
+				// 替换context
+				ctx = metadata.AppendToOutgoingContext(ctx, key, value)
+			}
+		}
+
 		err := invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
 		spbStatus := ecode.ExtractCodes(err)
-		var fields = make([]elog.Field, 0, 20)
+
 		fields = append(fields,
 			elog.FieldType("unary"),
 			elog.FieldCode(int32(spbStatus.Code())),
@@ -180,12 +191,6 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		}
 		if config.EnableAccessInterceptorRes {
 			fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
-		}
-
-		for _, key := range transport.CustomContextKeys() {
-			if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
-				fields = append(fields, elog.FieldCustomKeyValue(key, value))
-			}
 		}
 
 		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
@@ -217,9 +222,8 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 func customHeader(egoLogExtraKeys []string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		for _, key := range egoLogExtraKeys {
-			if value := tools.LoggerGrpcContextValue(ctx, key); value != "" {
+			if value := tools.GrpcHeaderValue(ctx, key); value != "" {
 				ctx = transport.WithValue(ctx, key, value)
-				ctx = metadata.AppendToOutgoingContext(ctx, key, value)
 			}
 		}
 		return invoker(ctx, method, req, res, cc, opts...)

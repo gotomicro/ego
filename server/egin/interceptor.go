@@ -14,8 +14,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gotomicro/ego/core/transport"
+	"github.com/gotomicro/ego/internal/tools"
 	"github.com/opentracing/opentracing-go"
-	"github.com/spf13/cast"
 	"github.com/uber/jaeger-client-go"
 	"go.uber.org/zap"
 
@@ -91,9 +91,8 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 
 		// 必须在defer外层，因为要赋值，替换ctx
 		for _, key := range loggerKeys {
-			if value := getContextValue(c, key, config.EnableTrustedCustomHeader); value != "" {
-				fields = append(fields, elog.FieldCustomKeyValue(key, value))
-			}
+			// 赋值context
+			getHeaderValue(c, key, config.EnableTrustedCustomHeader)
 		}
 
 		defer func() {
@@ -107,6 +106,12 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 				elog.FieldSize(int32(c.Writer.Size())),
 				elog.FieldPeerIP(getPeerIP(c.Request.RemoteAddr)),
 			)
+
+			for _, key := range loggerKeys {
+				if value := tools.ContextValue(c.Request.Context(), key); value != "" {
+					fields = append(fields, elog.FieldCustomKeyValue(key, value))
+				}
+			}
 
 			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(c.Request.Context())))
@@ -271,23 +276,18 @@ func getPeerIP(addr string) string {
 	return ""
 }
 
-func getContextValue(c *gin.Context, key string, enableTrustedCustomHeader bool) string {
+func getHeaderValue(c *gin.Context, key string, enableTrustedCustomHeader bool) string {
 	if key == "" {
 		return ""
 	}
-	// 用Request.Context，因为这个是原生的HTTP，会往下传递链路，所以复用该Context传递的信息
-	val := cast.ToString(c.Request.Context().Value(key))
-	if val == "" {
-		// 通常HTTP在外网，例如自定义Header： X-Ego-Uid 不可信任
-		if !enableTrustedCustomHeader {
-			return ""
-		}
-		value := c.GetHeader(key)
-		if value != "" {
-			// 如果信任该Header，将header数据赋值到context上
-			c.Request = c.Request.WithContext(transport.WithValue(c.Request.Context(), key, value))
-		}
-		return value
+	// 通常HTTP在外网，例如自定义Header： X-Ego-Uid 不可信任
+	if !enableTrustedCustomHeader {
+		return ""
 	}
-	return val
+	value := c.GetHeader(key)
+	if value != "" {
+		// 如果信任该Header，将header数据赋值到context上
+		c.Request = c.Request.WithContext(transport.WithValue(c.Request.Context(), key, value))
+	}
+	return value
 }

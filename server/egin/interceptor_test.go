@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/gotomicro/ego/core/elog"
@@ -98,4 +99,28 @@ func performRequest(r http.Handler, method, path string, headers ...header) *htt
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	return w
+}
+
+func Test_getHeaderValue(t *testing.T) {
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request, _ = http.NewRequest("GET", "/chat", nil)
+	c.Request.Header.Set("X-Ego-Uid", "9527")
+	value := getHeaderValue(c, "X-Ego-Uid", true)
+	assert.Equal(t, "9527", value)
+}
+
+func Test_getHeaderAssignValue(t *testing.T) {
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request, _ = http.NewRequest("GET", "/chat", nil)
+	c.Request.Header.Set("X-Ego-Uid", "9527")
+	value := getHeaderValue(c, "X-Ego-Uid", true)
+	assert.Equal(t, "9527", value)
+
+	value2 := transport.Value(c.Request.Context(), "X-Ego-Uid")
+	assert.Equal(t, "9527", value2)
+}
+
+func Test_getPeerIp(t *testing.T) {
+	addr := getPeerIP("192.168.1.1:50085")
+	assert.Equal(t, "192.168.1.1", addr)
 }
