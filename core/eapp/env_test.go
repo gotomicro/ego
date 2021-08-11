@@ -45,8 +45,8 @@ func TestAppInstance(t *testing.T) {
 }
 
 func TestIsDevelopmentMode(t *testing.T) {
-	os.Setenv(constant.EnvAppZone, "true")
-	defer os.Unsetenv(constant.EnvAppZone)
+	os.Setenv(constant.EgoDebug, "true")
+	defer os.Unsetenv(constant.EgoDebug)
 
 	initEnv()
 	out := IsDevelopmentMode()
