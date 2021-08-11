@@ -50,7 +50,7 @@ func TestIsDevelopmentMode(t *testing.T) {
 
 	initEnv()
 	out := IsDevelopmentMode()
-	assert.Equal(t, "true", out)
+	assert.Equal(t, true, out)
 }
 
 func TestEgoLogPath(t *testing.T) {
