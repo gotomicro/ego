@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-//TestCycleDone
 func TestCycleDone(t *testing.T) {
 	state := "init"
 	c := NewCycle()
@@ -30,7 +29,6 @@ func TestCycleDone(t *testing.T) {
 	}
 }
 
-//TestCycleClose
 func TestCycleClose(t *testing.T) {
 	state := "init"
 	c := NewCycle()

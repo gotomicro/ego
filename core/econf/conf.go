@@ -10,9 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gotomicro/ego/core/util/xcast"
-	"github.com/gotomicro/ego/core/util/xmap"
 	"github.com/mitchellh/mapstructure"
+	"github.com/spf13/cast"
+
+	"github.com/gotomicro/ego/core/util/xmap"
+	"github.com/gotomicro/ego/internal/tools"
 )
 
 // PackageName 包名
@@ -200,7 +202,7 @@ func GetString(key string) string {
 
 // GetString returns the value associated with the key as a string.
 func (c *Configuration) GetString(key string) string {
-	return xcast.ToString(c.Get(key))
+	return cast.ToString(c.Get(key))
 }
 
 // GetBool returns the value associated with the key as a boolean with default defaultConfiguration.
@@ -210,7 +212,7 @@ func GetBool(key string) bool {
 
 // GetBool returns the value associated with the key as a boolean.
 func (c *Configuration) GetBool(key string) bool {
-	return xcast.ToBool(c.Get(key))
+	return cast.ToBool(c.Get(key))
 }
 
 // GetInt returns the value associated with the key as an integer with default defaultConfiguration.
@@ -220,7 +222,7 @@ func GetInt(key string) int {
 
 // GetInt returns the value associated with the key as an integer.
 func (c *Configuration) GetInt(key string) int {
-	return xcast.ToInt(c.Get(key))
+	return cast.ToInt(c.Get(key))
 }
 
 // GetInt64 returns the value associated with the key as an integer with default defaultConfiguration.
@@ -230,7 +232,7 @@ func GetInt64(key string) int64 {
 
 // GetInt64 returns the value associated with the key as an integer.
 func (c *Configuration) GetInt64(key string) int64 {
-	return xcast.ToInt64(c.Get(key))
+	return cast.ToInt64(c.Get(key))
 }
 
 // GetFloat64 returns the value associated with the key as a float64 with default defaultConfiguration.
@@ -240,7 +242,7 @@ func GetFloat64(key string) float64 {
 
 // GetFloat64 returns the value associated with the key as a float64.
 func (c *Configuration) GetFloat64(key string) float64 {
-	return xcast.ToFloat64(c.Get(key))
+	return cast.ToFloat64(c.Get(key))
 }
 
 // GetTime returns the value associated with the key as time with default defaultConfiguration.
@@ -250,7 +252,7 @@ func GetTime(key string) time.Time {
 
 // GetTime returns the value associated with the key as time.
 func (c *Configuration) GetTime(key string) time.Time {
-	return xcast.ToTime(c.Get(key))
+	return cast.ToTime(c.Get(key))
 }
 
 // GetDuration returns the value associated with the key as a duration with default defaultConfiguration.
@@ -260,7 +262,7 @@ func GetDuration(key string) time.Duration {
 
 // GetDuration returns the value associated with the key as a duration.
 func (c *Configuration) GetDuration(key string) time.Duration {
-	return xcast.ToDuration(c.Get(key))
+	return cast.ToDuration(c.Get(key))
 }
 
 // GetStringSlice returns the value associated with the key as a slice of strings with default defaultConfiguration.
@@ -270,7 +272,7 @@ func GetStringSlice(key string) []string {
 
 // GetStringSlice returns the value associated with the key as a slice of strings.
 func (c *Configuration) GetStringSlice(key string) []string {
-	return xcast.ToStringSlice(c.Get(key))
+	return cast.ToStringSlice(c.Get(key))
 }
 
 // GetSlice returns the value associated with the key as a slice of strings with default defaultConfiguration.
@@ -280,7 +282,7 @@ func GetSlice(key string) []interface{} {
 
 // GetSlice returns the value associated with the key as a slice of strings.
 func (c *Configuration) GetSlice(key string) []interface{} {
-	return xcast.ToSlice(c.Get(key))
+	return cast.ToSlice(c.Get(key))
 }
 
 // GetStringMap returns the value associated with the key as a map of interfaces with default defaultConfiguration.
@@ -290,7 +292,7 @@ func GetStringMap(key string) map[string]interface{} {
 
 // GetStringMap returns the value associated with the key as a map of interfaces.
 func (c *Configuration) GetStringMap(key string) map[string]interface{} {
-	return xcast.ToStringMap(c.Get(key))
+	return cast.ToStringMap(c.Get(key))
 }
 
 // GetStringMapString returns the value associated with the key as a map of strings with default defaultConfiguration.
@@ -300,12 +302,12 @@ func GetStringMapString(key string) map[string]string {
 
 // GetStringMapString returns the value associated with the key as a map of strings.
 func (c *Configuration) GetStringMapString(key string) map[string]string {
-	return xcast.ToStringMapString(c.Get(key))
+	return cast.ToStringMapString(c.Get(key))
 }
 
 // GetSliceStringMap returns the value associated with the slice of maps.
 func (c *Configuration) GetSliceStringMap(key string) []map[string]interface{} {
-	return xcast.ToSliceStringMap(c.Get(key))
+	return tools.ToSliceStringMap(c.Get(key))
 }
 
 // GetStringMapStringSlice returns the value associated with the key as a map to a slice of strings with default defaultConfiguration.
@@ -315,7 +317,7 @@ func GetStringMapStringSlice(key string) map[string][]string {
 
 // GetStringMapStringSlice returns the value associated with the key as a map to a slice of strings.
 func (c *Configuration) GetStringMapStringSlice(key string) map[string][]string {
-	return xcast.ToStringMapStringSlice(c.Get(key))
+	return cast.ToStringMapStringSlice(c.Get(key))
 }
 
 // UnmarshalWithExpect unmarshal key, returns expect if failed
@@ -392,7 +394,7 @@ func lookup(prefix string, target map[string]interface{}, data map[string]interf
 		if prefix == "" {
 			pp = k
 		}
-		if dd, err := xcast.ToStringMapE(v); err == nil {
+		if dd, err := cast.ToStringMapE(v); err == nil {
 			lookup(pp, dd, data, sep)
 		} else {
 			data[pp] = v

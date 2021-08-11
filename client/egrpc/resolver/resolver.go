@@ -10,7 +10,6 @@ import (
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/eregistry"
-	"github.com/gotomicro/ego/core/util/xgo"
 	"github.com/gotomicro/ego/server"
 )
 
@@ -81,7 +80,7 @@ func (b *baseResolver) Close() {
 }
 
 func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
-	xgo.Go(func() {
+	go func() {
 		for {
 			select {
 			case endpoint := <-endpoints:
@@ -106,7 +105,7 @@ func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 				return
 			}
 		}
-	})
+	}()
 }
 
 func attrEqual(oldAttr *attributes.Attributes, node server.ServiceInfo) bool {

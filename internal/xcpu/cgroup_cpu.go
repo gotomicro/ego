@@ -156,7 +156,7 @@ func totalCPUUsage() (usage uint64, err error) {
 	if cg, err = currentcGroup(); err != nil {
 		return
 	}
-	return cg.CPUAcctUsage()
+	return cg.cpuAcctUsage()
 }
 
 func perCPUUsage() (usage []uint64, err error) {
@@ -164,7 +164,7 @@ func perCPUUsage() (usage []uint64, err error) {
 	if cg, err = currentcGroup(); err != nil {
 		return
 	}
-	return cg.CPUAcctUsagePerCPU()
+	return cg.cpuAcctUsagePerCPU()
 }
 
 func cpuSets() (sets []uint64, err error) {
@@ -172,7 +172,7 @@ func cpuSets() (sets []uint64, err error) {
 	if cg, err = currentcGroup(); err != nil {
 		return
 	}
-	return cg.CPUSetCPUs()
+	return cg.cpuSetCPUs()
 }
 
 func cpuQuota() (quota int64, err error) {
@@ -180,7 +180,7 @@ func cpuQuota() (quota int64, err error) {
 	if cg, err = currentcGroup(); err != nil {
 		return
 	}
-	return cg.CPUCFSQuotaUs()
+	return cg.cpuCFSQuotaUs()
 }
 
 func cpuPeriod() (peroid uint64, err error) {
@@ -188,7 +188,7 @@ func cpuPeriod() (peroid uint64, err error) {
 	if cg, err = currentcGroup(); err != nil {
 		return
 	}
-	return cg.CPUCFSPeriodUs()
+	return cg.cpuCFSPeriodUs()
 }
 
 func cpuFreq() uint64 {

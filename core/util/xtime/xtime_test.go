@@ -18,7 +18,16 @@ func TestDuration(t *testing.T) {
 		args args
 		want time.Duration
 	}{
-		// TODO: Add test cases.
+		{
+			name: "",
+			args: args{str: "1s"},
+			want: time.Second,
+		},
+		{
+			name: "",
+			args: args{str: "2m"},
+			want: 2 * time.Minute,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

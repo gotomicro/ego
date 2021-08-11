@@ -1,12 +1,16 @@
-.PHONY: build
-
+ROOT:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))# 根路径
 VETPACKAGES=`go list ./... | grep -v /vendor/ | grep -v /examples/`
 GOFILES=`find . -name "*.go" -type f -not -path "./vendor/*"`
 
-gofmt:
-		echo "正在使用gofmt格式化文件..."
-		gofmt -s -w ${GOFILES}
-		echo "格式化完成"
-govet:
-		echo "正在进行静态检测..."
-		go vet $(VETPACKAGES)
+.PHONY: fmt vet test
+fmt:
+	@echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>make $@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+	gofmt -s -w ${GOFILES}
+
+vet:
+	@echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>make $@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+	go vet $(VETPACKAGES)
+
+test:
+	@echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>make $@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+	go clean -testcache ./... && go test -race $(go list ./... | grep -v /examples/) -v -coverprofile=coverage.txt -covermode=atomic

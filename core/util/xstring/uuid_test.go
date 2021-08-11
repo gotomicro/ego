@@ -3,40 +3,20 @@ package xstring
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGenerateUUID(t *testing.T) {
-	type args struct {
-		seedTime time.Time
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GenerateUUID(tt.args.seedTime); got != tt.want {
-				t.Errorf("GenerateUUID() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	out := GenerateUUID(time.Now())
+	assert.NotEmpty(t, out)
+	assert.Equal(t, 32, len(out))
+	assert.NotEqual(t, "00000000000000000000000000000000", out)
 }
 
 func TestGenerateID(t *testing.T) {
-	tests := []struct {
-		name string
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GenerateID(); got != tt.want {
-				t.Errorf("GenerateID() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	out := GenerateID()
+	assert.NotEmpty(t, out)
+	assert.Equal(t, 16, len(out))
+	assert.NotEqual(t, "00000000000000000000000000000000", out)
 }

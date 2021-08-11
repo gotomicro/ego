@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gotomicro/ego/core/transport"
@@ -38,4 +39,13 @@ func TestContextValue(t *testing.T) {
 func TestContextValueEmpty(t *testing.T) {
 	value := ContextValue(context.Background(), "X-Ego-Uid")
 	assert.Equal(t, "", value)
+}
+
+func TestToSliceStringMap(t *testing.T) {
+	type m map[string]interface{}
+	in := ToSliceStringMap([]m{
+		{"aaa": "AAA"},
+	})
+	out := ToSliceStringMap(in)
+	fmt.Printf("out--------------->"+"%+v\n", out)
 }

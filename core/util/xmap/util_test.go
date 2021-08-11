@@ -97,3 +97,52 @@ func TestMergeStringMap(t *testing.T) {
 		})
 	}
 }
+
+func TestDeepSearchInMap(t *testing.T) {
+	type args struct {
+		m     map[string]interface{}
+		paths []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[string]interface{}
+	}{
+		{
+			name: "test",
+			args: args{map[string]interface{}{"key1": map[string]interface{}{"subkey1": "subval1"}}, []string{"key1"}},
+			want: map[string]interface{}{"subkey1": "subval1"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := DeepSearchInMap(tt.args.m, tt.args.paths...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DeepSearchInMap() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToMapStringInterface(t *testing.T) {
+	type args struct {
+		src map[interface{}]interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[string]interface{}
+	}{
+		{
+			name: "test",
+			args: args{map[interface{}]interface{}{1: 1}},
+			want: map[string]interface{}{"1": 1},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToMapStringInterface(tt.args.src); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ToMapStringInterface() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

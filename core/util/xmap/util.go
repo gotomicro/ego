@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gotomicro/ego/core/util/xcast"
+	"github.com/spf13/cast"
 )
 
 // MergeStringMap merge two map
@@ -65,7 +65,7 @@ func DeepSearchInMap(m map[string]interface{}, paths ...string) map[string]inter
 			continue
 		}
 
-		m3, err := xcast.ToStringMapE(m2)
+		m3, err := cast.ToStringMapE(m2)
 		if err != nil {
 			m3 = make(map[string]interface{})
 			mtmp[k] = m3
