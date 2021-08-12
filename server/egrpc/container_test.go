@@ -16,8 +16,7 @@ func TestDefaultContainer(t *testing.T) {
 	c := DefaultContainer()
 	assert.NotPanics(t, func() {
 		cmp := c.Build()
-		addr := cmp.Address()
-		assert.Equal(t, ":9002", addr)
+		assert.Equal(t, ":9002", cmp.Address())
 	})
 }
 
@@ -27,13 +26,12 @@ func TestNewContainer(t *testing.T) {
 port = 9005
 host = "127.0.0.1"
 `
-	err := econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
-	assert.NoError(t, err)
-	ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+	assert.NoError(t, econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal))
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 	assert.NotPanics(t, func() {
 		cmp := Load("grpc").Build()
-		addr := cmp.Address()
-		assert.Equal(t, "127.0.0.1:9005", addr)
+		assert.Equal(t, "127.0.0.1:9005", cmp.Address())
 		assert.NoError(t, cmp.Init())
 		go func() {
 			assert.NoError(t, cmp.Start())
@@ -44,6 +42,7 @@ host = "127.0.0.1"
 			case <-ctx.Done():
 				assert.NoError(t, cmp.Stop())
 				break L
+			default:
 			}
 		}
 	})

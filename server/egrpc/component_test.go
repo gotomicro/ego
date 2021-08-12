@@ -17,20 +17,12 @@ func TestNewComponent(t *testing.T) {
 		Port:    9005,
 		Network: "tcp4",
 	}
-	logger := elog.DefaultLogger
-	cmp := newComponent("test-cmp", &cfg, logger)
-	name := cmp.Name()
-	assert.Equal(t, "test-cmp", name)
+	cmp := newComponent("test-cmp", &cfg, elog.DefaultLogger)
+	assert.Equal(t, "test-cmp", cmp.Name())
+	assert.Equal(t, "server.egrpc", cmp.PackageName())
+	assert.Equal(t, "0.0.0.0:9005", cmp.Address())
 
-	pkgName := cmp.PackageName()
-	assert.Equal(t, "server.egrpc", pkgName)
-
-	addr := cmp.Address()
-	assert.Equal(t, "0.0.0.0:9005", addr)
-
-	var err error
-	err = cmp.Init()
-	assert.NoError(t, err)
+	assert.NoError(t, cmp.Init())
 
 	info := cmp.Info()
 	assert.NotEmpty(t, info.Name)
@@ -40,18 +32,18 @@ func TestNewComponent(t *testing.T) {
 
 	// err = cmp.Start()
 	go func() {
-		err := cmp.Start()
-		assert.NoError(t, err)
+		assert.NoError(t, cmp.Start())
 	}()
 
-	ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 L:
 	for {
 		select {
 		case <-ctx.Done():
-			err := cmp.Stop()
-			assert.NoError(t, err)
+			assert.NoError(t, cmp.Stop())
 			break L
+		default:
 		}
 	}
 
