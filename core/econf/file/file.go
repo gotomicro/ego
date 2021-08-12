@@ -13,7 +13,6 @@ import (
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/econf/manager"
 	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/util/xgo"
 )
 
 // fileDataSource file provider.
@@ -43,7 +42,7 @@ func (fp *fileDataSource) Parse(path string, watch bool) econf.ConfigType {
 
 	if watch {
 		fp.changed = make(chan struct{}, 1)
-		xgo.Go(fp.watch)
+		go fp.watch()
 	}
 
 	return extParser(path)

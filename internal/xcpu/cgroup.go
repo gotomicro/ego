@@ -17,8 +17,8 @@ type cgroup struct {
 	cgroupSet map[string]string
 }
 
-// CPUCFSQuotaUs cpu.cfs_quota_us
-func (c *cgroup) CPUCFSQuotaUs() (int64, error) {
+// cpuCFSQuotaUs cpu.cfs_quota_us
+func (c *cgroup) cpuCFSQuotaUs() (int64, error) {
 	data, err := readFile(path.Join(c.cgroupSet["cpu"], "cpu.cfs_quota_us"))
 	if err != nil {
 		return 0, err
@@ -26,8 +26,8 @@ func (c *cgroup) CPUCFSQuotaUs() (int64, error) {
 	return strconv.ParseInt(data, 10, 64)
 }
 
-// CPUCFSPeriodUs cpu.cfs_period_us
-func (c *cgroup) CPUCFSPeriodUs() (uint64, error) {
+// cpuCFSPeriodUs cpu.cfs_period_us
+func (c *cgroup) cpuCFSPeriodUs() (uint64, error) {
 	data, err := readFile(path.Join(c.cgroupSet["cpu"], "cpu.cfs_period_us"))
 	if err != nil {
 		return 0, err
@@ -35,8 +35,8 @@ func (c *cgroup) CPUCFSPeriodUs() (uint64, error) {
 	return parseUint(data)
 }
 
-// CPUAcctUsage cpuacct.usage
-func (c *cgroup) CPUAcctUsage() (uint64, error) {
+// cpuAcctUsage cpuacct.usage
+func (c *cgroup) cpuAcctUsage() (uint64, error) {
 	data, err := readFile(path.Join(c.cgroupSet["cpuacct"], "cpuacct.usage"))
 	if err != nil {
 		return 0, err
@@ -44,8 +44,8 @@ func (c *cgroup) CPUAcctUsage() (uint64, error) {
 	return parseUint(data)
 }
 
-// CPUAcctUsagePerCPU cpuacct.usage_percpu
-func (c *cgroup) CPUAcctUsagePerCPU() ([]uint64, error) {
+// cpuAcctUsagePerCPU cpuacct.usage_percpu
+func (c *cgroup) cpuAcctUsagePerCPU() ([]uint64, error) {
 	data, err := readFile(path.Join(c.cgroupSet["cpuacct"], "cpuacct.usage_percpu"))
 	if err != nil {
 		return nil, err
@@ -61,8 +61,8 @@ func (c *cgroup) CPUAcctUsagePerCPU() ([]uint64, error) {
 	return usage, nil
 }
 
-// CPUSetCPUs cpuset.cpus
-func (c *cgroup) CPUSetCPUs() ([]uint64, error) {
+// cpuSetCPUs cpuset.cpus
+func (c *cgroup) cpuSetCPUs() ([]uint64, error) {
 	data, err := readFile(path.Join(c.cgroupSet["cpuset"], "cpuset.cpus"))
 	if err != nil {
 		return nil, err

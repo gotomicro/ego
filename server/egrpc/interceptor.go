@@ -23,8 +23,8 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
-	"github.com/gotomicro/ego/core/util/xcpu"
 	"github.com/gotomicro/ego/core/util/xstring"
+	"github.com/gotomicro/ego/internal/xcpu"
 )
 
 func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gotomicro/ego/core/transport"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/gotomicro/ego/core/transport"
 )
 
 func TestGrpcHeaderValue(t *testing.T) {
@@ -38,4 +39,11 @@ func TestContextValue(t *testing.T) {
 func TestContextValueEmpty(t *testing.T) {
 	value := ContextValue(context.Background(), "X-Ego-Uid")
 	assert.Equal(t, "", value)
+}
+
+func TestToSliceStringMap(t *testing.T) {
+	out := ToSliceStringMap([]interface{}{
+		map[string]interface{}{"aaa": "AAA"},
+	})
+	assert.Equal(t, []map[string]interface{}{{"aaa": "AAA"}}, out)
 }

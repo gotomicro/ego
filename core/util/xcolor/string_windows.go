@@ -4,16 +4,9 @@ package xcolor
 
 import (
 	"fmt"
-	"math/rand"
-	"strconv"
 )
 
-var _ = RandomColor()
-
-// RandomColor generates a random color.
-func RandomColor() string {
-	return fmt.Sprintf("#%s", strconv.FormatInt(int64(rand.Intn(16777216)), 16))
-}
+var _ = Random()
 
 // Yellow ...
 func Yellow(msg string) string {

@@ -11,7 +11,6 @@ func TestToSnakeCase(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
 		{
 			name: "test",
 			args: args{
