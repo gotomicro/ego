@@ -36,15 +36,8 @@ host = "127.0.0.1"
 		go func() {
 			assert.NoError(t, cmp.Start())
 		}()
-	L:
-		for {
-			select {
-			case <-ctx.Done():
-				assert.NoError(t, cmp.Stop())
-				break L
-			default:
-			}
-		}
+		<-ctx.Done()
+		assert.NoError(t, cmp.Stop())
 	})
 	t.Log("done")
 }

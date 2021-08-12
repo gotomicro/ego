@@ -37,15 +37,9 @@ func TestNewComponent(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-L:
-	for {
-		select {
-		case <-ctx.Done():
-			assert.NoError(t, cmp.Stop())
-			break L
-		default:
-		}
-	}
+
+	<-ctx.Done()
+	assert.NoError(t, cmp.Stop())
 
 	t.Log("done")
 }

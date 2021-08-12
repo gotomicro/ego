@@ -2,7 +2,7 @@ package tools
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"reflect"
 	"strings"
 
@@ -35,23 +35,18 @@ func ContextValue(ctx context.Context, key string) string {
 
 // ToSliceStringMap casts an empty interface to []map[string]interface{} ignoring error
 func ToSliceStringMap(i interface{}) []map[string]interface{} {
-	v, _ := toSliceStringMapE(i)
-	return v
-}
-
-func toSliceStringMapE(i interface{}) ([]map[string]interface{}, error) {
 	var s = make([]map[string]interface{}, 0)
-
 	switch v := i.(type) {
 	case []interface{}:
 		for _, u := range v {
 			s = append(s, cast.ToStringMap(u))
 		}
-		return s, nil
+		return s
 	case []map[string]interface{}:
 		s = append(s, v...)
-		return s, nil
+		return s
 	default:
-		return s, fmt.Errorf("unable to Cast %#v of type %v to []map[string]interface{}", i, reflect.TypeOf(i))
+		log.Printf("unable to Cast %#v of type %v to []map[string]interface{}", i, reflect.TypeOf(i))
+		return s
 	}
 }

@@ -2,12 +2,12 @@ package tools
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	"github.com/gotomicro/ego/core/transport"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/gotomicro/ego/core/transport"
 )
 
 func TestGrpcHeaderValue(t *testing.T) {
@@ -42,10 +42,8 @@ func TestContextValueEmpty(t *testing.T) {
 }
 
 func TestToSliceStringMap(t *testing.T) {
-	type m map[string]interface{}
-	in := ToSliceStringMap([]m{
-		{"aaa": "AAA"},
+	out := ToSliceStringMap([]interface{}{
+		map[string]interface{}{"aaa": "AAA"},
 	})
-	out := ToSliceStringMap(in)
-	fmt.Printf("out--------------->"+"%+v\n", out)
+	assert.Equal(t, []map[string]interface{}{{"aaa": "AAA"}}, out)
 }
