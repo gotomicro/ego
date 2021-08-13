@@ -89,14 +89,11 @@ func (c *Component) Start() error {
 	var err error
 	if c.config.EnableTls {
 		err = c.Server.ServeTLS(c.listener, c.config.TlsCertFile, c.config.TlsKeyFile)
-		if err == http.ErrServerClosed {
-			return nil
-		}
 	} else {
 		err = c.Server.Serve(c.listener)
-		if err == http.ErrServerClosed {
-			return nil
-		}
+	}
+	if err == http.ErrServerClosed {
+		return nil
 	}
 	return err
 }
