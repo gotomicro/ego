@@ -25,8 +25,11 @@ type Config struct {
 	WebsocketHandshakeTimeout  time.Duration // 握手时间
 	WebsocketReadBufferSize    int
 	WebsocketWriteBufferSize   int
-	EnableWebsocketCompression bool // 是否开通压缩
-	EnableWebsocketCheckOrigin bool // 是否支持跨域
+	EnableWebsocketCompression bool   // 是否开通压缩
+	EnableWebsocketCheckOrigin bool   // 是否支持跨域
+	EnableTls                  bool   // 是否进入 https 模式
+	TlsCertFile                string // https 证书
+	TlsKeyFile                 string // https 私钥
 }
 
 // DefaultConfig ...
