@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
@@ -85,8 +86,12 @@ func (c *Component) Start() error {
 		Handler: c,
 	}
 	c.mu.Unlock()
-	err := c.Server.Serve(c.listener)
-
+	var err error
+	if c.config.EnableTls {
+		err = c.Server.ServeTLS(c.listener, c.config.TlsCertFile, c.config.TlsKeyFile)
+	} else {
+		err = c.Server.Serve(c.listener)
+	}
 	if err == http.ErrServerClosed {
 		return nil
 	}
