@@ -79,9 +79,9 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 
 	var comp *Component
 	storeCache.RLock()
-	comp = storeCache.cache[jobName]
+	comp, ok := storeCache.cache[jobName]
 	storeCache.RUnlock()
-	if comp == nil {
+	if !ok {
 		w.Header().Set("X-Ego-Job-Err", fmt.Sprintf("job:%s not exist", jobName))
 		w.WriteHeader(400)
 		return
