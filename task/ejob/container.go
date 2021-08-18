@@ -1,6 +1,7 @@
 package ejob
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -80,7 +81,12 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	storeCache.RLock()
 	comp = storeCache.cache[jobName]
 	storeCache.RUnlock()
-	err := comp.Start()
+	if comp == nil {
+		w.Header().Set("X-Ego-Job-Err", fmt.Sprintf("job:%s not exist", jobName))
+		w.WriteHeader(400)
+		return
+	}
+	err := comp.StartHTTP(w, r)
 	if err != nil {
 		w.Header().Set("X-Ego-Job-Err", err.Error())
 		w.WriteHeader(400)
