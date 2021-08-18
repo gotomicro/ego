@@ -7,12 +7,13 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
+
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/standard"
-	"github.com/opentracing/opentracing-go"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -65,15 +66,13 @@ func (c *Component) Init() error {
 	return nil
 }
 
-// Start 启动
-func (c *Component) Start() (err error) {
-	span, ctx := etrace.StartSpanFromContext(
-		context.Background(),
-		"ego-job",
+func (c *Component) trace(ctx context.Context) {
+	var (
+		traceID = etrace.ExtractTraceID(ctx)
+		fields  = []elog.Field{elog.FieldName(c.name)}
+		err     error
 	)
-	defer span.Finish()
-	traceID := etrace.ExtractTraceID(ctx)
-	var fields = []elog.Field{elog.FieldName(c.name)}
+
 	// 如果设置了链路，增加链路信息
 	if opentracing.IsGlobalTracerRegistered() {
 		fields = append(fields, elog.FieldTid(traceID))
@@ -95,12 +94,37 @@ func (c *Component) Start() (err error) {
 		}
 		if err != nil {
 			fields = append(fields, elog.FieldErr(err), elog.FieldCost(time.Since(beg)))
-			c.logger.Error("stop ejob", fields...)
+			c.logger.Error("start  ejob", fields...)
 		} else {
 			fields = append(fields, elog.FieldCost(time.Since(beg)))
-			c.logger.Info("stop ejob", fields...)
+			c.logger.Info("start  ejob", fields...)
 		}
 	}()
+}
+
+// StartHTTP ...
+func (c *Component) StartHTTP(w http.ResponseWriter, r *http.Request) (err error) {
+	span, ctx := etrace.StartSpanFromContext(
+		context.Background(),
+		"ego-job",
+	)
+	defer span.Finish()
+	c.trace(ctx)
+	return c.config.startFunc(Context{
+		Ctx:     ctx,
+		Writer:  w,
+		Request: r,
+	})
+}
+
+// Start 启动
+func (c *Component) Start() (err error) {
+	span, ctx := etrace.StartSpanFromContext(
+		context.Background(),
+		"ego-job",
+	)
+	defer span.Finish()
+	c.trace(ctx)
 	return c.config.startFunc(Context{
 		Ctx: ctx,
 	})
