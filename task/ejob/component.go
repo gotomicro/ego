@@ -105,9 +105,11 @@ func (c *Component) trace(ctx context.Context) {
 // StartHTTP ...
 func (c *Component) StartHTTP(w http.ResponseWriter, r *http.Request) (err error) {
 	span, ctx := etrace.StartSpanFromContext(
-		context.Background(),
+		r.Context(),
 		"ego-job",
+		etrace.HeaderExtractor(r.Header),
 	)
+	r = r.WithContext(ctx)
 	defer span.Finish()
 	c.trace(ctx)
 	return c.config.startFunc(Context{
