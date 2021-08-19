@@ -120,5 +120,8 @@ func HandleJobList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Write(buf)
+	_, err = w.Write(buf)
+	if err != nil {
+		elog.Error("HandleJobList write failed", zap.Error(err))
+	}
 }
