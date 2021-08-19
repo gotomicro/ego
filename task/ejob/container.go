@@ -1,9 +1,12 @@
 package ejob
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
+
+	"go.uber.org/zap"
 
 	"github.com/gotomicro/ego/core/elog"
 )
@@ -20,6 +23,16 @@ func init() {
 		RWMutex: sync.RWMutex{},
 		cache:   make(map[string]*Component),
 	}
+}
+
+func (s *store) cloneCache() map[string]*Component {
+	s.RLock()
+	defer s.RUnlock()
+	res := make(map[string]*Component)
+	for jobName, component := range s.cache {
+		res[jobName] = component
+	}
+	return res
 }
 
 // Container 容器
@@ -93,4 +106,22 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(200)
+}
+
+func HandleJobList(w http.ResponseWriter, r *http.Request) {
+	jobMap := storeCache.cloneCache()
+	jobList := make([]string, 0, len(jobMap))
+	for jobName := range jobMap {
+		jobList = append(jobList, jobName)
+	}
+	buf, err := json.Marshal(jobList)
+	if err != nil {
+		elog.Error("HandleJobList json.Marshal failed", zap.Error(err), zap.Any("jobList", jobList))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_, err = w.Write(buf)
+	if err != nil {
+		elog.Error("HandleJobList write failed", zap.Error(err))
+	}
 }
