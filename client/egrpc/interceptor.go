@@ -7,8 +7,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/gotomicro/ego/core/transport"
-	"github.com/gotomicro/ego/internal/tools"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
@@ -22,8 +20,10 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/core/util/xdebug"
 	"github.com/gotomicro/ego/core/util/xstring"
+	"github.com/gotomicro/ego/internal/tools"
 )
 
 // metricUnaryClientInterceptor returns grpc unary request metrics collector interceptor
@@ -64,11 +64,6 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 // debugUnaryClientInterceptor returns grpc unary request request and response details interceptor
 func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		// 如果不是调试模式，跳出
-		if !eapp.IsDevelopmentMode() {
-			return nil
-		}
-
 		var p peer.Peer
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, append(opts, grpc.Peer(&p))...)
@@ -78,7 +73,6 @@ func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientIntercep
 		} else {
 			log.Println("grpc.response", xdebug.MakeReqResInfoV2(6, compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
 		}
-
 		return err
 	}
 }

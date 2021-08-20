@@ -1,11 +1,12 @@
 package egrpc
 
 import (
-	"github.com/gotomicro/ego/core/transport"
 	"google.golang.org/grpc"
 
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/transport"
 )
 
 // Option 可选项
@@ -54,7 +55,7 @@ func (c *Container) Build(options ...Option) *Component {
 	// 默认日志
 	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config))))
 
-	if c.config.Debug {
+	if eapp.IsDevelopmentMode() {
 		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.name, c.config.Addr))))
 	}
 
