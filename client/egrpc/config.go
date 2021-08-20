@@ -18,7 +18,6 @@ type Config struct {
 	DialTimeout                  time.Duration // 连接超时，默认3s
 	ReadTimeout                  time.Duration // 读超时，默认1s
 	SlowLogThreshold             time.Duration // 慢日志记录的阈值，默认600ms
-	Debug                        bool          // 是否开启调试，默认不开启，开启后并加上export EGO_DEBUG=true，可以看到每次请求，配置名、地址、耗时、请求数据、响应数据
 	EnableBlock                  bool          // 是否开启阻塞，默认开启
 	EnableWithInsecure           bool          // 是否开启非安全传输，默认开启
 	EnableMetricInterceptor      bool          // 是否开启监控，默认开启
@@ -44,7 +43,6 @@ func DefaultConfig() *Config {
 		DialTimeout:                  time.Second * 3,
 		ReadTimeout:                  xtime.Duration("1s"),
 		SlowLogThreshold:             xtime.Duration("600ms"),
-		Debug:                        false,
 		EnableBlock:                  true,
 		EnableTraceInterceptor:       true,
 		EnableWithInsecure:           true,
