@@ -87,8 +87,8 @@ func (c *Component) Start() error {
 	}
 	c.mu.Unlock()
 	var err error
-	if c.config.EnableTls {
-		err = c.Server.ServeTLS(c.listener, c.config.TlsCertFile, c.config.TlsKeyFile)
+	if c.config.EnableTLS {
+		err = c.Server.ServeTLS(c.listener, c.config.TLSCertFile, c.config.TLSKeyFile)
 	} else {
 		err = c.Server.Serve(c.listener)
 	}

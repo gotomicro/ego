@@ -1,7 +1,9 @@
 package egin
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -123,4 +125,15 @@ func Test_getHeaderAssignValue(t *testing.T) {
 func Test_getPeerIp(t *testing.T) {
 	addr := getPeerIP("192.168.1.1:50085")
 	assert.Equal(t, "192.168.1.1", addr)
+}
+
+func Test_copyBody(t *testing.T) {
+	src := []byte("hello, world")
+	dst := make([]byte, len(src))
+	rb := bytes.NewBuffer(src)
+	var wb bytes.Buffer
+	r := io.TeeReader(rb, &wb)
+	if n, err := io.ReadFull(r, dst); err != nil || n != len(src) {
+		t.Fatalf("ReadFull(r, dst) = %d, %v; want %d, nil", n, err, len(src))
+	}
 }

@@ -108,6 +108,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 }
 
+// HandleJobList job列表
 func HandleJobList(w http.ResponseWriter, r *http.Request) {
 	jobMap := storeCache.cloneCache()
 	jobList := make([]string, 0, len(jobMap))
