@@ -112,6 +112,7 @@ func New(options ...Option) *Ego {
 		initMaxProcs,
 		e.initLogger,
 		e.initTracer,
+		e.initSentinel,
 	}
 
 	// 初始化系统函数

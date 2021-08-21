@@ -12,17 +12,18 @@ import (
 	"strings"
 	"time"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/internal/tools"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	"go.uber.org/zap"
-
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/emetric"
-	"github.com/gotomicro/ego/core/etrace"
 )
 
 var (
@@ -177,6 +178,10 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 	}
 }
 
+//func copyBody(r io.Reader, w io.Writer) io.ReadCloser {
+//	return ioutil.NopCloser(io.TeeReader(r, w))
+//}
+
 // stack returns a nicely formatted stack frame, skipping skip frames.
 func stack(skip int) []byte {
 	buf := new(bytes.Buffer) // the returned data
@@ -263,6 +268,38 @@ func traceServerInterceptor() gin.HandlerFunc {
 		defer span.Finish()
 		// 判断了全局jaeger的设置，所以这里一定能够断言为jaeger
 		c.Header(eapp.EgoTraceIDName(), span.(*jaeger.Span).Context().(jaeger.SpanContext).TraceID().String())
+		c.Next()
+	}
+}
+
+// sentinelMiddleware returns new gin.HandlerFunc
+// Default resource name is {method}:{path}, such as "GET:/api/users/:id"
+// Default block fallback is returning 429 code
+// Define your own behavior by setting options
+func sentinelMiddleware(config *Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		resourceName := c.Request.Method + "." + c.FullPath()
+
+		if config.resourceExtract != nil {
+			resourceName = config.resourceExtract(c)
+		}
+
+		entry, err := sentinel.Entry(
+			resourceName,
+			sentinel.WithResourceType(base.ResTypeWeb),
+			sentinel.WithTrafficType(base.Inbound),
+		)
+
+		if err != nil {
+			if config.blockFallback != nil {
+				config.blockFallback(c)
+			} else {
+				c.AbortWithStatus(http.StatusTooManyRequests)
+			}
+			return
+		}
+
+		defer entry.Exit()
 		c.Next()
 	}
 }

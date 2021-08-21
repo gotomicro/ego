@@ -1,0 +1,8 @@
+[
+  {
+    "resource": "GET./hello",
+    "threshold": 2,
+    "tokenCalculateStrategy": 0,
+    "controlBehavior": 0
+  }
+]

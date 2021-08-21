@@ -64,5 +64,10 @@ func (c *Container) Build(options ...Option) *Component {
 	if c.config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
 		server.Use(traceServerInterceptor())
 	}
+
+	if c.config.EnableSentinel {
+		server.Use(sentinelMiddleware(c.config))
+	}
+
 	return server
 }

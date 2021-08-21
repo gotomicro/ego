@@ -1,0 +1,11 @@
+[server.http]
+host = "0.0.0.0"
+port = 9007
+enableAccessInterceptorReq = true
+enableAccessInterceptorRes = true
+enableSentinel = true
+[server.governor]
+host = "0.0.0.0"
+port = 9003
+[sentinel]
+flowRulesFile = "./config/sentinel.json"

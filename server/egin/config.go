@@ -22,14 +22,17 @@ type Config struct {
 	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
 	EnableTrustedCustomHeader  bool          // 是否开启自定义header头，记录数据往链路后传递，默认不开启
+	EnableSentinel             bool          // 是否开启限流，默认不开启
 	WebsocketHandshakeTimeout  time.Duration // 握手时间
 	WebsocketReadBufferSize    int
 	WebsocketWriteBufferSize   int
 	EnableWebsocketCompression bool   // 是否开通压缩
 	EnableWebsocketCheckOrigin bool   // 是否支持跨域
-	EnableTls                  bool   // 是否进入 https 模式
-	TlsCertFile                string // https 证书
-	TlsKeyFile                 string // https 私钥
+	EnableTLS                  bool   // 是否进入 https 模式
+	TLSCertFile                string // https 证书
+	TLSKeyFile                 string // https 私钥
+	blockFallback              func(*gin.Context)
+	resourceExtract            func(*gin.Context) string
 }
 
 // DefaultConfig ...
