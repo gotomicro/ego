@@ -50,5 +50,9 @@ func DefaultConfig() *Config {
 
 // Address ...
 func (config Config) Address() string {
+	// 如果是unix，那么启动方式为unix domain socket，host填写file
+	if config.Network == "unix" {
+		return config.Host
+	}
 	return fmt.Sprintf("%s:%d", config.Host, config.Port)
 }
