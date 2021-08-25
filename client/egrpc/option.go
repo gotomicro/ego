@@ -41,6 +41,13 @@ func WithReadTimeout(t time.Duration) Option {
 	}
 }
 
+// WithDebug setting if enable debug mode
+func WithDebug(enableDebug bool) Option {
+	return func(c *Container) {
+		// for version compatibility
+	}
+}
+
 // WithDialOption setting grpc dial options
 func WithDialOption(opts ...grpc.DialOption) Option {
 	return func(c *Container) {
