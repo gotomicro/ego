@@ -14,6 +14,7 @@ var customKeyStore = contextKeyStore{
 type contextKeyStore struct {
 	keyArr []string
 	keyMap map[string]*contextKey
+	length int
 }
 
 func init() {
@@ -21,6 +22,7 @@ func init() {
 	for _, value := range eapp.EgoLogExtraKeys() {
 		customKeyStore.keyMap[value] = newContextKey(value)
 	}
+	customKeyStore.length = len(customKeyStore.keyArr)
 }
 
 // Set 设置context key arr
@@ -29,11 +31,17 @@ func Set(arr []string) {
 	for _, value := range arr {
 		customKeyStore.keyMap[value] = newContextKey(value)
 	}
+	customKeyStore.length = len(customKeyStore.keyArr)
 }
 
 // CustomContextKeys 自定义context
 func CustomContextKeys() []string {
 	return customKeyStore.keyArr
+}
+
+// CustomContextKeysLength 自定义context keys长度
+func CustomContextKeysLength() int {
+	return customKeyStore.length
 }
 
 // WithValue 设置数据

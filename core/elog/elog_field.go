@@ -49,6 +49,11 @@ func FieldCode(value int32) Field {
 	return Int32("code", value)
 }
 
+// FieldOriginCode 原始code
+func FieldOriginCode(value int32) Field {
+	return Int32("ocode", value)
+}
+
 // FieldTid 设置链路id
 func FieldTid(value string) Field {
 	return String("tid", value)

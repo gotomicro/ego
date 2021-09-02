@@ -19,6 +19,7 @@ type Config struct {
 	EnableTraceInterceptor     bool          // 是否开启链路追踪，默认开启
 	EnableLocalMainIP          bool          // 自动获取ip地址
 	SlowLogThreshold           time.Duration // 服务慢日志，默认500ms
+	EnableAccessInterceptor    bool          // 是否开启，记录请求数据
 	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
 	EnableTrustedCustomHeader  bool          // 是否开启自定义header头，记录数据往链路后传递，默认不开启
@@ -41,6 +42,7 @@ func DefaultConfig() *Config {
 		Host:                       eflag.String("host"),
 		Port:                       9090,
 		Mode:                       gin.ReleaseMode,
+		EnableAccessInterceptor:    true,
 		EnableTraceInterceptor:     true,
 		EnableMetricInterceptor:    true,
 		SlowLogThreshold:           xtime.Duration("500ms"),
