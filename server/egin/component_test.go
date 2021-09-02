@@ -22,10 +22,11 @@ func TestComponent_buildTLSConfig(t *testing.T) {
 		context.String(200, "success")
 	})
 	go func() {
-		err := server.Start()
-		assert.Nil(t, err)
+		assert.Nil(t, server.Start())
 	}()
-	defer server.Stop()
+	defer func() {
+		_ = server.Stop()
+	}()
 	time.Sleep(10 * time.Millisecond)
 	t.Run("clientAuth", func(t *testing.T) {
 		var c = &http.Client{
@@ -35,10 +36,10 @@ func TestComponent_buildTLSConfig(t *testing.T) {
 				},
 			},
 		}
-		get, err := c.Get("https://127.0.0.1:20000/clientAuth")
-		assert.Nil(t, err)
-		all, err := io.ReadAll(get.Body)
-		assert.Nil(t, err)
+		get, err1 := c.Get("https://127.0.0.1:20000/clientAuth")
+		assert.Nil(t, err1)
+		all, err1 := io.ReadAll(get.Body)
+		assert.Nil(t, err1)
 		assert.Equal(t, "success", string(all))
 	})
 	t.Run("NoClientAuth", func(t *testing.T) {
@@ -47,8 +48,8 @@ func TestComponent_buildTLSConfig(t *testing.T) {
 				return tls.Dial(network, addr, loadConfig(t, false))
 			},
 		}}
-		_, err := c.Get("https://127.0.0.1:20000/clientAuth")
-		assert.NotNil(t, err)
+		_, err2 := c.Get("https://127.0.0.1:20000/clientAuth")
+		assert.NotNil(t, err2)
 	})
 
 }
@@ -73,7 +74,6 @@ func loadConfig(t *testing.T, loadClientCert bool) *tls.Config {
 	assert.True(t, pool.AppendCertsFromPEM(ca))
 	cf := &tls.Config{}
 	cf.RootCAs = pool
-
 	if loadClientCert {
 		serverCert, err := tls.LoadX509KeyPair("./testdata/egoClient/anyClient.pem", "./testdata/egoClient/anyClient-key.pem")
 		assert.Nil(t, err)
