@@ -2,9 +2,12 @@ package egin
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 
@@ -88,7 +91,12 @@ func (c *Component) Start() error {
 	c.mu.Unlock()
 	var err error
 	if c.config.EnableTLS {
-		err = c.Server.ServeTLS(c.listener, c.config.TLSCertFile, c.config.TLSKeyFile)
+		config, errTls := c.buildTLSConfig()
+		if errTls != nil {
+			return errTls
+		}
+		c.Server.TLSConfig = config
+		err = c.Server.ServeTLS(c.listener, "", "")
 	} else {
 		err = c.Server.Serve(c.listener)
 	}
@@ -128,4 +136,27 @@ func (c *Component) Info() *server.ServiceInfo {
 
 func commentUniqKey(method, path string) string {
 	return fmt.Sprintf("%s@%s", strings.ToLower(method), path)
+}
+
+func (c *Component) buildTLSConfig() (*tls.Config, error) {
+	tlsConfig := &tls.Config{}
+	serverCert, err := tls.LoadX509KeyPair(c.config.TLSCertFile, c.config.TLSKeyFile)
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig.Certificates = []tls.Certificate{serverCert}
+	tlsConfig.ClientCAs = x509.NewCertPool()
+	tlsConfig.ClientAuth = c.config.ClientAuthType()
+	clientCAs := c.config.TLSClientCAs
+	for i := range clientCAs {
+		clientCA := clientCAs[i]
+		ca, err := os.ReadFile(clientCA)
+		if err != nil {
+			return nil, fmt.Errorf("read client ca fail:%+v", err)
+		}
+		if !tlsConfig.ClientCAs.AppendCertsFromPEM(ca) {
+			return nil, fmt.Errorf("append client ca fail:%+v", err)
+		}
+	}
+	return tlsConfig, nil
 }

@@ -1,6 +1,7 @@
 package egin
 
 import (
+	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -27,11 +28,13 @@ type Config struct {
 	WebsocketHandshakeTimeout  time.Duration // 握手时间
 	WebsocketReadBufferSize    int
 	WebsocketWriteBufferSize   int
-	EnableWebsocketCompression bool   // 是否开通压缩
-	EnableWebsocketCheckOrigin bool   // 是否支持跨域
-	EnableTLS                  bool   // 是否进入 https 模式
-	TLSCertFile                string // https 证书
-	TLSKeyFile                 string // https 私钥
+	EnableWebsocketCompression bool     // 是否开通压缩
+	EnableWebsocketCheckOrigin bool     // 是否支持跨域
+	EnableTLS                  bool     // 是否进入 https 模式
+	TLSCertFile                string   // https 证书
+	TLSKeyFile                 string   // https 私钥
+	TLSClientAuth              string   //https 客户端认证方式默认为 NoClientCert(NoClientCert,RequestClientCert,RequireAnyClientCert,VerifyClientCertIfGiven,RequireAndVerifyClientCert)
+	TLSClientCAs               []string //https client的ca，当需要双向认证的时候指定可以倒入自签证书
 	blockFallback              func(*gin.Context)
 	resourceExtract            func(*gin.Context) string
 }
@@ -53,4 +56,21 @@ func DefaultConfig() *Config {
 // Address ...
 func (config *Config) Address() string {
 	return fmt.Sprintf("%s:%d", config.Host, config.Port)
+}
+
+func (config *Config) ClientAuthType() tls.ClientAuthType {
+	switch config.TLSClientAuth {
+	case "NoClientCert":
+		return tls.NoClientCert
+	case "RequestClientCert":
+		return tls.RequestClientCert
+	case "RequireAnyClientCert":
+		return tls.RequireAnyClientCert
+	case "VerifyClientCertIfGiven":
+		return tls.VerifyClientCertIfGiven
+	case "RequireAndVerifyClientCert":
+		return tls.RequireAndVerifyClientCert
+	default:
+		return tls.NoClientCert
+	}
 }
