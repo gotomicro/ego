@@ -6,6 +6,8 @@
 [![goproxy.cn](https://goproxy.cn/stats/github.com/gotomicro/ego/badges/download-count.svg)](https://goproxy.cn/stats/github.com/gotomicro/ego)
 [![Release](https://img.shields.io/github/v/release/gotomicro/ego.svg?style=flat-square)](https://github.com/gotomicro/ego)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Example](https://img.shields.io/badge/sample-%E6%A0%B7%E4%BE%8B-2ca5e0?style=flat&logo=appveyor)](https://github.com/gotomicro/ego/tree/master/examples)
+[![Doc](https://img.shields.io/badge/doc-%E6%96%87%E6%A1%A3-2ca5e0?style=flat&logo=appveyor)](https://ego.gocn.vip)
 
 ## 1 帮助文档
 [https://ego.gocn.vip](https://ego.gocn.vip)
@@ -97,13 +99,13 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 
 ## 5 特性介绍
 * 配置驱动
-所有组件启动方式为`组件名称.Load("配置名称").Build()`，可以创建一个组件实例。如以下`http server`，`egin`是组件名称，`server.http`是配置名称
+  所有组件启动方式为`组件名称.Load("配置名称").Build()`，可以创建一个组件实例。如以下`http server`，`egin`是组件名称，`server.http`是配置名称
 ```go
 egin.Load("server.http").Build()
 ```
 * 友好的debug
-通过开启``debug``配置和命令行的``export EGO_DEBUG=true``，
-我们可以在测试环境里看到所有组件的请求里的行号、配置名、请求地址、耗时、请求数据、响应数据
+  通过开启``debug``配置和命令行的``export EGO_DEBUG=true``，
+  我们可以在测试环境里看到所有组件的请求里的行号、配置名、请求地址、耗时、请求数据、响应数据
 
 ![](docs/images/client_grpc1.png)
 ![](docs/images/client-http.png)
@@ -113,29 +115,38 @@ egin.Load("server.http").Build()
 并且使用``Goland``同学，可以直接通过行号点击到对应的代码路径(gRPC、HTTP客户端支持行号)
 
 * 链路
-使用opentrace协议，自动将链路加入到日志里
+  使用opentrace协议，自动将链路加入到日志里
     * gRPC链路
         * 测试代码
-        [gRPC直连查看链路id](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
+          [gRPC直连查看链路id](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
         * 服务端链路信息
-      
-        ![image](docs/images/trace-server-grpc.png)
+
+      ![image](docs/images/trace-server-grpc.png)
         * 客户端链路信息
-      
-        ![image](docs/images/trace-client-grpc.png)
+
+      ![image](docs/images/trace-client-grpc.png)
     * HTTP链路
-      
-        ![](docs/images/trace.png)
+
+      ![](docs/images/trace.png)
 
 * [统一的错误信息](https://ego.gocn.vip/awesome/errors.html)
-  
-* 统一的监控信息      
+
+* 统一的监控信息
 
 ![](docs/images/metric.png)
-    
+
 ## 6 Quick Start
 
 ### 6.1 HelloWorld
+配置
+
+```toml
+[server.http]
+    port = 9001
+    host = "0.0.0.0"
+```
+代码
+
 ```package main
 import (
    "github.com/gin-gonic/gin"
