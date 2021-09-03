@@ -7,7 +7,7 @@ require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
 	github.com/RaMin0/gin-health-check v0.0.0-20180807004848-a677317b3f01
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
-	github.com/alibaba/sentinel-golang v1.0.3 // indirect
+	github.com/alibaba/sentinel-golang v1.0.3
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.4.9
@@ -16,16 +16,16 @@ require (
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/websocket v1.4.2
-	github.com/json-iterator/go v1.1.11 // indirect
+	github.com/iancoleman/strcase v0.2.0
+	github.com/json-iterator/go v1.1.11
 	github.com/mitchellh/mapstructure v1.3.2
-	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/modern-go/reflect2 v1.0.1
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil v3.21.3+incompatible
 	github.com/spf13/cast v1.3.1
 	github.com/stretchr/testify v1.7.0
-	github.com/tklauser/go-sysconf v0.3.6 // indirect
 	github.com/uber/jaeger-client-go v2.23.1+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	go.uber.org/automaxprocs v1.3.0

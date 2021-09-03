@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package biz.v1;
+
+// language-specified package name
+option go_package = "biz/v1;bizv1";
+option java_multiple_files = true;
+option java_outer_classname = "BizProto";
+option java_package = "com.ego.biz.v1";
+
+// 错误定义
+enum Err {
+  // 未知类型
+  // @code=UNKNOWN
+  ERR_INVALID = 0;
+  // 找不到资源
+  // @code=NOT_FOUND
+  ERR_USER_NOT_FOUND = 1;
+  // 客户端参数错误
+  // @code=INVALID_ARGUMENT
+  ERR_CONTENT_MISSING = 2;
+}

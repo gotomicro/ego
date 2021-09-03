@@ -32,7 +32,7 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, opts...)
-		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), http.StatusText(ecode.GrpcToHTTPStatusCode(status.FromContextError(err).Code())))
+		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), http.StatusText(ecode.GrpcToHTTPStatusCode(status.Code(err))))
 		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, name, method, cc.Target())
 		return err
 	}
@@ -155,7 +155,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 
 		err := invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
-		spbStatus := status.FromContextError(err)
+		spbStatus := status.Convert(err)
 		httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
 		fields = append(fields,

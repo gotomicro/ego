@@ -31,7 +31,7 @@ func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info
 	startTime := time.Now()
 	resp, err := handler(ctx, req)
 	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), http.StatusText(ecode.GrpcToHTTPStatusCode(status.FromContextError(err).Code())))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), http.StatusText(ecode.GrpcToHTTPStatusCode(status.Code(err))))
 	return resp, err
 }
 
@@ -39,7 +39,7 @@ func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, in
 	startTime := time.Now()
 	err := handler(srv, ss)
 	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()), http.StatusText(ecode.GrpcToHTTPStatusCode(status.FromContextError(err).Code())))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()), http.StatusText(ecode.GrpcToHTTPStatusCode(status.Code(err))))
 	return err
 }
 
@@ -120,7 +120,7 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 				fields = append(fields, elog.FieldStack(stack))
 				event = "recover"
 			}
-			spbStatus := status.FromContextError(err)
+			spbStatus := status.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
 			fields = append(fields,
@@ -198,7 +198,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				return
 			}
 
-			spbStatus := status.FromContextError(err)
+			spbStatus := status.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
 			fields = append(fields,
