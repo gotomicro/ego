@@ -1,4 +1,4 @@
-module github.com/gotomicro/ego/cmd/protoc-gen-go-errors
+module protoc-gen-go-errors
 
 go 1.16
 
