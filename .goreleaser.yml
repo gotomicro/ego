@@ -1,10 +1,9 @@
 # This is an example .goreleaser.yml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
-before:
-  hooks:
-    - go mod download
 builds:
   - main: ./cmd/protoc-gen-go-errors
+    hooks:
+      pre: go mod download
     env:
       - CGO_ENABLED=0
     goos:
