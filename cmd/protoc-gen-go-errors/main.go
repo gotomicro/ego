@@ -30,14 +30,14 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
-var showVersion = flag.Bool("version", false, "print the version and exit")
+var versionFlag = flag.Bool("version", false, "print the version and exit")
 
-var version string = "1.0.0"
+var version string
 
 func main() {
 	flag.Parse()
-	if *showVersion {
-		fmt.Printf("protoc-gen-go-errors %v\n", version)
+	if *versionFlag {
+		fmt.Printf("Version: %s\n", version)
 		return
 	}
 	var flags flag.FlagSet
