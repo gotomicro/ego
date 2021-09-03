@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package errors;
+
+option go_package = "github.com/gotomicro/ego/eerrors;eerrors";
+option java_multiple_files = true;
+option java_package = "com.github.gotomicro.eerrors";
+
+message EgoError {
+  int32 code = 1;
+  string reason = 2;
+  string msg = 3;
+  map<string, string> metadata = 4;
+};

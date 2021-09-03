@@ -33,11 +33,11 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 		err := invoker(ctx, method, req, reply, cc, opts...)
 
 		// 收敛err错误，将err过滤后，可以知道err是否为系统错误码
-		spbStatus := ecode.ExtractCodes(err)
+		st := status.Convert(err)
 		// 只记录系统级别错误
-		if spbStatus.Code() < ecode.EcodeNum {
+		if st.Code() < ecode.EcodeNum {
 			// 只记录系统级别的详细错误码
-			emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), spbStatus.Message())
+			emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), st.Message())
 			emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, name, method, cc.Target())
 		} else {
 			emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), "biz error")
@@ -164,12 +164,11 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 
 		err := invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
-		spbStatus := ecode.ExtractCodes(err)
-
+		st := status.Convert(err)
 		fields = append(fields,
 			elog.FieldType("unary"),
-			elog.FieldCode(int32(spbStatus.Code())),
-			elog.FieldDescription(spbStatus.Message()),
+			elog.FieldCode(int32(st.Code())),
+			elog.FieldDescription(st.Message()),
 			elog.FieldMethod(method),
 			elog.FieldCost(cost),
 			elog.FieldName(cc.Target()),
@@ -194,7 +193,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		if err != nil {
 			fields = append(fields, elog.FieldEvent("error"), elog.FieldErr(err))
 			// 只记录系统级别错误
-			if spbStatus.Code() < ecode.EcodeNum {
+			if st.Code() < ecode.EcodeNum {
 				// 只记录系统级别错误
 				_logger.Error("access", fields...)
 				return err

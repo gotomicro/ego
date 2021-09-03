@@ -30,13 +30,13 @@ import (
 func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	startTime := time.Now()
 	resp, err := handler(ctx, req)
-	code := ecode.ExtractCodes(err)
+	st := status.Convert(err)
 	// 收敛err错误，将err过滤后，可以知道err是否为系统错误码
 	// 只记录系统级别错误
-	if code.Code() < ecode.EcodeNum {
+	if st.Code() < ecode.EcodeNum {
 		// 只记录系统级别的详细错误码
 		emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
-		emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), code.Message())
+		emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), st.Message())
 	} else {
 		emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
 		emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), "biz error")
@@ -48,9 +48,9 @@ func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info
 func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	startTime := time.Now()
 	err := handler(srv, ss)
-	code := ecode.ExtractCodes(err)
+	st := status.Convert(err)
 	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()), code.Message())
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()), st.Message())
 	return err
 }
 
@@ -139,7 +139,7 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 
 			fields = append(fields,
 				elog.FieldType("stream"),
-				elog.FieldCode(int32(ecode.ExtractCodes(err).Code())),
+				elog.FieldCode(int32(status.Convert(err).Code())),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
 				elog.FieldPeerName(getPeerName(stream.Context())),
@@ -195,7 +195,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 
 			fields = append(fields,
 				elog.FieldType("unary"),
-				elog.FieldCode(int32(ecode.ExtractCodes(err).Code())),
+				elog.FieldCode(int32(status.Convert(err).Code())),
 				elog.FieldEvent(event),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
