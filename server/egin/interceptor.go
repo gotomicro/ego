@@ -166,13 +166,15 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 				logger.Error("access", fields...)
 				return
 			}
-
-			fields = append(fields,
-				elog.FieldEvent(event),
-				elog.FieldErrAny(c.Errors.ByType(gin.ErrorTypePrivate).String()),
-				elog.FieldCode(int32(c.Writer.Status())),
-			)
-			logger.Info("access", fields...)
+			// todo 如果不记录日志的时候，应该早点return
+			if config.EnableAccessInterceptor {
+				fields = append(fields,
+					elog.FieldEvent(event),
+					elog.FieldErrAny(c.Errors.ByType(gin.ErrorTypePrivate).String()),
+					elog.FieldCode(int32(c.Writer.Status())),
+				)
+				logger.Info("access", fields...)
+			}
 		}()
 		c.Next()
 	}

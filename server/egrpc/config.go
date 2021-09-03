@@ -21,6 +21,7 @@ type Config struct {
 	EnableMetricInterceptor    bool          // 是否开启监控，默认开启
 	EnableTraceInterceptor     bool          // 是否开启链路追踪，默认开启
 	SlowLogThreshold           time.Duration // 服务慢日志，默认500ms
+	EnableAccessInterceptor    bool          // 是否开启，记录请求数据
 	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
 	EnableLocalMainIP          bool          // 自动获取ip地址
@@ -40,6 +41,7 @@ func DefaultConfig() *Config {
 		EnableMetricInterceptor:    true,
 		EnableTraceInterceptor:     true,
 		SlowLogThreshold:           xtime.Duration("500ms"),
+		EnableAccessInterceptor:    true,
 		EnableAccessInterceptorReq: false,
 		EnableAccessInterceptorRes: false,
 		serverOptions:              []grpc.ServerOption{},

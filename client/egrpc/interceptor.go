@@ -5,7 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
+
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/transport"
+	"github.com/gotomicro/ego/core/util/xdebug"
+	"github.com/gotomicro/ego/core/util/xstring"
+	"github.com/gotomicro/ego/internal/ecode"
+	"github.com/gotomicro/ego/internal/tools"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -14,16 +25,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
-
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/ecode"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/emetric"
-	"github.com/gotomicro/ego/core/etrace"
-	"github.com/gotomicro/ego/core/transport"
-	"github.com/gotomicro/ego/core/util/xdebug"
-	"github.com/gotomicro/ego/core/util/xstring"
-	"github.com/gotomicro/ego/internal/tools"
 )
 
 // metricUnaryClientInterceptor returns grpc unary request metrics collector interceptor
@@ -31,18 +32,8 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, opts...)
-
-		// 收敛err错误，将err过滤后，可以知道err是否为系统错误码
-		st := status.Convert(err)
-		// 只记录系统级别错误
-		if st.Code() < ecode.EcodeNum {
-			// 只记录系统级别的详细错误码
-			emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), st.Message())
-			emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, name, method, cc.Target())
-		} else {
-			emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), "biz error")
-			emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, name, method, cc.Target())
-		}
+		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), http.StatusText(ecode.GrpcToHTTPStatusCode(status.Code(err))))
+		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, name, method, cc.Target())
 		return err
 	}
 }
@@ -152,7 +143,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
 		loggerKeys := transport.CustomContextKeys()
-		var fields = make([]elog.Field, 0, 20+len(loggerKeys))
+		var fields = make([]elog.Field, 0, 20+transport.CustomContextKeysLength())
 
 		for _, key := range loggerKeys {
 			if value := tools.ContextValue(ctx, key); value != "" {
@@ -164,11 +155,14 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 
 		err := invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
-		st := status.Convert(err)
+		spbStatus := status.Convert(err)
+		httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
+
 		fields = append(fields,
 			elog.FieldType("unary"),
-			elog.FieldCode(int32(st.Code())),
-			elog.FieldDescription(st.Message()),
+			elog.FieldCode(int32(httpStatusCode)),
+			elog.FieldOriginCode(int32(spbStatus.Code())),
+			elog.FieldDescription(spbStatus.Message()),
 			elog.FieldMethod(method),
 			elog.FieldCost(cost),
 			elog.FieldName(cc.Target()),
@@ -193,7 +187,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		if err != nil {
 			fields = append(fields, elog.FieldEvent("error"), elog.FieldErr(err))
 			// 只记录系统级别错误
-			if st.Code() < ecode.EcodeNum {
+			if httpStatusCode >= http.StatusInternalServerError {
 				// 只记录系统级别错误
 				_logger.Error("access", fields...)
 				return err
