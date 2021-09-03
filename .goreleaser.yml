@@ -11,6 +11,7 @@ builds:
       - linux
       - windows
       - darwin
+    binary: protoc-gen-go-errors
     ldflags:
       - -s -w -X main.version={{.Version}}
 archives:
