@@ -15,7 +15,8 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Version}}
 archives:
-  - replacements:
+  - name_template: "protoc-gen-go-errors-{{ .Os }}-{{ .Arch }}"
+    replacements:
       darwin: Darwin
       linux: Linux
       windows: Windows
