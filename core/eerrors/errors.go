@@ -15,6 +15,7 @@ import (
 type Error interface {
 	error
 	WithMetadata(map[string]string) Error
+	WithMessage(string) Error
 }
 
 const (
@@ -35,12 +36,12 @@ func Register(egoError *EgoError) {
 }
 
 func (x *EgoError) Error() string {
-	return fmt.Sprintf("error: code = %d reason = %s message = %s metadata = %v", x.Code, x.Reason, x.Msg, x.Metadata)
+	return fmt.Sprintf("error: code = %d reason = %s message = %s metadata = %v", x.Code, x.Reason, x.Message, x.Metadata)
 }
 
 // GRPCStatus returns the Status represented by se.
 func (x *EgoError) GRPCStatus() *status.Status {
-	s, _ := status.New(codes.Code(x.Code), x.Msg).
+	s, _ := status.New(codes.Code(x.Code), x.Message).
 		WithDetails(&errdetails.ErrorInfo{
 			Reason:   x.Reason,
 			Metadata: x.Metadata,
@@ -55,12 +56,19 @@ func (x *EgoError) WithMetadata(md map[string]string) Error {
 	return err
 }
 
+// WithMessage set message to current EgoError
+func (x *EgoError) WithMessage(msg string) Error {
+	err := proto.Clone(x).(*EgoError)
+	err.Message = msg
+	return err
+}
+
 // New returns an error object for the code, message.
 func New(code int, reason, message string) *EgoError {
 	return &EgoError{
-		Code:   int32(code),
-		Msg:    message,
-		Reason: reason,
+		Code:    int32(code),
+		Message: message,
+		Reason:  reason,
 	}
 }
 

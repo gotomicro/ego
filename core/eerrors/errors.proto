@@ -9,6 +9,6 @@ option java_package = "com.github.gotomicro.eerrors";
 message EgoError {
   int32 code = 1;
   string reason = 2;
-  string msg = 3;
+  string message = 3;
   map<string, string> metadata = 4;
 };
