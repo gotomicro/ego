@@ -15,6 +15,7 @@ import (
 type Error interface {
 	error
 	WithMetadata(map[string]string) Error
+	WithMsg(string) Error
 }
 
 const (
@@ -52,6 +53,13 @@ func (x *EgoError) GRPCStatus() *status.Status {
 func (x *EgoError) WithMetadata(md map[string]string) Error {
 	err := proto.Clone(x).(*EgoError)
 	err.Metadata = md
+	return err
+}
+
+// WithMsg set message to current EgoError
+func (x *EgoError) WithMsg(msg string) Error {
+	err := proto.Clone(x).(*EgoError)
+	err.Msg = msg
 	return err
 }
 
