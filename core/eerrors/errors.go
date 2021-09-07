@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gotomicro/ego/internal/ecode"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -70,6 +71,11 @@ func New(code int, reason, message string) *EgoError {
 		Message: message,
 		Reason:  reason,
 	}
+}
+
+// ToHTTPStatusCode Get equivalent HTTP status code from x.Code
+func (x *EgoError) ToHTTPStatusCode() int {
+	return ecode.GrpcToHTTPStatusCode(codes.Code(x.Code))
 }
 
 // FromError try to convert an error to *Error.
