@@ -147,7 +147,8 @@ egin.Load("server.http").Build()
 ```
 代码
 
-```package main
+```go
+package main
 import (
    "github.com/gin-gonic/gin"
    "github.com/gotomicro/ego"

@@ -13,6 +13,7 @@ import (
 
 //go:generate protoc -I. --go_out=paths=source_relative:. errors.proto
 
+// Error 错误接口
 type Error interface {
 	error
 	WithMetadata(map[string]string) Error
@@ -32,6 +33,7 @@ type errKey string
 
 var errs = map[errKey]*EgoError{}
 
+// Register 注册错误信息
 func Register(egoError *EgoError) {
 	errs[errKey(egoError.Reason)] = egoError
 }

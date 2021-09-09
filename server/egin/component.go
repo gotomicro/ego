@@ -91,9 +91,9 @@ func (c *Component) Start() error {
 	c.mu.Unlock()
 	var err error
 	if c.config.EnableTLS {
-		config, errTls := c.buildTLSConfig()
-		if errTls != nil {
-			return errTls
+		config, errTLS := c.buildTLSConfig()
+		if errTLS != nil {
+			return errTLS
 		}
 		c.Server.TLSConfig = config
 		err = c.Server.ServeTLS(c.listener, "", "")

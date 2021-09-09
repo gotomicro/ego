@@ -58,6 +58,7 @@ func (config *Config) Address() string {
 	return fmt.Sprintf("%s:%d", config.Host, config.Port)
 }
 
+// ClientAuthType 客户端auth类型
 func (config *Config) ClientAuthType() tls.ClientAuthType {
 	switch config.TLSClientAuth {
 	case "NoClientCert":

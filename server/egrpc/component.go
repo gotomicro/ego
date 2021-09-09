@@ -4,14 +4,14 @@ import (
 	"context"
 	"net"
 
+	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
-
-	"github.com/gotomicro/ego/core/constant"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/server"
+	"google.golang.org/grpc/test/bufconn"
 )
 
 // PackageName 包名
@@ -56,7 +56,18 @@ func (c *Component) PackageName() string {
 
 // Init 初始化
 func (c *Component) Init() error {
-	listener, err := net.Listen(c.config.Network, c.config.Address())
+	var (
+		listener net.Listener
+		err      error
+	)
+	// gRPC测试listener
+	if c.config.Network == "bufnet" {
+		listener = bufconn.Listen(1024 * 1024)
+		c.listener = listener
+		return nil
+	}
+	// 正式listener
+	listener, err = net.Listen(c.config.Network, c.config.Address())
 	if err != nil {
 		c.logger.Panic("new grpc server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
 	}
@@ -111,4 +122,9 @@ func (c *Component) Info() *server.ServiceInfo {
 // Address 服务地址
 func (c *Component) Address() string {
 	return c.config.Address()
+}
+
+// Listener listener信息
+func (c *Component) Listener() net.Listener {
+	return c.listener
 }
