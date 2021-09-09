@@ -68,5 +68,5 @@ func (e *errorWrapper) execute() string {
 	if err := tmpl.Execute(buf, e); err != nil {
 		panic(err)
 	}
-	return string(buf.Bytes())
+	return buf.String()
 }

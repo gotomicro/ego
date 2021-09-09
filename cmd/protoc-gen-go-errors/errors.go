@@ -63,7 +63,7 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	index := 0
 	for _, enum := range file.Enums {
 		skip := genErrorsReason(gen, file, g, enum)
-		if skip == false {
+		if !skip {
 			index++
 		}
 	}
@@ -96,7 +96,7 @@ func genErrorsReason(gen *protogen.Plugin, file *protogen.File, g *protogen.Gene
 	var ew errorWrapper
 	for _, v := range enum.Values {
 		annos := getAnnotations(string(v.Comments.Leading))
-		eCode, _ := annos["code"]
+		eCode := annos["code"]
 		desc := string(v.Desc.Name())
 		err := &errorInfo{
 			Name:            string(enum.Desc.Name()),
