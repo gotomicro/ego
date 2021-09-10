@@ -34,7 +34,7 @@ type Greeter struct {
 }
 
 // SayHello ...
-func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
+func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
 	if request.Name == "error" {
 		return nil, status.Error(codes.Unavailable, "error")
 	}
@@ -43,7 +43,7 @@ func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequ
 	if err != nil {
 		return nil, fmt.Errorf("set header fail, %w", err)
 	}
-	return &helloworld.HelloReply{
+	return &helloworld.HelloResponse{
 		Message: "Hello EGO, I'm " + g.server.Address(),
 	}, nil
 }
