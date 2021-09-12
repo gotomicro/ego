@@ -30,14 +30,14 @@ func main() {
 
 type GreeterMock struct{}
 
-func (mock GreeterMock) SayHelloOK(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
-	return &helloworld.HelloReply{
+func (mock GreeterMock) SayHelloOK(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+	return &helloworld.HelloResponse{
 		Message: "hello",
 	}, nil
 }
 
-func (mock GreeterMock) SayHelloErr(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
-	return &helloworld.HelloReply{
+func (mock GreeterMock) SayHelloErr(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+	return &helloworld.HelloResponse{
 		Message: "hello",
 	}, fmt.Errorf("say hello err")
 }

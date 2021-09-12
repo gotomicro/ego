@@ -11,8 +11,8 @@ import (
 
 type GreeterMock struct{}
 
-func (mock GreeterMock) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
-	return &helloworld.HelloReply{
+func (mock GreeterMock) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+	return &helloworld.HelloResponse{
 		Message: "hello",
 	}, nil
 }
