@@ -32,6 +32,8 @@ builds:
       - -s -w -X main.version={{.Version}}
 archives:
   - id: protoc-gen-go-errors
+    builds:
+      -  protoc-gen-go-errors
     name_template: "protoc-gen-go-errors-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     replacements:
       darwin: Darwin
@@ -40,6 +42,8 @@ archives:
       386: i386
       amd64: x86_64
   - id: protoc-gen-go-test
+    builds:
+      - protoc-gen-go-test
     name_template: "protoc-gen-go-test-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     replacements:
       darwin: Darwin
