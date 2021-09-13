@@ -3,15 +3,15 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/proto"
 	"github.com/gotomicro/ego/server/egrpc"
-	"net"
 	"testing"
-	"context"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/test/bufconn"
-	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 	cegrpc "github.com/gotomicro/ego/client/egrpc"
+	"net"
+	"context"
+	"google.golang.org/grpc"
 	helloworld "github.com/gotomicro/ego/examples/helloworld"
 )
 

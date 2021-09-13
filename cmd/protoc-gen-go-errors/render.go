@@ -62,8 +62,7 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	g.P()
 	index := 0
 	for _, enum := range file.Enums {
-		skip := genErrorsReason(gen, file, g, enum)
-		if !skip {
+		if !generationErrorsSection(gen, file, g, enum) {
 			index++
 		}
 	}
@@ -73,26 +72,7 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	}
 }
 
-var commentRgx, _ = regexp.Compile(`@(\w+)=(\w+)`)
-
-type annotation struct {
-	name string
-	val  string
-}
-
-func getAnnotations(comment string) map[string]annotation {
-	matches := commentRgx.FindAllStringSubmatch(comment, -1)
-	annotations := make(map[string]annotation)
-	for _, v := range matches {
-		annotations[v[1]] = annotation{
-			name: v[1],
-			val:  v[2],
-		}
-	}
-	return annotations
-}
-
-func genErrorsReason(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, enum *protogen.Enum) bool {
+func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, enum *protogen.Enum) bool {
 	var ew errorWrapper
 	for _, v := range enum.Values {
 		annos := getAnnotations(string(v.Comments.Leading))
@@ -113,4 +93,23 @@ func genErrorsReason(gen *protogen.Plugin, file *protogen.File, g *protogen.Gene
 	}
 	g.P(ew.execute())
 	return false
+}
+
+var commentRgx, _ = regexp.Compile(`@(\w+)=(\w+)`)
+
+type annotation struct {
+	name string
+	val  string
+}
+
+func getAnnotations(comment string) map[string]annotation {
+	matches := commentRgx.FindAllStringSubmatch(comment, -1)
+	annotations := make(map[string]annotation)
+	for _, v := range matches {
+		annotations[v[1]] = annotation{
+			name: v[1],
+			val:  v[2],
+		}
+	}
+	return annotations
 }

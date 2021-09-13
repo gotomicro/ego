@@ -43,18 +43,17 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	g.P()
 	index := 0
 	for _, svc := range file.Services {
-		skip := genTest(gen, file, g, svc)
-		if skip == false {
+		if generateTestSection(gen, file, g, svc) == false {
 			index++
 		}
 	}
-	// If all enums do not contain 'errors.code', the current file is skipped
+	// If all enums do not contain 'service', the current file is skipped
 	if index == 0 {
 		g.Skip()
 	}
 }
 
-func genTest(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, svc *protogen.Service) bool {
+func generateTestSection(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, svc *protogen.Service) bool {
 	var w svcWrapper
 	for _, method := range svc.Methods {
 		method.Desc.IsStreamingServer()

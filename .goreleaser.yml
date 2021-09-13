@@ -9,9 +9,23 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
     binary: protoc-gen-go-errors
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+  - main: ./cmd/protoc-gen-go-test
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    binary: protoc-gen-go-test
     ldflags:
       - -s -w -X main.version={{.Version}}
 archives:
