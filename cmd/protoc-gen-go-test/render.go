@@ -43,7 +43,7 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	g.P()
 	index := 0
 	for _, svc := range file.Services {
-		if generateTestSection(gen, file, g, svc) == false {
+		if !generateTestSection(gen, file, g, svc) {
 			index++
 		}
 	}
