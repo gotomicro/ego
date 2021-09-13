@@ -5,13 +5,29 @@ before:
     - go mod download
 builds:
   - main: ./cmd/protoc-gen-go-errors
+    id: "protoc-gen-go-errors"
     env:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
     binary: protoc-gen-go-errors
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+  - main: ./cmd/protoc-gen-go-test
+    id: "protoc-gen-go-test"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    binary: protoc-gen-go-test
     ldflags:
       - -s -w -X main.version={{.Version}}
 archives:
