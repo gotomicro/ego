@@ -140,10 +140,6 @@ func (w *svcWrapper) execute() string {
 	buf := new(bytes.Buffer)
 
 	tpl := template.New("test")
-	err := template.Must(tpl.Parse(baseTpl)).Execute(buf, nil)
-	if err != nil {
-		log.Fatal("render tmpl fail", err)
-	}
 	for _, svc := range w.Svcs {
 		err := template.Must(tpl.Parse(svc.tmpl())).Execute(buf, svc)
 		if err != nil {
