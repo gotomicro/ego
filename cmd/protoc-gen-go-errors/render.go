@@ -62,8 +62,7 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	g.P()
 	index := 0
 	for _, enum := range file.Enums {
-		skip := genErrorsReason(gen, file, g, enum)
-		if skip == false {
+		if !generationErrorsSection(gen, file, g, enum) {
 			index++
 		}
 	}
@@ -71,6 +70,29 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	if index == 0 {
 		g.Skip()
 	}
+}
+
+func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, enum *protogen.Enum) bool {
+	var ew errorWrapper
+	for _, v := range enum.Values {
+		annos := getAnnotations(string(v.Comments.Leading))
+		eCode := annos["code"]
+		desc := string(v.Desc.Name())
+		err := &errorInfo{
+			Name:            string(enum.Desc.Name()),
+			Value:           desc,
+			UpperCamelValue: strcase.ToCamel(strings.ToLower(desc)),
+			LowerCamelValue: strcase.ToLowerCamel(strings.ToLower(desc)),
+			Code:            strcase.ToCamel(strings.ToLower(eCode.val)),
+			Key:             string(v.Desc.FullName()),
+		}
+		ew.Errors = append(ew.Errors, err)
+	}
+	if len(ew.Errors) == 0 {
+		return true
+	}
+	g.P(ew.execute())
+	return false
 }
 
 var commentRgx, _ = regexp.Compile(`@(\w+)=(\w+)`)
@@ -90,27 +112,4 @@ func getAnnotations(comment string) map[string]annotation {
 		}
 	}
 	return annotations
-}
-
-func genErrorsReason(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, enum *protogen.Enum) bool {
-	var ew errorWrapper
-	for _, v := range enum.Values {
-		annos := getAnnotations(string(v.Comments.Leading))
-		eCode, _ := annos["code"]
-		desc := string(v.Desc.Name())
-		err := &errorInfo{
-			Name:            string(enum.Desc.Name()),
-			Value:           desc,
-			UpperCamelValue: strcase.ToCamel(strings.ToLower(desc)),
-			LowerCamelValue: strcase.ToLowerCamel(strings.ToLower(desc)),
-			Code:            strcase.ToCamel(strings.ToLower(eCode.val)),
-			Key:             string(v.Desc.FullName()),
-		}
-		ew.Errors = append(ew.Errors, err)
-	}
-	if len(ew.Errors) == 0 {
-		return true
-	}
-	g.P(ew.execute())
-	return false
 }

@@ -25,9 +25,11 @@ package main
 import (
 	"bytes"
 	"text/template"
+
+	"github.com/gotomicro/ego/internal/tools"
 )
 
-var errorsTemplate = `
+const errorsTpl = `
 {{ range .Errors }}
 var {{.LowerCamelValue}} *eerrors.EgoError
 {{- end }}
@@ -61,12 +63,12 @@ type errorWrapper struct {
 
 func (e *errorWrapper) execute() string {
 	buf := new(bytes.Buffer)
-	tmpl, err := template.New("errors").Parse(errorsTemplate)
+	tmpl, err := template.New("errors").Parse(errorsTpl)
 	if err != nil {
 		panic(err)
 	}
 	if err := tmpl.Execute(buf, e); err != nil {
 		panic(err)
 	}
-	return string(buf.Bytes())
+	return string(tools.GoFmt(buf.Bytes()))
 }
