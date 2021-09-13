@@ -4,8 +4,8 @@ before:
   hooks:
     - go mod download
 builds:
-  - main: ./cmd/protoc-gen-go-errors
-    id: "protoc-gen-go-errors"
+  - id: protoc-gen-go-errors
+    main: ./cmd/protoc-gen-go-errors
     env:
       - CGO_ENABLED=0
     goos:
@@ -17,8 +17,8 @@ builds:
     binary: protoc-gen-go-errors
     ldflags:
       - -s -w -X main.version={{.Version}}
-  - main: ./cmd/protoc-gen-go-test
-    id: "protoc-gen-go-test"
+  - id: protoc-gen-go-test
+    main: ./cmd/protoc-gen-go-test
     env:
       - CGO_ENABLED=0
     goos:
@@ -31,7 +31,20 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Version}}
 archives:
-  - name_template: "protoc-gen-go-errors-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+  - id: protoc-gen-go-errors
+    builds:
+      -  protoc-gen-go-errors
+    name_template: "protoc-gen-go-errors-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+  - id: protoc-gen-go-test
+    builds:
+      - protoc-gen-go-test
+    name_template: "protoc-gen-go-test-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     replacements:
       darwin: Darwin
       linux: Linux
