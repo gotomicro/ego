@@ -16,10 +16,12 @@ import (
 var importTestPackages = map[string]string{
 	"testing":                               "",
 	"context":                               "",
+	"errors":                                "",
 	"github.com/stretchr/testify/assert":    "",
 	"google.golang.org/grpc":                "",
 	"google.golang.org/protobuf/proto":      "",
 	"github.com/gotomicro/ego/client/egrpc": "cegrpc",
+	"github.com/gotomicro/ego/core/eerrors": "",
 }
 
 var importInitTestPackages = map[string]string{
