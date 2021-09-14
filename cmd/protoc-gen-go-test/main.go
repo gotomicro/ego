@@ -3,9 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
 
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
@@ -20,32 +24,63 @@ func main() {
 		return
 	}
 	var (
-		flags flag.FlagSet
-		out   = flags.String("out", "", "specified output directory name")
-		mod   = flags.String("mod", "", "specified pb stub code module path")
+		flags   flag.FlagSet
+		outFlag = flags.String("out", "", "specified output directory name")
+		modFlag = flags.String("mod", "", "specified pb stub code module path")
 	)
-	protogen.Options{
-		ParamFunc: flags.Set,
-	}.Run(func(gen *protogen.Plugin) error {
-		gen.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
-		var outDir string
-		if *out != "" {
-			outDir = *out
+	if len(os.Args) > 1 {
+		exit(fmt.Errorf("unknown argument %q (this program should be run by protoc, not directly)", os.Args[1]))
+	}
+	in, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		exit(err)
+	}
+
+	req := &pluginpb.CodeGeneratorRequest{}
+	if err := proto.Unmarshal(in, req); err != nil {
+		exit(err)
+	}
+
+	gen, err := protogen.Options{ParamFunc: flags.Set}.New(req)
+	if err != nil {
+		exit(err)
+	}
+
+	if err := run(gen, outFlag, modFlag); err != nil {
+		gen.Error(err)
+	}
+	resp := gen.Response()
+	out, err := proto.Marshal(resp)
+	if err != nil {
+		exit(err)
+	}
+	if _, err := os.Stdout.Write(out); err != nil {
+		exit(err)
+	}
+}
+
+func run(gen *protogen.Plugin, outFlag *string, modFlag *string) error {
+	gfs := make([]*protogen.GeneratedFile, 0, len(gen.Files))
+	gen.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
+	if err := checkOut(*outFlag); err != nil {
+		return err
+	}
+	g, err := generateInitFile(gen, nil, *outFlag, *modFlag)
+	if err != nil {
+		return fmt.Errorf("generate init test file fail, %w", err)
+	}
+	gfs = append(gfs, g)
+	for _, f := range gen.Files {
+		if !f.Generate {
+			continue
 		}
-		if err := checkOut(outDir); err != nil {
-			return err
+		g, err := generateFile(gen, f, *outFlag, *modFlag)
+		if err != nil {
+			return fmt.Errorf("generate test file fail, %w", err)
 		}
-		generateInitFile(gen, *out, *mod)
-		for _, f := range gen.Files {
-			if !f.Generate {
-				continue
-			}
-			if _, err := generateFile(gen, f, *out, *mod); err != nil {
-				return fmt.Errorf("generate file fail, %w", err)
-			}
-		}
-		return nil
-	})
+		gfs = append(gfs, g)
+	}
+	return nil
 }
 
 func checkOut(out string) error {
@@ -57,4 +92,11 @@ func checkOut(out string) error {
 		return fmt.Errorf("out parameter is not a directory, %w", err)
 	}
 	return nil
+}
+
+func exit(err error) {
+	if _, err := fmt.Fprintf(os.Stderr, "%s: %v\n", filepath.Base(os.Args[0]), err); err != nil {
+		log.Println("fprintf fail, %w", err)
+	}
+	os.Exit(1)
 }

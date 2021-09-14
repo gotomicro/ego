@@ -9,6 +9,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/alibaba/sentinel-golang v1.0.3
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
+	github.com/dave/dst v0.26.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gin-gonic/gin v1.7.1
