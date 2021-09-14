@@ -6,3 +6,4 @@ node_modules
 .vscode
 yarn.lock
 package-lock.json
+.DS_Store
