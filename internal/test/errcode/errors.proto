@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package errcode;
+
+option go_package = "errcode;errcode";
+
+// 错误
+enum Error {
+  // 未知类型
+  // @code=UNKNOWN
+  ERR_UNKNOWN = 0;
+  // 参数错误
+  // @code=INVALID_ARGUMENT
+  ERR_INVALID_ARGUMENT = 1;
+  // 找不到资源
+  // @code=NOT_FOUND
+  ERR_NOT_FOUND = 2;
+  // db错误
+  // @code=INTERNAL
+  ERR_DB_ERROR = 3;
+}

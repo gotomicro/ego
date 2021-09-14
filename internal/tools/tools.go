@@ -53,6 +53,7 @@ func ToSliceStringMap(i interface{}) []map[string]interface{} {
 	}
 }
 
+// GoFmt 格式化Go
 func GoFmt(buf []byte) []byte {
 	formatted, err := format.Source(buf)
 	if err != nil {
