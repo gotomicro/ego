@@ -114,11 +114,10 @@ func FromError(err error) *EgoError {
 
 // PrintEgoErrLog ...
 func PrintEgoErrLog(msg string, err error) {
-	switch err.(type) {
+	switch e := err.(type) {
 	case *EgoError:
-		egoErr := err.(*EgoError)
-		elog.Error(egoErr.GetMessage(), zap.Any("meta", egoErr.GetMetadata()))
+		elog.Error(e.GetMessage(), zap.Any("meta", e.GetMetadata()))
 	default:
-		elog.Error(msg, zap.Error(err))
+		elog.Error(msg, zap.Error(e))
 	}
 }
