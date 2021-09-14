@@ -37,24 +37,27 @@ func Test{{.Name}}(t *testing.T) {
 	cli := {{.Package}}.New{{.Service.Name}}Client(cegrpc.DefaultContainer().Build(cegrpc.WithDialOption(grpc.WithContextDialer(bufDialer))).ClientConn)
     ctx := context.Background()
 	tests := []struct {
+		name string
 		req *{{.Package}}.{{.InType}}
 		wantRes *{{.Package}}.{{.OutType}}
 		wantErr error
 	}{
 		// TODO: Add or modify test cases.
-		{&{{.Package}}.{{.InType}}{}, &{{.Package}}.{{.OutType}}{}, nil},
+		{"DefaultCase", &{{.Package}}.{{.InType}}{}, &{{.Package}}.{{.OutType}}{}, nil},
 	}
 
 	for _, tt := range tests {
-		stream, err := cli.{{.Name}}(ctx)
-		assert.NoError(t, err)
-		err = stream.Send(tt.req)
-		assert.NoError(t, err)
+		t.Run(tt.name, func(t *testing.T) {
+			stream, err := cli.{{.Name}}(ctx)
+			assert.NoError(t, err)
+			err = stream.Send(tt.req)
+			assert.NoError(t, err)
 
-		res, err := stream.Recv()
-		assert.True(t, errors.Is(eerrors.FromError(err), tt.wantErr))
-		assert.True(t, proto.Equal(tt.wantRes, res))
-		t.Logf("res: %+v", res)
+			res, err := stream.Recv()
+			assert.True(t, errors.Is(eerrors.FromError(err), tt.wantErr))
+			assert.True(t, proto.Equal(tt.wantRes, res))
+			t.Logf("res: %+v", res)
+		})
 	}
 }
 
@@ -67,20 +70,23 @@ func Test{{.Name}}(t *testing.T) {
 	cli := {{.Package}}.New{{.Service.Name}}Client(cegrpc.DefaultContainer().Build(cegrpc.WithDialOption(grpc.WithContextDialer(bufDialer))).ClientConn)
     ctx := context.Background()
 	tests := []struct {
+		name string
 		req *{{.Package}}.{{.InType}}
 		wantRes *{{.Package}}.{{.OutType}}
 		wantErr error
 	}{
 		// TODO: Add or modify test cases.
-		{&{{.Package}}.{{.InType}}{}, &{{.Package}}.{{.OutType}}{}, nil},
+		{"DefaultCase", &{{.Package}}.{{.InType}}{}, &{{.Package}}.{{.OutType}}{}, nil},
 	}
 
 	for _, tt := range tests {
-		stream, err := cli.{{.Name}}(ctx, tt.req)
-		res, err := stream.Recv()
-		assert.True(t, errors.Is(eerrors.FromError(err), tt.wantErr))
-		assert.True(t, proto.Equal(tt.wantRes, res))
-		t.Logf("res: %+v", res)
+		t.Run(tt.name, func(t *testing.T) {
+			stream, err := cli.{{.Name}}(ctx, tt.req)
+			res, err := stream.Recv()
+			assert.True(t, errors.Is(eerrors.FromError(err), tt.wantErr))
+			assert.True(t, proto.Equal(tt.wantRes, res))
+			t.Logf("res: %+v", res)
+		})
 	}
 }
 
@@ -97,21 +103,24 @@ func Test{{.Name}}(t *testing.T) {
     assert.NoError(t, err)
 
 	tests := []struct {
+		name string
 		req *{{.Package}}.{{.InType}}
 		wantRes *{{.Package}}.{{.OutType}}
 		wantErr error
 	}{
 		// TODO: Add or modify test cases.
-		{&{{.Package}}.{{.InType}}{}, &{{.Package}}.{{.OutType}}{}, nil},
+		{"DefaultCase", &{{.Package}}.{{.InType}}{}, &{{.Package}}.{{.OutType}}{}, nil},
 	}
 
 	for _, tt := range tests {
-		err = stream.Send(tt.req)
-		assert.NoError(t, err)
-		res, err := stream.CloseAndRecv()
-		assert.True(t, errors.Is(eerrors.FromError(err), tt.wantErr))
-		assert.True(t, proto.Equal(tt.wantRes, res))
-		t.Logf("res: %+v", res)
+		t.Run(tt.name, func(t *testing.T) {
+			err = stream.Send(tt.req)
+			assert.NoError(t, err)
+			res, err := stream.CloseAndRecv()
+			assert.True(t, errors.Is(eerrors.FromError(err), tt.wantErr))
+			assert.True(t, proto.Equal(tt.wantRes, res))
+			t.Logf("res: %+v", res)
+		})
 	}
 }
 
@@ -124,19 +133,22 @@ func Test{{.Name}}(t *testing.T) {
 	cli := {{.Package}}.New{{.Service.Name}}Client(cegrpc.DefaultContainer().Build(cegrpc.WithDialOption(grpc.WithContextDialer(bufDialer))).ClientConn)
     ctx := context.Background()
 	tests := []struct {
+		name string
 		req *{{.Package}}.{{.InType}}
 		wantRes *{{.Package}}.{{.OutType}}
 		wantErr error
 	}{
 		// TODO: Add or modify test cases.
-		{&{{.Package}}.{{.InType}}{}, &{{.Package}}.{{.OutType}}{}, nil},
+		{"DefaultCase", &{{.Package}}.{{.InType}}{}, &{{.Package}}.{{.OutType}}{}, nil},
 	}
 
 	for _, tt := range tests {
-		res, err := cli.{{.Name}}(ctx, tt.req)
-		assert.True(t, errors.Is(eerrors.FromError(err), tt.wantErr))
-		assert.True(t, proto.Equal(tt.wantRes, res))
-		t.Logf("res: %+v", res)
+		t.Run(tt.name, func(t *testing.T) {
+			res, err := cli.{{.Name}}(ctx, tt.req)
+			assert.True(t, errors.Is(eerrors.FromError(err), tt.wantErr))
+			assert.True(t, proto.Equal(tt.wantRes, res))
+			t.Logf("res: %+v", res)
+		})
 	}
 }
 
