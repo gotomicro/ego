@@ -77,7 +77,6 @@ func genFinalContent(origContent []byte, tempContent []byte) ([]byte, error) {
 
 const (
 	annotationOverride = "Override"
-	annotationTime     = "Time"
 )
 
 var commentRgx, _ = regexp.Compile(`@(\w+)=([_a-zA-Z0-9-:]+)`)

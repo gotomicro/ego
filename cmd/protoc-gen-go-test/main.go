@@ -60,25 +60,22 @@ func main() {
 }
 
 func run(gen *protogen.Plugin, outFlag *string, modFlag *string) error {
-	gfs := make([]*protogen.GeneratedFile, 0, len(gen.Files))
 	gen.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
 	if err := checkOut(*outFlag); err != nil {
 		return err
 	}
-	g, err := generateInitFile(gen, nil, *outFlag, *modFlag)
+	_, err := generateInitFile(gen, nil, *outFlag, *modFlag)
 	if err != nil {
 		return fmt.Errorf("generate init test file fail, %w", err)
 	}
-	gfs = append(gfs, g)
 	for _, f := range gen.Files {
 		if !f.Generate {
 			continue
 		}
-		g, err := generateFile(gen, f, *outFlag, *modFlag)
+		_, err := generateFile(gen, f, *outFlag, *modFlag)
 		if err != nil {
 			return fmt.Errorf("generate test file fail, %w", err)
 		}
-		gfs = append(gfs, g)
 	}
 	return nil
 }
