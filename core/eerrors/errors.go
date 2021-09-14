@@ -41,8 +41,18 @@ func Register(egoError *EgoError) {
 	errs[errKey(egoError.Reason)] = egoError
 }
 
+// Error Error信息
 func (x *EgoError) Error() string {
 	return fmt.Sprintf("error: code = %d reason = %s message = %s metadata = %v", x.Code, x.Reason, x.Message, x.Metadata)
+}
+
+// Is 判断是否为根因错误
+func (x *EgoError) Is(err error) bool {
+	egoErr, flag := err.(*EgoError)
+	if !flag {
+		return false
+	}
+	return x.Reason == egoErr.Reason
 }
 
 // GRPCStatus returns the Status represented by se.
@@ -99,7 +109,7 @@ func FromError(err error) *EgoError {
 			case *errdetails.ErrorInfo:
 				e, ok := errs[errKey(d.Reason)]
 				if ok {
-					return e
+					return e.WithMessage(gs.Message()).WithMetadata(d.Metadata).(*EgoError)
 				}
 				return New(
 					int(gs.Code()),
