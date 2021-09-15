@@ -23,11 +23,10 @@ func main() {
 		fmt.Printf("Version: %s\n", version)
 		return
 	}
-	var (
-		flags   flag.FlagSet
-		outFlag = flags.String("out", "", "specified output directory name")
-		modFlag = flags.String("mod", "", "specified pb stub code module path")
-	)
+	var flags flag.FlagSet
+	var outFlag = flags.String("out", "", "specified output directory name")
+	var modFlag = flags.String("mod", "", "specified pb stub code module path")
+	// check args
 	if len(os.Args) > 1 {
 		exit(fmt.Errorf("unknown argument %q (this program should be run by protoc, not directly)", os.Args[1]))
 	}
@@ -36,16 +35,17 @@ func main() {
 		exit(err)
 	}
 
+	// prepare generation
 	req := &pluginpb.CodeGeneratorRequest{}
 	if err := proto.Unmarshal(in, req); err != nil {
 		exit(err)
 	}
-
 	gen, err := protogen.Options{ParamFunc: flags.Set}.New(req)
 	if err != nil {
 		exit(err)
 	}
 
+	// execute generation
 	if err := run(gen, outFlag, modFlag); err != nil {
 		gen.Error(err)
 	}
@@ -54,6 +54,8 @@ func main() {
 	if err != nil {
 		exit(err)
 	}
+
+	// write to stdout
 	if _, err := os.Stdout.Write(out); err != nil {
 		exit(err)
 	}
