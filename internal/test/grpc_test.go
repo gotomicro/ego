@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"log"
 	"net"
 	"testing"
 
@@ -18,33 +19,32 @@ import (
 
 var svc *egrpc.Component
 
-func TestGrpcError(t *testing.T) {
+func init() {
 	svc = egrpc.DefaultContainer().Build(egrpc.WithNetwork("bufnet"))
+	helloworld.RegisterGreeterServer(svc, &Greeter{})
 	err := svc.Init()
-	assert.NoError(t, err)
+	if err != nil {
+		log.Fatalf("init exited with error: %v", err)
+	}
 	go func() {
 		err = svc.Start()
-		assert.NoError(t, err)
+		if err != nil {
+			log.Fatalf("init start with error: %v", err)
+		}
 	}()
-	helloworld.RegisterGreeterServer(svc, &Greeter{})
+}
+
+func TestGrpcError(t *testing.T) {
 	resourceClient := cegrpc.DefaultContainer().Build(cegrpc.WithDialOption(grpc.WithContextDialer(bufDialer)))
 	ctx := context.Background()
 	client := helloworld.NewGreeterClient(resourceClient.ClientConn)
-	_, err = client.SayHello(ctx, &helloworld.HelloRequest{})
+	_, err := client.SayHello(ctx, &helloworld.HelloRequest{})
 	egoErr := eerrors.FromError(err)
 	assert.ErrorIs(t, egoErr, errcode.ErrInvalidArgument())
 	assert.Equal(t, "name is empty", egoErr.GetMessage())
 }
 
 func TestGrpcOk(t *testing.T) {
-	svc = egrpc.DefaultContainer().Build(egrpc.WithNetwork("bufnet"))
-	err := svc.Init()
-	assert.NoError(t, err)
-	go func() {
-		err = svc.Start()
-		assert.NoError(t, err)
-	}()
-	helloworld.RegisterGreeterServer(svc, &Greeter{})
 	resourceClient := cegrpc.DefaultContainer().Build(cegrpc.WithDialOption(grpc.WithContextDialer(bufDialer)))
 	ctx := context.Background()
 	client := helloworld.NewGreeterClient(resourceClient.ClientConn)
