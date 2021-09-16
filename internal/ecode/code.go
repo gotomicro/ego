@@ -4,7 +4,16 @@ import (
 	"net/http"
 
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
+
+// Convert 内部转换，为了让err=nil的时候，监控数据里有OK信息
+func Convert(err error) *status.Status {
+	if err == nil {
+		return status.New(codes.OK, "OK")
+	}
+	return status.Convert(err)
+}
 
 // GrpcToHTTPStatusCode gRPC转HTTP Code
 // example:

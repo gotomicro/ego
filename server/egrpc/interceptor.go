@@ -30,16 +30,18 @@ import (
 func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	startTime := time.Now()
 	resp, err := handler(ctx, req)
+	statusInfo := ecode.Convert(err)
 	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), http.StatusText(ecode.GrpcToHTTPStatusCode(status.Code(err))))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
 	return resp, err
 }
 
 func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	startTime := time.Now()
 	err := handler(srv, ss)
+	statusInfo := ecode.Convert(err)
 	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()), http.StatusText(ecode.GrpcToHTTPStatusCode(status.Code(err))))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ss.Context()), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
 	return err
 }
 
@@ -126,8 +128,8 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 			fields = append(fields,
 				elog.FieldType("stream"),
 				elog.FieldEvent(event),
-				elog.FieldCode(int32(httpStatusCode)),
-				elog.FieldOriginCode(int32(spbStatus.Code())),
+				elog.FieldCode(int32(spbStatus.Code())),
+				elog.FieldUniformCode(int32(httpStatusCode)),
 				elog.FieldDescription(spbStatus.Message()),
 				elog.FieldCost(time.Since(beg)),
 				elog.FieldPeerName(getPeerName(stream.Context())),
@@ -203,8 +205,8 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 
 			fields = append(fields,
 				elog.FieldType("unary"),
-				elog.FieldCode(int32(httpStatusCode)),
-				elog.FieldOriginCode(int32(spbStatus.Code())),
+				elog.FieldCode(int32(spbStatus.Code())),
+				elog.FieldUniformCode(int32(httpStatusCode)),
 				elog.FieldDescription(spbStatus.Message()),
 				elog.FieldEvent(event),
 				elog.FieldMethod(info.FullMethod),

@@ -162,6 +162,7 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 					zap.ByteString("stack", stackInfo),
 					elog.FieldErrAny(rec),
 					elog.FieldCode(int32(c.Writer.Status())),
+					elog.FieldUniformCode(int32(c.Writer.Status())),
 				)
 				logger.Error("access", fields...)
 				return
@@ -250,7 +251,7 @@ func metricServerInterceptor() gin.HandlerFunc {
 		beg := time.Now()
 		c.Next()
 		emetric.ServerHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c))
-		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c), http.StatusText(c.Writer.Status()))
+		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c), http.StatusText(c.Writer.Status()), http.StatusText(c.Writer.Status()))
 	}
 }
 
