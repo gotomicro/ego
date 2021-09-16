@@ -26,3 +26,13 @@ func Test_customHeader(t *testing.T) {
 		})
 	assert.Nil(t, err)
 }
+
+func TestMetric(t *testing.T) {
+	interceptor := metricUnaryClientInterceptor("test")
+	cc := new(grpc.ClientConn)
+	err := interceptor(context.Background(), "/foo", nil, nil, cc,
+		func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, opts ...grpc.CallOption) error {
+			return nil
+		})
+	assert.Nil(t, err)
+}

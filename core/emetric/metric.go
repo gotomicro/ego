@@ -44,7 +44,7 @@ var (
 	ServerHandleCounter = CounterVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "server_handle_total",
-		Labels:    []string{"type", "method", "peer", "code"},
+		Labels:    []string{"type", "method", "peer", "code", "uniform_code"},
 	}.Build()
 
 	// ServerHandleHistogram ...

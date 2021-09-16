@@ -49,9 +49,9 @@ func FieldCode(value int32) Field {
 	return Int32("code", value)
 }
 
-// FieldOriginCode 原始code
-func FieldOriginCode(value int32) Field {
-	return Int32("ocode", value)
+// FieldUniformCode uniform code
+func FieldUniformCode(value int32) Field {
+	return Int32("ucode", value)
 }
 
 // FieldTid 设置链路id
