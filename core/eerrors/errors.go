@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gotomicro/ego/internal/ecode"
+	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/internal/ecode"
 )
 
 //go:generate protoc -I. --go_out=paths=source_relative:. errors.proto
@@ -38,8 +41,18 @@ func Register(egoError *EgoError) {
 	errs[errKey(egoError.Reason)] = egoError
 }
 
+// Error Error信息
 func (x *EgoError) Error() string {
 	return fmt.Sprintf("error: code = %d reason = %s message = %s metadata = %v", x.Code, x.Reason, x.Message, x.Metadata)
+}
+
+// Is 判断是否为根因错误
+func (x *EgoError) Is(err error) bool {
+	egoErr, flag := err.(*EgoError)
+	if !flag {
+		return false
+	}
+	return x.Reason == egoErr.Reason
 }
 
 // GRPCStatus returns the Status represented by se.
@@ -96,7 +109,7 @@ func FromError(err error) *EgoError {
 			case *errdetails.ErrorInfo:
 				e, ok := errs[errKey(d.Reason)]
 				if ok {
-					return e
+					return e.WithMessage(gs.Message()).WithMetadata(d.Metadata).(*EgoError)
 				}
 				return New(
 					int(gs.Code()),
@@ -107,4 +120,14 @@ func FromError(err error) *EgoError {
 		}
 	}
 	return New(int(codes.Unknown), UnknownReason, err.Error())
+}
+
+// PrintEgoErrLog ...
+func PrintEgoErrLog(msg string, err error) {
+	switch e := err.(type) {
+	case *EgoError:
+		elog.Error(e.GetMessage(), zap.Any("meta", e.GetMetadata()))
+	default:
+		elog.Error(msg, zap.Error(e))
+	}
 }

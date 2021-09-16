@@ -20,7 +20,7 @@ jobs:
         run: go build -v ./...
 
       - name: Test
-        run: go test -v -race $(go list ./... | grep -v /examples/) -coverprofile=coverage.txt -covermode=atomic
+        run: go test -v -race $(go list ./... | grep -v /examples/ ) -coverprofile=coverage.txt -covermode=atomic
       - name: CodeCov
         uses: codecov/codecov-action@v1
         with:

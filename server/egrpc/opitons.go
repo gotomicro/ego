@@ -39,3 +39,10 @@ func WithUnaryInterceptor(interceptors ...grpc.UnaryServerInterceptor) Option {
 		c.config.unaryInterceptors = append(c.config.unaryInterceptors, interceptors...)
 	}
 }
+
+// WithNetwork inject network
+func WithNetwork(network string) Option {
+	return func(c *Container) {
+		c.config.Network = network
+	}
+}
