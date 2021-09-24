@@ -37,14 +37,15 @@ func genFinalContent(origContent []byte, tempContent []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decorator parse fail, %w", err)
 	}
-	canntOverideFns := map[string]*dst.FuncDecl{}
+	// cannotOverrideFns store functions we can't override now
+	cannotOverrideFns := map[string]*dst.FuncDecl{}
 	for _, decl := range origf.Decls {
 		fn, ok := decl.(*dst.FuncDecl)
 		if ok {
 			comments := strings.Join(fn.Decs.Start, "\n")
 			annos := getAnnotations(comments)
 			if anno, ok := annos[annotationOverride]; ok && anno.val == "true" {
-				canntOverideFns[fn.Name.Name] = fn
+				cannotOverrideFns[fn.Name.Name] = fn
 			}
 		}
 	}
@@ -60,7 +61,8 @@ func genFinalContent(origContent []byte, tempContent []byte) ([]byte, error) {
 			decls = append(decls, decl)
 			continue
 		}
-		oldFn, ok := canntOverideFns[fn.Name.Name]
+		// if function can't be override now, we ignore it
+		oldFn, ok := cannotOverrideFns[fn.Name.Name]
 		if ok {
 			fn = oldFn
 		}
@@ -76,6 +78,7 @@ func genFinalContent(origContent []byte, tempContent []byte) ([]byte, error) {
 }
 
 const (
+	// annotationOverride is "Override" annotation, Override=true means user have already overridden it.
 	annotationOverride = "Override"
 )
 
@@ -86,6 +89,7 @@ type annotation struct {
 	val  string
 }
 
+// getAnnotations parse annotations from comments
 func getAnnotations(comment string) map[string]annotation {
 	matches := commentRgx.FindAllStringSubmatch(comment, -1)
 	annotations := make(map[string]annotation)
