@@ -74,6 +74,10 @@ func run(gen *protogen.Plugin, outFlag *string, modFlag *string) error {
 		if !f.Generate {
 			continue
 		}
+		// if proto contains services, we do not generate code.
+		if f.Desc.Services().Len() == 0 {
+			continue
+		}
 		_, err := generateFile(gen, f, *outFlag, *modFlag)
 		if err != nil {
 			return fmt.Errorf("generate test file fail, %w", err)
