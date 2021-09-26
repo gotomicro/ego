@@ -8,6 +8,8 @@ option java_multiple_files = true;
 option java_outer_classname = "BizProto";
 option java_package = "com.ego.biz.v1";
 
+// @plugins=protoc-gen-go-errors
+
 // 错误定义
 enum Err {
   // 未知类型
