@@ -25,7 +25,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"path/filepath"
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
@@ -41,17 +40,13 @@ func main() {
 		fmt.Printf("Version: %s\n", version)
 		return
 	}
-	var flags flag.FlagSet
-	file := flags.String("file", "", "specified proto files (default value: errors.proto)")
-	protogen.Options{ParamFunc: flags.Set}.Run(func(gen *protogen.Plugin) error {
+	protogen.Options{}.Run(func(gen *protogen.Plugin) error {
 		gen.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
 		for _, f := range gen.Files {
-			if !f.Generate {
+			if !f.Generate || !needGenerate(f.Proto.SourceCodeInfo.Location) {
 				continue
 			}
-			if filepath.Base(f.Proto.GetName()) != *file {
-				continue
-			}
+
 			generateFile(gen, f)
 		}
 		return nil

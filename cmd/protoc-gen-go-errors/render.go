@@ -27,6 +27,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 const (
@@ -72,11 +73,16 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	}
 }
 
+const (
+	fileLevelCommentAnnotation  = "plugins"
+	fieldLevelCommentAnnotation = "code"
+)
+
 func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, enum *protogen.Enum) bool {
 	var ew errorWrapper
 	for _, v := range enum.Values {
 		annos := getAnnotations(string(v.Comments.Leading))
-		eCode := annos["code"]
+		eCode := annos[fieldLevelCommentAnnotation]
 		desc := string(v.Desc.Name())
 		err := &errorInfo{
 			Name:            string(enum.Desc.Name()),
@@ -95,7 +101,8 @@ func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *proto
 	return false
 }
 
-var commentRgx, _ = regexp.Compile(`@(\w+)=(\w+)`)
+var filedLevelCommentRgx, _ = regexp.Compile(`@(\w+)=([_a-zA-Z0-9-,]+)`)
+var fileLevelCommentRgx, _ = regexp.Compile(`@(\w+)=([_a-zA-Z0-9-,]+)`)
 
 type annotation struct {
 	name string
@@ -103,7 +110,11 @@ type annotation struct {
 }
 
 func getAnnotations(comment string) map[string]annotation {
-	matches := commentRgx.FindAllStringSubmatch(comment, -1)
+	matches := filedLevelCommentRgx.FindAllStringSubmatch(comment, -1)
+	return findMatchesFromComments(matches)
+}
+
+func findMatchesFromComments(matches [][]string) map[string]annotation {
 	annotations := make(map[string]annotation)
 	for _, v := range matches {
 		annotations[v[1]] = annotation{
@@ -112,4 +123,29 @@ func getAnnotations(comment string) map[string]annotation {
 		}
 	}
 	return annotations
+}
+
+func getFileLevelAnnotations(locs []*descriptorpb.SourceCodeInfo_Location) map[string]annotation {
+	comments := ""
+	for _, loc := range locs {
+		comments += loc.String()
+	}
+	matches := fileLevelCommentRgx.FindAllStringSubmatch(comments, -1)
+	return findMatchesFromComments(matches)
+}
+
+func needGenerate(locs []*descriptorpb.SourceCodeInfo_Location) bool {
+	annos := getFileLevelAnnotations(locs)
+	anno, ok := annos[fileLevelCommentAnnotation]
+	if !ok {
+		return false
+	}
+	plugins := strings.Split(anno.val, ",")
+	for _, p := range plugins {
+		// if protobuf contains "@plugins=protoc-gen-go-errors" annotation, then we should generate errors stub code
+		if p == "protoc-gen-go-errors" {
+			return true
+		}
+	}
+	return false
 }
