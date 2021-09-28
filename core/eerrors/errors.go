@@ -14,8 +14,6 @@ import (
 	"github.com/gotomicro/ego/internal/ecode"
 )
 
-//go:generate protoc -I. --go_out=paths=source_relative:. errors.proto
-
 // Error 错误接口
 type Error interface {
 	error
