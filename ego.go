@@ -55,6 +55,7 @@ type opts struct {
 	shutdownSignals   []os.Signal
 }
 
+//go:generate protoc -I. --go_out=module=github.com/gotomicro/ego/core/eerrors,Mcore/eerrors/errors.proto=github.com/gotomicro/ego/core/eerrors:core/eerrors core/eerrors/errors.proto
 // New new Ego
 func New(options ...Option) *Ego {
 	e := &Ego{

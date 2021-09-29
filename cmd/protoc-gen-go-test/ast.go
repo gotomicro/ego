@@ -11,6 +11,8 @@ import (
 	"github.com/dave/dst"
 	"github.com/dave/dst/decorator"
 	"github.com/gotomicro/ego/internal/tools"
+	orderedmap "github.com/wk8/go-ordered-map"
+	"golang.org/x/tools/imports"
 )
 
 func checkAndMerge(f *file) ([]byte, error) {
@@ -29,6 +31,103 @@ func checkAndMerge(f *file) ([]byte, error) {
 	return finaBytes, nil
 }
 
+func getDecls(dstFile *dst.File) (*orderedmap.OrderedMap, *orderedmap.OrderedMap, *orderedmap.OrderedMap, *orderedmap.OrderedMap) {
+	var importDecls = orderedmap.New()
+	var typeDecls = orderedmap.New()
+	var valueDecls = orderedmap.New()
+	var fnDecls = orderedmap.New()
+
+	for _, decl := range dstFile.Decls {
+		switch t := decl.(type) {
+		case *dst.FuncDecl:
+			fnDecls.Set(t.Name.Name, t)
+		case *dst.GenDecl:
+			if len(t.Specs) == 0 {
+				continue
+			}
+			switch t.Specs[0].(type) {
+			case *dst.ValueSpec:
+				for _, sp := range t.Specs {
+					val := sp.(*dst.ValueSpec)
+					for _, v := range val.Names {
+						val.Names = []*dst.Ident{v}
+						decl := *t
+						decl.Specs = []dst.Spec{val}
+						valueDecls.Set(v.Name, &decl)
+					}
+				}
+			case *dst.TypeSpec:
+				for _, sp := range t.Specs {
+					decl := *t
+					decl.Specs = []dst.Spec{sp}
+					typeDecls.Set(sp.(*dst.TypeSpec).Name.String(), &decl)
+				}
+			case *dst.ImportSpec:
+				for _, sp := range t.Specs {
+					decl := *t
+					decl.Specs = []dst.Spec{sp}
+					importDecls.Set(sp.(*dst.ImportSpec).Path.Value, &decl)
+				}
+			}
+		default:
+			panic("bad decls")
+		}
+	}
+	return importDecls, typeDecls, valueDecls, fnDecls
+}
+
+func castStrToBool(str string) bool {
+	return str == "true"
+}
+
+type decls []dst.Decl
+
+func (decls *decls) rebuildGenDecls(opDecls *orderedmap.OrderedMap, tpDecls *orderedmap.OrderedMap) *decls {
+	for op := opDecls.Oldest(); op != nil; op = op.Next() {
+		k := op.Key.(string)
+		d := op.Value.(*dst.GenDecl)
+		anno := getAnnotations(strings.Join(d.Decs.Start, "\n"))[annotationOverride]
+		tp := tpDecls.GetPair(op.Key)
+		if tp != nil {
+			if castStrToBool(anno.val) {
+				*decls = append(*decls, d)
+			} else {
+				*decls = append(*decls, tp.Value.(*dst.GenDecl))
+			}
+			tpDecls.Delete(k)
+		} else {
+			*decls = append(*decls, d)
+		}
+	}
+	for tp := tpDecls.Oldest(); tp != nil; tp = tp.Next() {
+		*decls = append(*decls, tp.Value.(*dst.GenDecl))
+	}
+	return decls
+}
+
+func (decls *decls) rebuildFnDecls(opDecls *orderedmap.OrderedMap, tpDecls *orderedmap.OrderedMap) *decls {
+	for op := opDecls.Oldest(); op != nil; op = op.Next() {
+		k := op.Key.(string)
+		d := op.Value.(*dst.FuncDecl)
+		anno := getAnnotations(strings.Join(d.Decs.Start, "\n"))[annotationOverride]
+		tp := tpDecls.GetPair(op.Key)
+		if tp != nil {
+			if castStrToBool(anno.val) {
+				*decls = append(*decls, d)
+			} else {
+				*decls = append(*decls, tp.Value.(*dst.FuncDecl))
+			}
+			tpDecls.Delete(k)
+		} else {
+			*decls = append(*decls, d)
+		}
+	}
+	for tp := tpDecls.Oldest(); tp != nil; tp = tp.Next() {
+		*decls = append(*decls, tp.Value.(*dst.FuncDecl))
+	}
+	return decls
+}
+
 func genFinalContent(origContent []byte, tempContent []byte) ([]byte, error) {
 	if len(origContent) == 0 {
 		return tempContent, nil
@@ -37,44 +136,28 @@ func genFinalContent(origContent []byte, tempContent []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decorator parse fail, %w", err)
 	}
-	// cannotOverrideFns store functions we can't override now
-	cannotOverrideFns := map[string]*dst.FuncDecl{}
-	for _, decl := range origf.Decls {
-		fn, ok := decl.(*dst.FuncDecl)
-		if ok {
-			comments := strings.Join(fn.Decs.Start, "\n")
-			annos := getAnnotations(comments)
-			if anno, ok := annos[annotationOverride]; ok && anno.val == "true" {
-				cannotOverrideFns[fn.Name.Name] = fn
-			}
-		}
-	}
-
 	tempf, err := decorator.Parse(tempContent)
 	if err != nil {
 		return nil, fmt.Errorf("decorator parse fail, %w", err)
 	}
-	decls := []dst.Decl{}
-	for _, decl := range tempf.Decls {
-		fn, ok := decl.(*dst.FuncDecl)
-		if !ok {
-			decls = append(decls, decl)
-			continue
-		}
-		// if function can't be override now, we ignore it
-		oldFn, ok := cannotOverrideFns[fn.Name.Name]
-		if ok {
-			fn = oldFn
-		}
-		decls = append(decls, fn)
-	}
-	tempf.Decls = decls
+
+	var decls decls
+	origImportDecls, origTypeDecls, origValueDecls, origFnDecls := getDecls(origf)
+	tempImportDecls, tempTypeDecls, tempValueDecls, tempFnDecls := getDecls(tempf)
+	// 1. rebuild import decls
+	// 2. rebuild type decls
+	// 3. rebuild value decls
+	// 4. rebuild function decls
+	decls.rebuildGenDecls(origImportDecls, tempImportDecls).
+		rebuildGenDecls(origTypeDecls, tempTypeDecls).
+		rebuildGenDecls(origValueDecls, tempValueDecls).
+		rebuildFnDecls(origFnDecls, tempFnDecls)
+	origf.Decls = decls
 	buf := bytes.NewBuffer([]byte{})
-	if err := decorator.Fprint(buf, tempf); err != nil {
+	if err := decorator.Fprint(buf, origf); err != nil {
 		return nil, fmt.Errorf("fprint fail, %w", err)
 	}
-
-	return tools.GoFmt(buf.Bytes()), nil
+	return imports.Process("", tools.GoFmt(buf.Bytes()), &imports.Options{Comments: true, TabIndent: true, TabWidth: 8, FormatOnly: true})
 }
 
 const (
