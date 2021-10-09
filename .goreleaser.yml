@@ -30,6 +30,19 @@ builds:
     binary: protoc-gen-go-test
     ldflags:
       - -s -w -X main.version={{.Version}}
+  - id: protoc-gen-go-http
+    main: ./cmd/protoc-gen-go-http
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    binary: protoc-gen-go-http
+    ldflags:
+      - -s -w -X main.version={{.Version}}
 archives:
   - id: protoc-gen-go-errors
     builds:
@@ -45,6 +58,16 @@ archives:
     builds:
       - protoc-gen-go-test
     name_template: "protoc-gen-go-test-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+  - id: protoc-gen-go-http
+    builds:
+      - protoc-gen-go-http
+    name_template: "protoc-gen-go-http-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     replacements:
       darwin: Darwin
       linux: Linux
