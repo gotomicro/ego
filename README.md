@@ -229,6 +229,7 @@ Thanks for these wonderful people:
   </tr>
   <tr>
     <td align="center"><a href="http://blog.lincolnzhou.com/"><img src="https://avatars.githubusercontent.com/u/3911154?v=4" width="64px;" alt=""/><br /><sub><b>LincolnZhou</b></sub></a></td>
+    <td align="center"><a href="https://github.com/optimistic9527"><img src="https://avatars.githubusercontent.com/u/37545032?v=4" width="64px;" alt=""/><br /><sub><b>optimistic9527</b></sub></a></td>
   </tr>
 </table>
 
