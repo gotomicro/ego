@@ -147,6 +147,7 @@ func (c *Component) buildTLSConfig() (*tls.Config, error) {
 	tlsConfig.Certificates = []tls.Certificate{serverCert}
 	tlsConfig.ClientCAs = x509.NewCertPool()
 	tlsConfig.ClientAuth = c.config.ClientAuthType()
+	tlsConfig.ClientSessionCache = c.config.TLSSessionCache
 	clientCAs := c.config.TLSClientCAs
 	for i := range clientCAs {
 		clientCA := clientCAs[i]
