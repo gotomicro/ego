@@ -33,8 +33,9 @@ type Config struct {
 	EnableTLS                  bool     // 是否进入 https 模式
 	TLSCertFile                string   // https 证书
 	TLSKeyFile                 string   // https 私钥
-	TLSClientAuth              string   //https 客户端认证方式默认为 NoClientCert(NoClientCert,RequestClientCert,RequireAnyClientCert,VerifyClientCertIfGiven,RequireAndVerifyClientCert)
-	TLSClientCAs               []string //https client的ca，当需要双向认证的时候指定可以倒入自签证书
+	TLSClientAuth              string   // https 客户端认证方式默认为 NoClientCert(NoClientCert,RequestClientCert,RequireAnyClientCert,VerifyClientCertIfGiven,RequireAndVerifyClientCert)
+	TLSClientCAs               []string // https client的ca，当需要双向认证的时候指定可以倒入自签证书
+	TLSSessionCache            tls.ClientSessionCache
 	blockFallback              func(*gin.Context)
 	resourceExtract            func(*gin.Context) string
 }

@@ -1,6 +1,8 @@
 package egin
 
 import (
+	"crypto/tls"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,5 +23,12 @@ func WithSentinelResourceExtractor(fn func(*gin.Context) string) Option {
 func WithSentinelBlockFallback(fn func(*gin.Context)) Option {
 	return func(c *Container) {
 		c.config.blockFallback = fn
+	}
+}
+
+// WithTLSSessionCache 限流后的返回数据
+func WithTLSSessionCache(tsc tls.ClientSessionCache) Option {
+	return func(c *Container) {
+		c.config.TLSSessionCache = tsc
 	}
 }
