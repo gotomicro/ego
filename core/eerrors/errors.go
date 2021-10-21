@@ -50,6 +50,9 @@ func (x *EgoError) Is(err error) bool {
 	if !flag {
 		return false
 	}
+	if err == nil {
+		return false
+	}
 	return x.Reason == egoErr.Reason
 }
 
