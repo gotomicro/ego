@@ -20,7 +20,7 @@ func TestNewComponent(t *testing.T) {
 	cmp := newComponent("test-cmp", &cfg, elog.DefaultLogger)
 	assert.Equal(t, "test-cmp", cmp.Name())
 	assert.Equal(t, "server.egrpc", cmp.PackageName())
-	assert.Equal(t, "0.0.0.0:9005", cmp.Address())
+	assert.Equal(t, "0.0.0.0:9001", cmp.Address())
 
 	assert.NoError(t, cmp.Init())
 
