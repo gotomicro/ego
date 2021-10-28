@@ -35,7 +35,7 @@ type Component struct {
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
 	gin.SetMode(config.Mode)
-	return &Component{
+	comp := &Component{
 		name:             name,
 		config:           config,
 		logger:           logger,
@@ -43,6 +43,9 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		listener:         nil,
 		routerCommentMap: make(map[string]string),
 	}
+	// 设置信任的header头
+	comp.Engine.TrustedPlatform = config.TrustedPlatform
+	return comp
 }
 
 // Name 配置名称

@@ -234,7 +234,7 @@ func initMaxProcs() error {
 			elog.EgoLogger.Panic("init max procs", elog.FieldComponent("app"), elog.FieldErr(err))
 		}
 	}
-	elog.EgoLogger.Info("init max procs", elog.FieldComponent("app"), elog.FieldValueAny(runtime.GOMAXPROCS(-1)))
+	elog.EgoLogger.Info("init app", elog.FieldComponent("app"), elog.Int("pid", os.Getpid()), elog.Int("coreNum", runtime.GOMAXPROCS(-1)))
 	return nil
 }
 
