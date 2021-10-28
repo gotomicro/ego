@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	// 引入file的config协议
 	_ "github.com/gotomicro/ego/core/econf/file"
 	"github.com/gotomicro/ego/core/eflag"
@@ -163,14 +164,8 @@ func (e *Ego) Job(runners ...ejob.Ejob) *Ego {
 	}
 
 	jobMap := make(map[string]struct{})
-	// 逗号分割可以执行多个job
-	if strings.Contains(jobFlag, ",") {
-		jobArr := strings.Split(jobFlag, ",")
-		for _, value := range jobArr {
-			jobMap[value] = struct{}{}
-		}
-	} else {
-		jobMap[jobFlag] = struct{}{}
+	for _, jobName := range strings.Split(jobFlag, ",") {
+		jobMap[jobName] = struct{}{}
 	}
 
 	for _, runner := range runners {
