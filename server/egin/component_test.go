@@ -4,14 +4,17 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestComponent_buildTLSConfig(t *testing.T) {
@@ -52,6 +55,68 @@ func TestComponent_buildTLSConfig(t *testing.T) {
 		assert.NotNil(t, err2)
 	})
 
+}
+
+func TestContextClientIP(t *testing.T) {
+	router := DefaultContainer().Build(WithTrustedPlatform("X-Forwarded-For"))
+	router.GET("/", func(c *gin.Context) {
+		assert.Equal(t, "10.10.10.11", c.ClientIP())
+	})
+
+	performRequest(router, "GET", "/", header{
+		Key:   "X-Forwarded-For",
+		Value: "10.10.10.11",
+	})
+
+	router3 := DefaultContainer().Build(WithTrustedPlatform("X-Forwarded-For"))
+	router3.GET("/", func(c *gin.Context) {
+		assert.NotEqual(t, "10.10.10.12", c.ClientIP())
+	})
+
+	performRequest(router3, "GET", "/", header{
+		Key:   "X-Forwarded-For",
+		Value: "10.10.10.11,10.10.10.12",
+	})
+
+	router2 := DefaultContainer().Build(WithTrustedPlatform("X-CUSTOM-CDN-IP"))
+	router2.GET("/", func(c *gin.Context) {
+		assert.Equal(t, "10.10.10.12", c.ClientIP())
+	})
+
+	performRequest(router2, "GET", "/", header{
+		Key:   "X-CUSTOM-CDN-IP",
+		Value: "10.10.10.12",
+	})
+}
+
+func TestNewComponent(t *testing.T) {
+	cfg := Config{
+		Host: "0.0.0.0",
+		Port: 9005,
+	}
+	cmp := newComponent("test-cmp", &cfg, elog.DefaultLogger)
+	assert.Equal(t, "test-cmp", cmp.Name())
+	assert.Equal(t, "server.egin", cmp.PackageName())
+	assert.Equal(t, "0.0.0.0:9005", cmp.config.Address())
+
+	assert.NoError(t, cmp.Init())
+
+	info := cmp.Info()
+	assert.NotEmpty(t, info.Name)
+	assert.Equal(t, "http", info.Scheme)
+	assert.Equal(t, "[::]:9005", info.Address)
+	assert.Equal(t, constant.ServiceProvider, info.Kind)
+
+	// err = cmp.Start()
+	go func() {
+		assert.NoError(t, cmp.Start())
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	<-ctx.Done()
+	assert.NoError(t, cmp.Stop())
 }
 
 func startClientAuthTLSServer() *Component {

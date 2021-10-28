@@ -35,6 +35,7 @@ type Config struct {
 	TLSKeyFile                 string   // https 私钥
 	TLSClientAuth              string   // https 客户端认证方式默认为 NoClientCert(NoClientCert,RequestClientCert,RequireAnyClientCert,VerifyClientCertIfGiven,RequireAndVerifyClientCert)
 	TLSClientCAs               []string // https client的ca，当需要双向认证的时候指定可以倒入自签证书
+	TrustedPlatform            string   // 需要用户换成自己的CDN名字，获取客户端IP地址
 	TLSSessionCache            tls.ClientSessionCache
 	blockFallback              func(*gin.Context)
 	resourceExtract            func(*gin.Context) string
@@ -51,6 +52,7 @@ func DefaultConfig() *Config {
 		EnableMetricInterceptor:    true,
 		SlowLogThreshold:           xtime.Duration("500ms"),
 		EnableWebsocketCheckOrigin: false,
+		TrustedPlatform:            "",
 	}
 }
 
