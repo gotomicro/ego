@@ -14,7 +14,7 @@ import (
 func TestNewComponent(t *testing.T) {
 	cfg := Config{
 		Host:    "0.0.0.0",
-		Port:    9005,
+		Port:    9001,
 		Network: "tcp4",
 	}
 	cmp := newComponent("test-cmp", &cfg, elog.DefaultLogger)
@@ -27,7 +27,7 @@ func TestNewComponent(t *testing.T) {
 	info := cmp.Info()
 	assert.NotEmpty(t, info.Name)
 	assert.Equal(t, "grpc", info.Scheme)
-	assert.Equal(t, "0.0.0.0:9005", info.Address)
+	assert.Equal(t, "0.0.0.0:9001", info.Address)
 	assert.Equal(t, constant.ServiceProvider, info.Kind)
 
 	// err = cmp.Start()
