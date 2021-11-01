@@ -118,6 +118,16 @@ func newLogger(name string, key string, config *Config) *Component {
 
 }
 
+// ZapLogger returns *zap.Logger
+func (logger *Component) ZapLogger() *zap.Logger {
+	return logger.desugar
+}
+
+// ZapSugaredLogger returns *zap.SugaredLogger
+func (logger *Component) ZapSugaredLogger() *zap.SugaredLogger {
+	return logger.sugar
+}
+
 // AutoLevel ...
 func (logger *Component) AutoLevel(confKey string) {
 	econf.OnChange(func(config *econf.Configuration) {
