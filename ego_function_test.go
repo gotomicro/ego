@@ -40,7 +40,7 @@ func Test_startJobsNoJob(t *testing.T) {
 
 func Test_startJobsOneJobErrNil(t *testing.T) {
 	app := &Ego{
-		jobs:   make(map[string]ejob.Ejob, 0),
+		jobs:   make(map[string]ejob.Ejob),
 		logger: elog.EgoLogger,
 	}
 	app.Job(ejob.Job("test", func(context ejob.Context) error {
@@ -66,7 +66,7 @@ func Test_startJobsOneJobErrNotNil(t *testing.T) {
 	assert.NoError(t, err)
 
 	app := &Ego{
-		jobs:   make(map[string]ejob.Ejob, 0),
+		jobs:   make(map[string]ejob.Ejob),
 		logger: elog.EgoLogger,
 	}
 	app.Job(ejob.Job("test", func(context ejob.Context) error {
