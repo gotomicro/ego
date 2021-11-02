@@ -12,7 +12,7 @@ var (
 	nilEgoErr    *EgoError
 	nilErr       error
 	notNilEgoErr = New(1, "__REASON__", "__MESSAGE__")
-	notNilErr    = errors.New("some error")
+	errNotNil    = errors.New("some error")
 )
 
 func TestRegister(t *testing.T) {
@@ -40,7 +40,7 @@ func TestIs(t *testing.T) {
 	}{
 		{"nilEgoErr-nilEgoErr", nilEgoErr, nilEgoErr, true},
 		{"nilEgoErr-nilErr", nilEgoErr, nilErr, false},
-		{"notNilEgoErr-notNilErr", nilEgoErr, notNilErr, false},
+		{"notNilEgoErr-errNotNil", nilEgoErr, errNotNil, false},
 		{"notNilEgoErr-notNilEgoErr", nilEgoErr, notNilEgoErr, false},
 	}
 	for _, tt := range tests {
@@ -63,7 +63,7 @@ func TestFromError(t *testing.T) {
 	}{
 		{"empty-ego-error", New(0, "", ""), 0, "", "", nil},
 		{"some-ego-error", notNilEgoErr, 1, "__REASON__", "__MESSAGE__", nil},
-		{"normal-error", notNilErr, int32(codes.Unknown), UnknownReason, "some error", nil},
+		{"normal-error", errNotNil, int32(codes.Unknown), UnknownReason, "some error", nil},
 	}
 	for _, tt := range tests {
 		res := FromError(tt.req)
@@ -83,7 +83,7 @@ func TestCheckErr(t *testing.T) {
 	}{
 		{"original:nil, checked:nil", nil, nil, true},
 		{"original:notNilEgoErr, checked:nil", notNilEgoErr, nil, false},
-		{"original:notNilErr, checked:nil", notNilErr, nil, true},
+		{"original:errNotNil, checked:nil", errNotNil, nil, true},
 	}
 
 	for _, tt := range tests {
