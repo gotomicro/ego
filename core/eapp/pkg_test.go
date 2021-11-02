@@ -62,3 +62,10 @@ func TestPrintVersion(t *testing.T) {
 	appName = "test-app"
 	PrintVersion()
 }
+
+func TestSetBuildTime(t *testing.T) {
+	buildTime = "2021-10-28--12:00"
+	setBuildTime(buildTime)
+	out := BuildTime()
+	assert.Equal(t, "2021-10-28 12:00", out)
+}
