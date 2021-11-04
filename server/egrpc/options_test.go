@@ -28,7 +28,6 @@ func TestWithServerOption(t *testing.T) {
 	opt := WithServerOption(grpc.WriteBufferSize(128 * 1024))
 	cmp := newCmp(t, opt)
 	assert.Equal(t, 3, len(cmp.config.serverOptions))
-	t.Log("done")
 }
 
 func TestWithStreamInterceptor(t *testing.T) {

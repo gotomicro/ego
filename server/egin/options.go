@@ -32,3 +32,10 @@ func WithTLSSessionCache(tsc tls.ClientSessionCache) Option {
 		c.config.TLSSessionCache = tsc
 	}
 }
+
+// WithTrustedPlatform 信任的Header头，获取客户端IP地址
+func WithTrustedPlatform(trustedPlatform string) Option {
+	return func(c *Container) {
+		c.config.TrustedPlatform = trustedPlatform
+	}
+}

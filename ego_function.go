@@ -181,11 +181,13 @@ func (e *Ego) initLogger() error {
 	if econf.Get(e.opts.configPrefix+"logger.default") != nil {
 		elog.DefaultLogger = elog.Load(e.opts.configPrefix + "logger.default").Build()
 		elog.EgoLogger.Info("reinit default logger", elog.FieldComponent(elog.PackageName))
+		e.opts.afterStopClean = append(e.opts.afterStopClean, elog.DefaultLogger.Flush)
 	}
 
 	if econf.Get(e.opts.configPrefix+"logger.ego") != nil {
 		elog.EgoLogger = elog.Load(e.opts.configPrefix + "logger.ego").Build(elog.WithFileName(elog.EgoLoggerName))
 		elog.EgoLogger.Info("reinit ego logger", elog.FieldComponent(elog.PackageName))
+		e.opts.afterStopClean = append(e.opts.afterStopClean, elog.EgoLogger.Flush)
 	}
 	return nil
 }
@@ -234,7 +236,7 @@ func initMaxProcs() error {
 			elog.EgoLogger.Panic("init max procs", elog.FieldComponent("app"), elog.FieldErr(err))
 		}
 	}
-	elog.EgoLogger.Info("init max procs", elog.FieldComponent("app"), elog.FieldValueAny(runtime.GOMAXPROCS(-1)))
+	elog.EgoLogger.Info("init app", elog.FieldComponent("app"), elog.Int("pid", os.Getpid()), elog.Int("coreNum", runtime.GOMAXPROCS(-1)))
 	return nil
 }
 

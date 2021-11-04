@@ -82,13 +82,14 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 |直连调用gRPC|[代码](./client/egrpc)|[例子](./examples/grpc/direct)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_4-%E7%9B%B4%E8%BF%9Egrpc)|
 |通过etcd调用gRPC||[例子](https://github.com/gotomicro/ego-component/tree/master/eetcd/examples)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_5-%E4%BD%BF%E7%94%A8etcd%E7%9A%84grpc)|
 |通过k8s调用gRPC||[例子](https://github.com/gotomicro/ego-component/tree/master/ek8s/examples)|[文档](https://ego.gocn.vip/frame/client/grpc.html#_6-%E4%BD%BF%E7%94%A8k8s%E7%9A%84grpc)|
+|限流熔断sentinel|[代码](https://github.com/gotomicro/ego/tree/master/core/esentinel)|[例子](https://github.com/gotomicro/ego/tree/master/examples/sentinel/http)|[文档](https://ego.gocn.vip/frame/client/sentinel.html)|
 |调用MySQL|[代码](https://github.com/gotomicro/ego-component/tree/master/egorm)|[例子](https://github.com/gotomicro/ego-component/tree/master/egorm/examples/gorm)|[文档](https://ego.gocn.vip/frame/client/gorm.html#example)|
 |调用Redis|[代码](https://github.com/gotomicro/ego-component/tree/master/eredis)|[例子](https://github.com/gotomicro/ego-component/tree/master/eredis/examples/redis)|[文档](https://ego.gocn.vip/frame/client/redis.html#example)|
 |调用Redis分布式锁|[代码](https://github.com/gotomicro/ego-component/tree/master/eredis)|||
-|调用Mongo|[代码](https://github.com/gotomicro/ego-component/tree/master/emongo)|||
-|调用Kafka|[代码](https://github.com/gotomicro/ego-component/tree/master/ekafka)|||
+|调用Mongo|[代码](https://github.com/gotomicro/ego-component/tree/master/emongo)||[文档](https://ego.gocn.vip/frame/client/mongo.html)|
+|调用Kafka|[代码](https://github.com/gotomicro/ego-component/tree/master/ekafka)||[文档](https://ego.gocn.vip/frame/client/kafka.html)|
 |调用ETCD|[代码](https://github.com/gotomicro/ego-component/tree/master/eetcd)|||
-|调用K8S|[代码](https://github.com/gotomicro/ego-component/tree/master/ek8s)|||
+|调用K8S|[代码](https://github.com/gotomicro/ego-component/tree/master/ek8s)||[文档](https://ego.gocn.vip/frame/client/ek8s.html)|
 |调用Oauth2|[代码](https://github.com/gotomicro/ego-component/tree/master/eoauth2)|||
 |调用Wechat|[代码](https://github.com/gotomicro/ego-component/tree/master/ewechat)|||
 |调用Dingtalk|[代码](https://github.com/gotomicro/ego-component/tree/master/edingtalk)|||
@@ -96,8 +97,21 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 
 * 更多组件请查看:[https://github.com/gotomicro/ego-component](https://github.com/gotomicro/ego-component)
 
+## 5 下载工具
+```bash
+bash <(curl -L https://raw.githubusercontent.com/gotomicro/egoctl/main/getlatest.sh)
+```
+通过以上脚本，可以下载protoc工具全家桶，以及ego的protoc插件和egoctl
+* /usr/local/bin/egoctl               EGO工具 
+* /usr/local/bin/protoc               生成Pb工具
+* /usr/local/bin/protoc-gen-go        生成Pb工具
+* /usr/local/bin/protoc-gen-go-grpc   生成gRPC工具
+* /usr/local/bin/protoc-gen-go-errors 生成错误码工具
+* /usr/local/bin/protoc-gen-openapiv2 生成HTTP工具
+* /usr/local/bin/protoc-gen-go-http   生成HTTP工具
 
-## 5 特性介绍
+
+## 6 特性介绍
 * 配置驱动
   所有组件启动方式为`组件名称.Load("配置名称").Build()`，可以创建一个组件实例。如以下`http server`，`egin`是组件名称，`server.http`是配置名称
 ```go
@@ -135,9 +149,9 @@ egin.Load("server.http").Build()
 
 ![](docs/images/metric.png)
 
-## 6 Quick Start
+## 7 Quick Start
 
-### 6.1 HelloWorld
+### 7.1 HelloWorld
 配置
 
 ```toml
@@ -171,13 +185,13 @@ func main() {
 }
 ```
 
-### 6.2 使用命令行运行
+### 7.2 使用命令行运行
 ```
 export EGO_DEBUG=true # 默认日志输出到logs目录，开启dev后日志输出到终端
 go run main.go --config=config.toml
 ```
 
-### 6.3 如下所示
+### 7.3 如下所示
 ![图片](./docs/images/startup.png)
 
 
@@ -187,16 +201,16 @@ go run main.go --config=config.toml
 "Hello Ego"%  
 ```
 
-### 6.4 更加友好的包编译
+### 7.4 更加友好的包编译
 
 使用scripts文件夹里的[包编译](examples/build)，可以看到优雅的version提示
 
 ![图片](./docs/images/version.png)
 
-## 7 更新日志
+## 8 更新日志
 [Releases](https://github.com/gotomicro/ego/releases)
 
-## 8 加入我们
+## 9 加入我们
 加入我们，请在验证信息里添加``ego``关键字
 
 ![image](./docs/images/join.jpeg)

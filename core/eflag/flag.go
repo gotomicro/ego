@@ -37,9 +37,18 @@ type (
 	}
 )
 
-// setFlagSet 设置flagSet
-func setFlagSet(fs *FlagSet) {
+// SetFlagSet 设置flagSet
+func SetFlagSet(fs *FlagSet) {
 	flagset = fs
+}
+
+// NewFlagSet new flagSet
+func NewFlagSet(flagCommand *flag.FlagSet, flags ...Flag) *FlagSet {
+	return &FlagSet{
+		FlagSet: flagCommand,
+		flags:   flags,
+		actions: make(map[string]func(string, *FlagSet)),
+	}
 }
 
 // Register ...

@@ -53,7 +53,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 // Name 配置名称
 func (c *Component) Name() string {
-	return c.config.Name
+	return c.name
 }
 
 // PackageName 包名
