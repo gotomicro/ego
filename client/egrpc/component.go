@@ -4,7 +4,9 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap/zapgrpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 
 	"github.com/gotomicro/ego/core/elog"
 )
@@ -22,6 +24,7 @@ type Component struct {
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
+	grpclog.SetLoggerV2(zapgrpc.NewLogger(logger.ZapLogger()))
 	var ctx = context.Background()
 	var dialOptions = config.dialOptions
 	// 默认配置使用block

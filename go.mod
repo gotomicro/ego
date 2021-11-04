@@ -30,13 +30,15 @@ require (
 	github.com/uber/jaeger-client-go v2.23.1+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/wk8/go-ordered-map v0.2.0
+	go.opencensus.io v0.22.2
 	go.uber.org/automaxprocs v1.3.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/tools v0.1.6
 	google.golang.org/genproto v0.0.0-20210708141623-e76da96a951f
-	google.golang.org/grpc v1.39.0
+	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
+

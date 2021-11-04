@@ -122,7 +122,7 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 				fields = append(fields, elog.FieldStack(stack))
 				event = "recover"
 			}
-			spbStatus := status.Convert(err)
+			spbStatus := ecode.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
 			fields = append(fields,
@@ -200,7 +200,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				return
 			}
 
-			spbStatus := status.Convert(err)
+			spbStatus := ecode.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
 			fields = append(fields,

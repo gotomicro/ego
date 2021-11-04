@@ -1,6 +1,7 @@
 package ecode
 
 import (
+	"context"
 	"net/http"
 
 	"google.golang.org/grpc/codes"
@@ -12,7 +13,21 @@ func Convert(err error) *status.Status {
 	if err == nil {
 		return status.New(codes.OK, "OK")
 	}
-	return status.Convert(err)
+
+	if se, ok := err.(interface {
+		GRPCStatus() *status.Status
+	}); ok {
+		return se.GRPCStatus()
+	}
+
+	switch err {
+	case context.DeadlineExceeded:
+		return status.New(codes.DeadlineExceeded, err.Error())
+	case context.Canceled:
+		return status.New(codes.Canceled, err.Error())
+	}
+
+	return status.New(codes.Unknown, err.Error())
 }
 
 // GrpcToHTTPStatusCode gRPC转HTTP Code

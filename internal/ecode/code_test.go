@@ -1,6 +1,7 @@
 package ecode
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -10,8 +11,9 @@ import (
 )
 
 func TestConvert(t *testing.T) {
-	statusInfo := Convert(nil)
-	assert.Equal(t, status.New(codes.OK, "OK"), statusInfo)
+	assert.Equal(t, status.New(codes.OK, "OK"), Convert(nil))
+	assert.Equal(t, status.New(codes.Canceled, context.Canceled.Error()), Convert(context.Canceled))
+	assert.Equal(t, status.New(codes.DeadlineExceeded, context.DeadlineExceeded.Error()), Convert(context.DeadlineExceeded))
 }
 
 func TestGrpcToHTTPStatusCode(t *testing.T) {
