@@ -47,24 +47,27 @@ func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 		endpoint = target.URL.Opaque
 	}
 	endpoint = strings.TrimPrefix(endpoint, "/")
-	endpoints, err := b.reg.WatchServices(ctx, eregistry.Target{
+
+	egoTarget := eregistry.Target{
 		Protocol:  eregistry.ProtocolGRPC,
 		Scheme:    target.URL.Scheme,
 		Endpoint:  endpoint,
 		Authority: target.URL.Host,
-	})
+	}
+
+	endpoints, err := b.reg.WatchServices(ctx, egoTarget)
 	if err != nil {
 		cancel()
 		return nil, err
 	}
 
 	br := &baseResolver{
-		target: target,
-		cc:     cc,
-		stop:   make(chan struct{}),
-		reg:    b.reg,
-		cancel: cancel,
-		attrs:  make(map[string]*attributes.Attributes),
+		target:   egoTarget,
+		cc:       cc,
+		stop:     make(chan struct{}),
+		reg:      b.reg,
+		cancel:   cancel,
+		nodeInfo: make(map[string]*attributes.Attributes),
 	}
 	br.run(endpoints)
 	return br, nil
@@ -76,12 +79,12 @@ func (b baseBuilder) Scheme() string {
 }
 
 type baseResolver struct {
-	target resolver.Target
-	cc     resolver.ClientConn
-	stop   chan struct{}
-	reg    eregistry.Registry
-	cancel context.CancelFunc
-	attrs  map[string]*attributes.Attributes
+	target   eregistry.Target // 使用ego的target，因为官方的target后续会不兼容
+	cc       resolver.ClientConn
+	stop     chan struct{}
+	reg      eregistry.Registry
+	cancel   context.CancelFunc
+	nodeInfo map[string]*attributes.Attributes // node节点的属性
 }
 
 // ResolveNow ...
@@ -97,6 +100,18 @@ func (b *baseResolver) Close() {
 	b.cancel()
 }
 
+// run 更新节点信息
+// State
+//      Addresses   []Address{  IP列表
+//                  	Addr: IP 地址,
+//						ServerName: 应用名称, 如：svc-user
+//						Attributes: 节点基本信息： server.ServiceInfo
+//                  }
+//      Attributes： {  用于负载均衡的配置，目前需要通过后台来设置
+//						constant.KeyRouteConfig    路由配置
+//						constant.KeyProviderConfig 服务提供方元信息
+//						constant.KeyConsumerConfig 服务消费方配置信息
+//                   }
 func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 	go func() {
 		for {
@@ -108,14 +123,17 @@ func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 															WithValue(constant.KeyProviderConfig, endpoint.ProviderConfigs). // 服务提供方元信息
 															WithValue(constant.KeyConsumerConfig, endpoint.ConsumerConfigs), // 服务消费方配置信息
 				}
+				// 如果node信息有变更，那么就添加，更新或者删除
 				b.tryUpdateAttrs(endpoint.Nodes)
+
 				for key, node := range endpoint.Nodes {
 					var address resolver.Address
 					address.Addr = node.Address
-					address.ServerName = b.target.URL.Path
-					address.Attributes = b.attrs[key]
+					address.ServerName = b.target.Endpoint
+					address.Attributes = b.nodeInfo[key]
 					state.Addresses = append(state.Addresses, address)
 				}
+
 				_ = b.cc.UpdateState(state)
 			case <-b.stop:
 				return
@@ -124,23 +142,24 @@ func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 	}()
 }
 
+// attrEqual 校验节点数据是否相等
 func attrEqual(oldAttr *attributes.Attributes, node server.ServiceInfo) bool {
 	oldNode := oldAttr.Value(constant.KeyServiceInfo)
-	// NOTICE:目前暂时未用Services和Metadata，所以可以使用reflect.DeepEqual
 	return reflect.DeepEqual(oldNode, node)
 }
 
+// tryUpdateAttrs 更新节点数据
 func (b *baseResolver) tryUpdateAttrs(nodes map[string]server.ServiceInfo) {
 	for addr, node := range nodes {
-		oldAttr, ok := b.attrs[addr]
+		oldAttr, ok := b.nodeInfo[addr]
 		if !ok || !attrEqual(oldAttr, node) {
 			attr := attributes.New(constant.KeyServiceInfo, node)
-			b.attrs[addr] = attr
+			b.nodeInfo[addr] = attr
 		}
 	}
-	for addr := range b.attrs {
+	for addr := range b.nodeInfo {
 		if _, ok := nodes[addr]; !ok {
-			delete(b.attrs, addr)
+			delete(b.nodeInfo, addr)
 		}
 	}
 }
