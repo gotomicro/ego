@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"reflect"
+	"strings"
 
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
@@ -29,10 +30,27 @@ type baseBuilder struct {
 // Build ...
 func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 	ctx, cancel := context.WithCancel(context.Background())
+
+	// grpc新版本1.40以后，会采用url parse解析，获取endpoint，但这个方法官方说了会有些问题。
+	// 而 Ego 支持 unix socket，所以需要做一些兼容处理，详情请看 grpc.ClientConn.parseTarget 方法
+	// For targets of the form "[scheme]://[authority]/endpoint, the endpoint
+	// value returned from url.Parse() contains a leading "/". Although this is
+	// in accordance with RFC 3986, we do not want to break existing resolver
+	// implementations which expect the endpoint without the leading "/". So, we
+	// end up stripping the leading "/" here. But this will result in an
+	// incorrect parsing for something like "unix:///path/to/socket". Since we
+	// own the "unix" resolver, we can workaround in the unix resolver by using
+	// the `URL` field instead of the `Endpoint` field.
+
+	endpoint := target.URL.Path
+	if endpoint == "" {
+		endpoint = target.URL.Opaque
+	}
+	endpoint = strings.TrimPrefix(endpoint, "/")
 	endpoints, err := b.reg.WatchServices(ctx, eregistry.Target{
 		Protocol:  eregistry.ProtocolGRPC,
 		Scheme:    target.URL.Scheme,
-		Endpoint:  target.URL.Path,
+		Endpoint:  endpoint,
 		Authority: target.URL.Host,
 	})
 	if err != nil {
