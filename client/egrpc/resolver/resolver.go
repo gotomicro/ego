@@ -31,9 +31,9 @@ func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 	ctx, cancel := context.WithCancel(context.Background())
 	endpoints, err := b.reg.WatchServices(ctx, eregistry.Target{
 		Protocol:  eregistry.ProtocolGRPC,
-		Scheme:    target.Scheme,
-		Endpoint:  target.Endpoint,
-		Authority: target.Authority,
+		Scheme:    target.URL.Scheme,
+		Endpoint:  target.URL.Path,
+		Authority: target.URL.Host,
 	})
 	if err != nil {
 		cancel()
@@ -94,7 +94,7 @@ func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 				for key, node := range endpoint.Nodes {
 					var address resolver.Address
 					address.Addr = node.Address
-					address.ServerName = b.target.Endpoint
+					address.ServerName = b.target.URL.Path
 					address.Attributes = b.attrs[key]
 					state.Addresses = append(state.Addresses, address)
 				}

@@ -21,10 +21,8 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
-	"google.golang.org/grpc/status"
 )
 
 // metricUnaryClientInterceptor returns grpc unary request metrics collector interceptor
@@ -38,20 +36,6 @@ func metricUnaryClientInterceptor(name string) func(ctx context.Context, method 
 		return err
 	}
 }
-
-// metricStreamClientInterceptor returns grpc stream request metrics collector interceptor
-// func metricStreamClientInterceptor(name string) func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-// 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-// 		beg := time.Now()
-// 		clientStream, err := streamer(ctx, desc, cc, method, opts...)
-//
-// 		// 暂时用默认的grpc的默认err收敛
-// 		codes := ecode.ExtractCodes(err)
-// 		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCStream, name, method, cc.Target(), codes.GetMessage())
-// 		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCStream, name, method, cc.Target())
-// 		return clientStream, err
-// 	}
-// }
 
 // debugUnaryClientInterceptor returns grpc unary request request and response details interceptor
 func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientInterceptor {
@@ -89,11 +73,7 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 
 		err := invoker(etrace.MetadataInjector(ctx, md), method, req, reply, cc, opts...)
 		if err != nil {
-			code := codes.Unknown
-			if s, ok := status.FromError(err); ok {
-				code = s.Code()
-			}
-			span.SetTag("response_code", code)
+			span.SetTag("response_code", ecode.Convert(err).Code())
 			ext.Error.Set(span, true)
 
 			span.LogFields(etrace.String("event", "error"), etrace.String("message", err.Error()))
@@ -156,7 +136,7 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 
 		err := invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
-		spbStatus := status.Convert(err)
+		spbStatus := ecode.Convert(err)
 		httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
 		fields = append(fields,
