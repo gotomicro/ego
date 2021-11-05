@@ -2,7 +2,6 @@ package econf_test
 
 import (
 	"io/ioutil"
-	"os"
 	"path"
 	"sync"
 	"testing"
@@ -19,9 +18,9 @@ func TestWithTagName(t *testing.T) {
 	configFile := path.Join(watchDir, "config.yaml")
 	err = ioutil.WriteFile(configFile, []byte("foo: bar\n"), 0640)
 	require.Nil(t, err)
-	defer func() {
-		os.RemoveAll(watchDir)
-	}()
+	// defer func() {
+	// 	os.RemoveAll(configFile)
+	// }()
 	v := econf.New()
 	provider, parser, tag, err := manager.NewDataSource(configFile, true)
 	require.Nil(t, err)
