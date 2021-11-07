@@ -2,8 +2,6 @@ package eregistry
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"io"
 
 	"google.golang.org/grpc/resolver"
@@ -42,23 +40,22 @@ type SyncServicesOptions struct {
 	GrpcResolverNowOptions resolver.ResolveNowOptions
 }
 
-// GetServiceKey ..
+// GetServiceKey ETCD注册需要使用
 func GetServiceKey(prefix string, s *server.ServiceInfo) string {
-	return fmt.Sprintf("/%s/%s/%s/%s://%s", prefix, s.Name, s.Kind.String(), s.Scheme, s.Address)
+	return s.GetServiceKey(prefix)
 }
 
-// GetServiceValue ..
+// Deprecated: Use *server.ServiceInfo.GetServiceValue()
+// GetServiceValue ETCD注册需要使用
 func GetServiceValue(s *server.ServiceInfo) string {
-	val, _ := json.Marshal(s)
-	return string(val)
+	return s.GetServiceValue()
 }
 
-// GetService ..
-func GetService(s string) *server.ServiceInfo {
-	var si server.ServiceInfo
-	_ = json.Unmarshal([]byte(s), &si)
-	return &si
-}
+//func GetService(s string) *server.ServiceInfo {
+//	var si server.ServiceInfo
+//	_ = json.Unmarshal([]byte(s), &si)
+//	return &si
+//}
 
 // Nop registry, used for local development/debugging
 type Nop struct{}

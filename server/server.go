@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/gotomicro/ego/core/constant"
@@ -46,6 +47,17 @@ type Service struct {
 // Label ...
 func (si ServiceInfo) Label() string {
 	return fmt.Sprintf("%s://%s", si.Scheme, si.Address)
+}
+
+// GetServiceValue ETCD注册需要使用的服务信息
+func (si *ServiceInfo) GetServiceValue() string {
+	val, _ := json.Marshal(si)
+	return string(val)
+}
+
+// GetServiceKey ETCD注册需要使用
+func (si *ServiceInfo) GetServiceKey(prefix string) string {
+	return fmt.Sprintf("/%s/%s/%s/%s://%s", prefix, si.Name, si.Kind.String(), si.Scheme, si.Address)
 }
 
 // Server ...

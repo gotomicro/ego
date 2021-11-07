@@ -57,3 +57,72 @@ func TestServiceInfo(t *testing.T) {
 		})
 	}
 }
+
+func Test_ServiceInfoLabel(t *testing.T) {
+	svc := ServiceInfo{
+		Name:    "myserver",
+		Scheme:  "http",
+		Address: "localhost",
+		Weight:  100,
+		Enable:  true,
+		Healthy: true,
+		Kind:    constant.ServiceProvider,
+		Metadata: map[string]string{
+			"appHost":    "",
+			"appMode":    "",
+			"appVersion": "",
+			"buildTime":  "",
+			"egoVersion": "v0.7.0",
+			"key":        "val",
+			"startTime":  xtime.TS.Format(time.Now()),
+		},
+	}
+	assert.Equal(t, "http://localhost", svc.Label())
+}
+
+func Test_ServiceInfoGetServiceValue(t *testing.T) {
+	svc := ServiceInfo{
+		Name:    "myserver",
+		Scheme:  "http",
+		Address: "localhost",
+		Weight:  100,
+		Enable:  true,
+		Healthy: true,
+		Kind:    constant.ServiceProvider,
+		Metadata: map[string]string{
+			"appHost":    "",
+			"appMode":    "",
+			"appVersion": "",
+			"buildTime":  "",
+			"egoVersion": "v0.7.0",
+			"key":        "val",
+			"startTime":  xtime.TS.Format(time.Now()),
+		},
+	}
+	assert.Contains(t, svc.GetServiceValue(), "v0.7.0")
+	assert.Contains(t, svc.GetServiceValue(), "localhost")
+	assert.Contains(t, svc.GetServiceValue(), "myserver")
+	assert.Contains(t, svc.GetServiceValue(), "http")
+}
+
+func Test_ServiceInfoGetServiceKey(t *testing.T) {
+	svc := ServiceInfo{
+		Name:    "myserver",
+		Scheme:  "http",
+		Address: "localhost",
+		Weight:  100,
+		Enable:  true,
+		Healthy: true,
+		Kind:    constant.ServiceProvider,
+		Metadata: map[string]string{
+			"appHost":    "",
+			"appMode":    "",
+			"appVersion": "",
+			"buildTime":  "",
+			"egoVersion": "v0.7.0",
+			"key":        "val",
+			"startTime":  xtime.TS.Format(time.Now()),
+		},
+	}
+	assert.Equal(t, "/ego/myserver/providers/http://localhost", svc.GetServiceKey("ego"))
+}
