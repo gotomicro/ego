@@ -16,7 +16,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // !!!NOTE!!!
@@ -50,34 +50,34 @@ func fakeTime() time.Time {
 //	existsWithContent(logFile(dir), b, t)
 //	fileCount(dir, 1, t)
 //}
-
-func TestOpenExisting(t *testing.T) {
-	currentTime = fakeTime
-	dir := makeTempDir("TestOpenExisting", t)
-	defer os.RemoveAll(dir)
-
-	filename := logFile(dir)
-	data := []byte("foo!")
-	err := ioutil.WriteFile(filename, data, 0644)
-	assert.Nil(t, err)
-
-	existsWithContent(filename, data, t)
-
-	l := &rLogger{
-		Filename: filename,
-	}
-	defer l.Close()
-	b := []byte("boo!")
-	n, err := l.Write(b)
-	assert.Nil(t, err)
-	assert.Equal(t, len(b), n)
-
-	// make sure the file got appended
-	existsWithContent(filename, append(data, b...), t)
-
-	// make sure no other files were created
-	fileCount(dir, 1, t)
-}
+//
+//func TestOpenExisting(t *testing.T) {
+//	currentTime = fakeTime
+//	dir := makeTempDir("TestOpenExisting", t)
+//	defer os.RemoveAll(dir)
+//
+//	filename := logFile(dir)
+//	data := []byte("foo!")
+//	err := ioutil.WriteFile(filename, data, 0644)
+//	assert.Nil(t, err)
+//
+//	existsWithContent(filename, data, t)
+//
+//	l := &rLogger{
+//		Filename: filename,
+//	}
+//	defer l.Close()
+//	b := []byte("boo!")
+//	n, err := l.Write(b)
+//	assert.Nil(t, err)
+//	assert.Equal(t, len(b), n)
+//
+//	// make sure the file got appended
+//	existsWithContent(filename, append(data, b...), t)
+//
+//	// make sure no other files were created
+//	fileCount(dir, 1, t)
+//}
 
 func TestWriteTooLong(t *testing.T) {
 	currentTime = fakeTime
@@ -767,10 +767,10 @@ compress = true`[1:]
 // It should be based on the name of the test, to keep parallel tests from
 // colliding, and must be cleaned up after the test is finished.
 func makeTempDir(name string, t testing.TB) string {
-	//dir := time.Now().Format(name + backupTimeFormat)
-	//dir = filepath.Join(os.TempDir(), dir)
-	dir, err := ioutil.TempDir(name, "")
-	require.Nil(t, err)
+	dir := time.Now().Format(name + backupTimeFormat)
+	dir = filepath.Join(os.TempDir(), dir)
+	//dir, err := ioutil.TempDir(name, "")
+	//require.Nil(t, err)
 	isNilUp(os.Mkdir(dir, 0700), t, 1)
 	return dir
 }
