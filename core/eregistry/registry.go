@@ -40,6 +40,7 @@ type SyncServicesOptions struct {
 	GrpcResolverNowOptions resolver.ResolveNowOptions
 }
 
+// Deprecated: Use *server.ServiceInfo.GetServiceKey()
 // GetServiceKey ETCD注册需要使用
 func GetServiceKey(prefix string, s *server.ServiceInfo) string {
 	return s.GetServiceKey(prefix)
@@ -56,31 +57,6 @@ func GetServiceValue(s *server.ServiceInfo) string {
 //	_ = json.Unmarshal([]byte(s), &si)
 //	return &si
 //}
-
-// Nop registry, used for local development/debugging
-type Nop struct{}
-
-// ListServices ...
-func (n Nop) ListServices(ctx context.Context, target Target) ([]*server.ServiceInfo, error) {
-	panic("implement me")
-}
-
-// WatchServices ...
-func (n Nop) WatchServices(ctx context.Context, target Target) (chan Endpoints, error) {
-	panic("implement me")
-}
-
-// RegisterService ...
-func (n Nop) RegisterService(context.Context, *server.ServiceInfo) error { return nil }
-
-// UnregisterService ...
-func (n Nop) UnregisterService(context.Context, *server.ServiceInfo) error { return nil }
-
-// SyncServices 同步所有服务
-func (n Nop) SyncServices(context.Context, SyncServicesOptions) error { return nil }
-
-// Close ...
-func (n Nop) Close() error { return nil }
 
 // Configuration ...
 type Configuration struct {
