@@ -49,7 +49,7 @@ func (*rotateWriterBuilder) Scheme() string {
 	return writerRotateLogger
 }
 
-// Load constructs a zapcore.Core with stderr syncer
+// Build constructs a zapcore.Core with stderr syncer
 func (r *rotateWriterBuilder) Build(key string, commonConfig *Config) Writer {
 	c := defaultConfig()
 	if err := econf.UnmarshalKey(key, &c); err != nil {

@@ -37,12 +37,12 @@ func (in *Endpoints) DeepCopy() *Endpoints {
 	}
 
 	out := newEndpoints()
-	in.DeepCopyInfo(out)
+	in.deepCopyInfo(out)
 	return out
 }
 
-// DeepCopyInfo ...
-func (in *Endpoints) DeepCopyInfo(out *Endpoints) {
+// deepCopyInfo ...
+func (in *Endpoints) deepCopyInfo(out *Endpoints) {
 	for key, info := range in.Nodes {
 		out.Nodes[key] = info
 	}

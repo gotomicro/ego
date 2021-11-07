@@ -49,3 +49,8 @@ func TestWithUnaryInterceptor(t *testing.T) {
 	assert.Equal(t, 2, len(cmp.config.unaryInterceptors))
 	t.Log("done")
 }
+
+func TestWithNetwork(t *testing.T) {
+	cmp := newCmp(t, WithNetwork("bufnet"))
+	assert.Equal(t, "bufnet", cmp.config.Network)
+}

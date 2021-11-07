@@ -31,8 +31,8 @@ func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info
 	startTime := time.Now()
 	resp, err := handler(ctx, req)
 	statusInfo := ecode.Convert(err)
-	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ctx), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
+	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
 	return resp, err
 }
 
@@ -40,8 +40,8 @@ func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, in
 	startTime := time.Now()
 	err := handler(srv, ss)
 	statusInfo := ecode.Convert(err)
-	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, extractApp(ss.Context()))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, extractApp(ss.Context()), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
+	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ss.Context()), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
 	return err
 }
 
@@ -94,13 +94,6 @@ func traceStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *g
 		ServerStream: ss,
 		ctx:          ctx,
 	})
-}
-
-func extractApp(ctx context.Context) string {
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		return strings.Join(md.Get("app"), ",")
-	}
-	return "unknown"
 }
 
 func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc.StreamServerInterceptor {
