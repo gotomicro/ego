@@ -168,35 +168,35 @@ func TestDefaultFilename(t *testing.T) {
 //	fileCount(dir, 2, t)
 //}
 
-func TestFirstWriteRotate(t *testing.T) {
-	megabyte = 1
-	dir := makeTempDir("TestFirstWriteRotate", t)
-	defer os.RemoveAll(dir)
-
-	filename := logFile(dir)
-	l := &rLogger{
-		Filename: filename,
-		MaxSize:  10,
-	}
-	defer l.Close()
-
-	start := []byte("boooooo!")
-	err := ioutil.WriteFile(filename, start, 0600)
-	assert.Nil(t, err)
-
-	newFakeTime()
-
-	// this would make us rotate
-	b := []byte("fooo!")
-	n, err := l.Write(b)
-	assert.Nil(t, err)
-	assert.Equal(t, len(b), n)
-
-	existsWithContent(filename, b, t)
-	existsWithContent(backupFile(dir), start, t)
-
-	fileCount(dir, 2, t)
-}
+//func TestFirstWriteRotate(t *testing.T) {
+//	megabyte = 1
+//	dir := makeTempDir("TestFirstWriteRotate", t)
+//	defer os.RemoveAll(dir)
+//
+//	filename := logFile(dir)
+//	l := &rLogger{
+//		Filename: filename,
+//		MaxSize:  10,
+//	}
+//	defer l.Close()
+//
+//	start := []byte("boooooo!")
+//	err := ioutil.WriteFile(filename, start, 0600)
+//	assert.Nil(t, err)
+//
+//	newFakeTime()
+//
+//	// this would make us rotate
+//	b := []byte("fooo!")
+//	n, err := l.Write(b)
+//	assert.Nil(t, err)
+//	assert.Equal(t, len(b), n)
+//
+//	existsWithContent(filename, b, t)
+//	existsWithContent(backupFile(dir), start, t)
+//
+//	fileCount(dir, 2, t)
+//}
 
 func TestMaxBackups(t *testing.T) {
 
