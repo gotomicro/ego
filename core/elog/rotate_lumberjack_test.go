@@ -378,72 +378,73 @@ func TestCleanupExistingBackups(t *testing.T) {
 	fileCount(dir, 2, t)
 }
 
-func TestMaxAge(t *testing.T) {
-
-	megabyte = 1
-
-	dir := makeTempDir("TestMaxAge", t)
-	defer os.RemoveAll(dir)
-
-	filename := logFile(dir)
-	l := &rLogger{
-		Filename: filename,
-		MaxSize:  10,
-		MaxAge:   1,
-	}
-	defer l.Close()
-	b := []byte("boo!")
-	n, err := l.Write(b)
-	assert.Nil(t, err)
-	assert.Equal(t, len(b), n)
-
-	existsWithContent(filename, b, t)
-	fileCount(dir, 1, t)
-
-	// two days later
-	newFakeTime()
-
-	b2 := []byte("foooooo!")
-	n, err = l.Write(b2)
-	assert.Nil(t, err)
-	assert.Equal(t, len(b2), n)
-	existsWithContent(backupFile(dir), b, t)
-
-	// we need to wait a little bit since the files get deleted on a different
-	// goroutine.
-	<-time.After(10 * time.Millisecond)
-
-	// We should still have 2 log files, since the most recent backup was just
-	// created.
-	fileCount(dir, 2, t)
-
-	existsWithContent(filename, b2, t)
-
-	// we should have deleted the old file due to being too old
-	existsWithContent(backupFile(dir), b, t)
-
-	// two days later
-	newFakeTime()
-
-	b3 := []byte("baaaaar!")
-	n, err = l.Write(b3)
-	assert.Nil(t, err)
-	assert.Equal(t, len(b3), n)
-	existsWithContent(backupFile(dir), b2, t)
-
-	// we need to wait a little bit since the files get deleted on a different
-	// goroutine.
-	<-time.After(10 * time.Millisecond)
-
-	// We should have 2 log files - the main log file, and the most recent
-	// backup.  The earlier backup is past the cutoff and should be gone.
-	fileCount(dir, 2, t)
-
-	existsWithContent(filename, b3, t)
-
-	// we should have deleted the old file due to being too old
-	existsWithContent(backupFile(dir), b2, t)
-}
+//
+//func TestMaxAge(t *testing.T) {
+//
+//	megabyte = 1
+//
+//	dir := makeTempDir("TestMaxAge", t)
+//	defer os.RemoveAll(dir)
+//
+//	filename := logFile(dir)
+//	l := &rLogger{
+//		Filename: filename,
+//		MaxSize:  10,
+//		MaxAge:   1,
+//	}
+//	defer l.Close()
+//	b := []byte("boo!")
+//	n, err := l.Write(b)
+//	assert.Nil(t, err)
+//	assert.Equal(t, len(b), n)
+//
+//	existsWithContent(filename, b, t)
+//	fileCount(dir, 1, t)
+//
+//	// two days later
+//	newFakeTime()
+//
+//	b2 := []byte("foooooo!")
+//	n, err = l.Write(b2)
+//	assert.Nil(t, err)
+//	assert.Equal(t, len(b2), n)
+//	existsWithContent(backupFile(dir), b, t)
+//
+//	// we need to wait a little bit since the files get deleted on a different
+//	// goroutine.
+//	<-time.After(10 * time.Millisecond)
+//
+//	// We should still have 2 log files, since the most recent backup was just
+//	// created.
+//	fileCount(dir, 2, t)
+//
+//	existsWithContent(filename, b2, t)
+//
+//	// we should have deleted the old file due to being too old
+//	existsWithContent(backupFile(dir), b, t)
+//
+//	// two days later
+//	newFakeTime()
+//
+//	b3 := []byte("baaaaar!")
+//	n, err = l.Write(b3)
+//	assert.Nil(t, err)
+//	assert.Equal(t, len(b3), n)
+//	existsWithContent(backupFile(dir), b2, t)
+//
+//	// we need to wait a little bit since the files get deleted on a different
+//	// goroutine.
+//	<-time.After(10 * time.Millisecond)
+//
+//	// We should have 2 log files - the main log file, and the most recent
+//	// backup.  The earlier backup is past the cutoff and should be gone.
+//	fileCount(dir, 2, t)
+//
+//	existsWithContent(filename, b3, t)
+//
+//	// we should have deleted the old file due to being too old
+//	existsWithContent(backupFile(dir), b2, t)
+//}
 
 //
 //func TestOldLogFiles(t *testing.T) {
