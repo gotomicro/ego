@@ -16,7 +16,7 @@ func TestNop_Close(t *testing.T) {
 func TestNop_ListServices(t *testing.T) {
 	n := Nop{}
 	assert.Panics(t, func() {
-		n.ListServices(context.Background(), Target{})
+		_, _ = n.ListServices(context.Background(), Target{})
 	})
 }
 
@@ -41,6 +41,6 @@ func TestNop_UnregisterService(t *testing.T) {
 func TestNop_WatchServices(t *testing.T) {
 	n := Nop{}
 	assert.Panics(t, func() {
-		n.WatchServices(context.Background(), Target{})
+		_, _ = n.WatchServices(context.Background(), Target{})
 	})
 }
