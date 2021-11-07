@@ -35,7 +35,7 @@ func fakeTime() time.Time {
 }
 
 func init() {
-
+	currentTime = fakeTime
 }
 
 func TestNewFile(t *testing.T) {
@@ -133,14 +133,19 @@ func TestDefaultFilename(t *testing.T) {
 
 func TestAutoRotate(t *testing.T) {
 	megabyte = 1
-
 	dir := makeTempDir("TestAutoRotate", t)
-	defer os.RemoveAll(dir)
+	//
+	//dir, err := ioutil.TempDir("", "TestAutoRotate")
+	//require.Nil(t, err)
+	//filename := filepath.Join(dir, filepath.Base("lumberjack.log"))
+	//defer os.RemoveAll(dir)
 
 	filename := logFile(dir)
+	fmt.Printf("filename--------------->"+"%+v\n", filename)
 	l := &rLogger{
 		Filename: filename,
 		MaxSize:  10,
+		Interval: 24 * time.Hour,
 	}
 	defer l.Close()
 	b := []byte("boo!")
@@ -152,7 +157,7 @@ func TestAutoRotate(t *testing.T) {
 	fileCount(dir, 1, t)
 
 	newFakeTime()
-
+	currentTime = fakeTime
 	b2 := []byte("foooooo!")
 	n, err = l.Write(b2)
 	assert.Nil(t, err)
@@ -788,7 +793,7 @@ func logFile(dir string) string {
 }
 
 func backupFile(dir string) string {
-	return filepath.Join(dir, "foobar-"+fakeTime().UTC().Format(backupTimeFormat)+".log")
+	return filepath.Join(dir, "foobar.log."+fakeTime().UTC().Format(backupTimeFormat))
 }
 
 func backupFileLocal(dir string) string {
