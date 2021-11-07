@@ -41,7 +41,7 @@ func TestServiceInfo(t *testing.T) {
 					"appMode":    "",
 					"appVersion": "",
 					"buildTime":  "",
-					"egoVersion": "v0.7.0",
+					"egoVersion": "unknown version",
 					"key":        "val",
 					"startTime":  xtime.TS.Format(time.Now()),
 				},
