@@ -14,7 +14,7 @@ type Container struct {
 // DefaultContainer 默认容器
 func DefaultContainer() *Container {
 	return &Container{
-		config: DefaultConfig(),
+		config: defaultConfig(),
 	}
 }
 
