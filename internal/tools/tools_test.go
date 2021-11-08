@@ -52,3 +52,9 @@ func TestToSliceStringMap(t *testing.T) {
 	})
 	assert.Equal(t, []map[string]interface{}{{"aaa": "AAA"}}, out)
 }
+
+func TestGofmt(t *testing.T) {
+	assert.Panics(t, func() {
+		GoFmt([]byte(`asdfasdfasdfasdfasd func main`))
+	})
+}
