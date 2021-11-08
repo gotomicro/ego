@@ -30,9 +30,9 @@ func TestWithAddr(t *testing.T) {
 }
 
 func TestWithBalancerName(t *testing.T) {
-	opt := WithBalancerName("test")
+	opt := WithBalancerName("round_robin")
 	cmp := newCmp(t, opt)
-	assert.Equal(t, "test", cmp.config.BalancerName)
+	assert.Equal(t, "round_robin", cmp.config.BalancerName)
 }
 
 func TestWithDebug(t *testing.T) {
