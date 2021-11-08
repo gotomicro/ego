@@ -40,14 +40,14 @@ type SyncServicesOptions struct {
 	GrpcResolverNowOptions resolver.ResolveNowOptions
 }
 
-// Deprecated: Use *server.ServiceInfo.GetServiceKey()
 // GetServiceKey ETCD注册需要使用
+// Deprecated: Use *server.ServiceInfo.GetServiceKey()
 func GetServiceKey(prefix string, s *server.ServiceInfo) string {
 	return s.GetServiceKey(prefix)
 }
 
-// Deprecated: Use *server.ServiceInfo.GetServiceValue()
 // GetServiceValue ETCD注册需要使用
+// Deprecated: Use *server.ServiceInfo.GetServiceValue()
 func GetServiceValue(s *server.ServiceInfo) string {
 	return s.GetServiceValue()
 }

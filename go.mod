@@ -17,6 +17,7 @@ require (
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/websocket v1.4.2
+	github.com/gotomicro/logrotate v0.0.0-20211108024517-45d1f9a03ff5 // indirect
 	github.com/iancoleman/strcase v0.2.0
 	github.com/json-iterator/go v1.1.12
 	github.com/mitchellh/mapstructure v1.3.2
