@@ -31,7 +31,7 @@ func TestFieldComponent(t *testing.T) {
 
 func TestFieldComponentName(t *testing.T) {
 	value := zap.Field{Key: "compName", Type: zapcore.StringType, String: "ego"}
-	assert.True(t, reflect.DeepEqual(value, FieldComponent("ego")))
+	assert.True(t, reflect.DeepEqual(value, FieldComponentName("ego")))
 }
 
 //func TestFieldCost(t *testing.T) {
