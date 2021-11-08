@@ -80,6 +80,43 @@ func Test_ServiceInfoLabel(t *testing.T) {
 	assert.Equal(t, "http://localhost", svc.Label())
 }
 
+func Test_ServiceInfoEqual(t *testing.T) {
+	svc := ServiceInfo{
+		Name:    "myserver",
+		Scheme:  "http",
+		Address: "localhost",
+		Weight:  100,
+		Enable:  true,
+		Healthy: true,
+		Kind:    constant.ServiceProvider,
+		Metadata: map[string]string{
+			"appHost":    "",
+			"appMode":    "",
+			"appVersion": "",
+			"buildTime":  "",
+			"egoVersion": "v0.7.0",
+			"key":        "val",
+		},
+	}
+	assert.True(t, svc.Equal(ServiceInfo{
+		Name:    "myserver",
+		Scheme:  "http",
+		Address: "localhost",
+		Weight:  100,
+		Enable:  true,
+		Healthy: true,
+		Kind:    constant.ServiceProvider,
+		Metadata: map[string]string{
+			"appHost":    "",
+			"appMode":    "",
+			"appVersion": "",
+			"buildTime":  "",
+			"egoVersion": "v0.7.0",
+			"key":        "val",
+		},
+	}))
+}
+
 func Test_ServiceInfoGetServiceValue(t *testing.T) {
 	svc := ServiceInfo{
 		Name:    "myserver",

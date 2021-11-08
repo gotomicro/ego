@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"context"
-	"reflect"
 	"strings"
 
 	"google.golang.org/grpc/attributes"
@@ -144,17 +143,18 @@ func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 
 // attrEqual 校验节点数据是否相等
 func attrEqual(oldAttr *attributes.Attributes, node server.ServiceInfo) bool {
-	oldNode := oldAttr.Value(constant.KeyServiceInfo)
-	return reflect.DeepEqual(oldNode, node)
+	//oldNode := oldAttr.Value(constant.KeyServiceInfo)
+	//oldAttr.Equal(attributes.New(constant.KeyServiceInfo, node))
+	return oldAttr.Equal(attributes.New(constant.KeyServiceInfo, node))
 }
 
 // tryUpdateAttrs 更新节点数据
 func (b *baseResolver) tryUpdateAttrs(nodes map[string]server.ServiceInfo) {
 	for addr, node := range nodes {
 		oldAttr, ok := b.nodeInfo[addr]
-		if !ok || !attrEqual(oldAttr, node) {
-			attr := attributes.New(constant.KeyServiceInfo, node)
-			b.nodeInfo[addr] = attr
+		newAttr := attributes.New(constant.KeyServiceInfo, node)
+		if !ok || !oldAttr.Equal(newAttr) {
+			b.nodeInfo[addr] = newAttr
 		}
 	}
 	for addr := range b.nodeInfo {
