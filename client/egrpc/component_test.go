@@ -1,16 +1,18 @@
-package test
+package egrpc
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net"
 	"testing"
 
-	cegrpc "github.com/gotomicro/ego/client/egrpc"
-	"github.com/gotomicro/ego/core/eerrors"
+	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/internal/test/errcode"
 	"github.com/gotomicro/ego/internal/test/helloworld"
 	"github.com/gotomicro/ego/server/egrpc"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/proto"
 )
@@ -32,20 +34,26 @@ func init() {
 	}()
 }
 
-func TestGrpcError(t *testing.T) {
-	resourceClient := cegrpc.DefaultContainer().Build(cegrpc.WithBufnetServerListener(svc.Listener().(*bufconn.Listener)))
-	ctx := context.Background()
-	client := helloworld.NewGreeterClient(resourceClient.ClientConn)
-	_, err := client.SayHello(ctx, &helloworld.HelloRequest{})
-	egoErr := eerrors.FromError(err)
-	assert.ErrorIs(t, egoErr, errcode.ErrInvalidArgument())
-	assert.Equal(t, "name is empty", egoErr.GetMessage())
+func TestComponent_Error(t *testing.T) {
+	c := &Component{
+		err: fmt.Errorf("some error"),
+	}
+	assert.EqualError(t, c.Error(), "some error")
 }
 
-func TestGrpcOk(t *testing.T) {
-	resourceClient := cegrpc.DefaultContainer().Build(cegrpc.WithBufnetServerListener(svc.Listener().(*bufconn.Listener)))
+func Test_newComponent(t *testing.T) {
+	// address为空的时候会panic
+	assert.Panics(t, func() {
+		cfg := DefaultConfig()
+		//cfg.OnFail = "error"
+		newComponent("test-cmp", cfg, elog.DefaultLogger)
+	})
+
+	cfg := DefaultConfig()
+	cfg.dialOptions = append(cfg.dialOptions, grpc.WithContextDialer(bufDialer))
+	cmp := newComponent("test-cmp", cfg, elog.DefaultLogger)
 	ctx := context.Background()
-	client := helloworld.NewGreeterClient(resourceClient.ClientConn)
+	client := helloworld.NewGreeterClient(cmp.ClientConn)
 	resp, err := client.SayHello(ctx, &helloworld.HelloRequest{
 		Name: "Ego",
 	})
@@ -53,7 +61,6 @@ func TestGrpcOk(t *testing.T) {
 	assert.True(t, proto.Equal(&helloworld.HelloResponse{
 		Message: "Hello Ego",
 	}, resp))
-
 }
 
 // Greeter ...
@@ -70,4 +77,8 @@ func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequ
 	return &helloworld.HelloResponse{
 		Message: "Hello " + request.Name,
 	}, nil
+}
+
+func bufDialer(context.Context, string) (net.Conn, error) {
+	return svc.Listener().(*bufconn.Listener).Dial()
 }

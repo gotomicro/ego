@@ -141,13 +141,6 @@ func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 	}()
 }
 
-// attrEqual 校验节点数据是否相等
-func attrEqual(oldAttr *attributes.Attributes, node server.ServiceInfo) bool {
-	//oldNode := oldAttr.Value(constant.KeyServiceInfo)
-	//oldAttr.Equal(attributes.New(constant.KeyServiceInfo, node))
-	return oldAttr.Equal(attributes.New(constant.KeyServiceInfo, node))
-}
-
 // tryUpdateAttrs 更新节点数据
 func (b *baseResolver) tryUpdateAttrs(nodes map[string]server.ServiceInfo) {
 	for addr, node := range nodes {
