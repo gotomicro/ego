@@ -50,7 +50,7 @@ func (si ServiceInfo) Label() string {
 	return fmt.Sprintf("%s://%s", si.Scheme, si.Address)
 }
 
-// Equal ...
+// Equal 一定要实现这个方法，在gRPC的attributes里会使用该方法断言，判断是否相等
 func (si ServiceInfo) Equal(o interface{}) bool {
 	return reflect.DeepEqual(si, o)
 }

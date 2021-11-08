@@ -10,17 +10,17 @@ import (
 	"google.golang.org/grpc/attributes"
 )
 
-func Test_attrEqual(t *testing.T) {
+func Test_Equal(t *testing.T) {
 	oldAttr := attributes.New(constant.KeyServiceInfo, server.ServiceInfo{
 		Name:    "ego",
 		Scheme:  "grpc",
 		Address: "192.168.1.1",
 	})
-	assert.True(t, attrEqual(oldAttr, server.ServiceInfo{
+	assert.True(t, oldAttr.Equal(attributes.New(constant.KeyServiceInfo, server.ServiceInfo{
 		Name:    "ego",
 		Scheme:  "grpc",
 		Address: "192.168.1.1",
-	}))
+	})))
 
 	oldAttr2 := attributes.New(constant.KeyServiceInfo, server.ServiceInfo{
 		Name:     "ego",
@@ -28,12 +28,12 @@ func Test_attrEqual(t *testing.T) {
 		Address:  "192.168.1.1",
 		Metadata: map[string]string{"hello": "world"},
 	})
-	assert.True(t, attrEqual(oldAttr2, server.ServiceInfo{
+	assert.True(t, oldAttr2.Equal(attributes.New(constant.KeyServiceInfo, server.ServiceInfo{
 		Name:     "ego",
 		Scheme:   "grpc",
 		Address:  "192.168.1.1",
 		Metadata: map[string]string{"hello": "world"},
-	}))
+	})))
 
 	oldAttr3 := attributes.New(constant.KeyServiceInfo, server.ServiceInfo{
 		Name:     "ego",
@@ -49,7 +49,8 @@ func Test_attrEqual(t *testing.T) {
 			},
 		},
 	})
-	assert.True(t, attrEqual(oldAttr3, server.ServiceInfo{
+
+	assert.True(t, oldAttr3.Equal(attributes.New(constant.KeyServiceInfo, server.ServiceInfo{
 		Name:     "ego",
 		Scheme:   "grpc",
 		Address:  "192.168.1.1",
@@ -62,7 +63,7 @@ func Test_attrEqual(t *testing.T) {
 				Methods:   nil,
 			},
 		},
-	}))
+	})))
 }
 
 func Test_tryUpdateAttrs(t *testing.T) {
