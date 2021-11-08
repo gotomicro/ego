@@ -11,12 +11,15 @@ import (
 )
 
 func TestGrpcHeaderValue(t *testing.T) {
+	value := GrpcHeaderValue(context.Background(), "")
+	assert.Equal(t, "", value)
+
 	md := metadata.New(map[string]string{
 		"X-Ego-Uid": "9527",
 	})
 	ctx := metadata.NewIncomingContext(context.Background(), md)
-	value := GrpcHeaderValue(ctx, "X-Ego-Uid")
-	assert.Equal(t, "9527", value)
+	value2 := GrpcHeaderValue(ctx, "X-Ego-Uid")
+	assert.Equal(t, "9527", value2)
 }
 
 func TestGrpcHeaderValueEmpty(t *testing.T) {
@@ -25,10 +28,12 @@ func TestGrpcHeaderValueEmpty(t *testing.T) {
 }
 
 func TestContextValue(t *testing.T) {
-	transport.Set([]string{"X-Ego-Uid"})
+	value := ContextValue(context.Background(), "")
+	assert.Equal(t, "", value)
 
+	transport.Set([]string{"X-Ego-Uid"})
 	ctx := transport.WithValue(context.Background(), "X-Ego-Uid", 9527)
-	value := ContextValue(ctx, "X-Ego-Uid")
+	value = ContextValue(ctx, "X-Ego-Uid")
 	assert.Equal(t, "9527", value)
 
 	ctx = transport.WithValue(context.Background(), "X-Ego-Uid", 9528)
