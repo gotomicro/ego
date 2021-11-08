@@ -36,7 +36,7 @@ func TestWithBalancerName(t *testing.T) {
 }
 
 func TestWithDebug(t *testing.T) {
-	WithDebug(true)
+	_ = WithDebug(true)
 }
 
 func TestWithEnableAccessInterceptor(t *testing.T) {
