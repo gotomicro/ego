@@ -10,6 +10,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap/zapcore"
 )
 
 func TestRotateLogger(t *testing.T) {
@@ -206,4 +207,12 @@ func Test_IsDebugMode(t *testing.T) {
 	}
 	cmp.config.Debug = true
 	assert.True(t, cmp.IsDebugMode())
+}
+
+func TestSetLevel(t *testing.T) {
+	logger := &Component{
+		config: defaultConfig(),
+	}
+	logger.SetLevel(zapcore.ErrorLevel)
+	assert.Equal(t, "error", logger.lv.String())
 }

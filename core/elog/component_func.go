@@ -92,3 +92,7 @@ func panicDetail(msg string, fields ...Field) {
 		fmt.Printf("    %s: %s\n", xcolor.Red(key), fmt.Sprintf("%+v", val))
 	}
 }
+
+func normalizeMessage(msg string) string {
+	return fmt.Sprintf("%-32s", msg)
+}

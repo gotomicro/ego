@@ -1,7 +1,6 @@
 package elog
 
 import (
-	"fmt"
 	"strings"
 
 	"go.uber.org/zap"
@@ -165,10 +164,6 @@ func (logger *Component) Flush() error {
 // IsDebugMode ...
 func (logger *Component) IsDebugMode() bool {
 	return logger.config.Debug
-}
-
-func normalizeMessage(msg string) string {
-	return fmt.Sprintf("%-32s", msg)
 }
 
 // Debug ...

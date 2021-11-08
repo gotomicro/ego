@@ -1,6 +1,7 @@
 package elog
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -99,4 +100,16 @@ func Test_defaultDebugConfig(t *testing.T) {
 	assert.Equal(t, "msg", cfg.MessageKey)
 	assert.Equal(t, "stack", cfg.StacktraceKey)
 	assert.Equal(t, zapcore.DefaultLineEnding, cfg.LineEnding)
+}
+
+func Test_normalizeMessage(t *testing.T) {
+	assert.Equal(t, fmt.Sprintf("%-32s", "hello"), normalizeMessage("hello"))
+}
+
+func Test_sprintf(t *testing.T) {
+	assert.Equal(t, "ego", sprintf("", "ego"))
+	assert.Equal(t, "hello,ego", sprintf("hello,%s", "ego"))
+	assert.Equal(t, "", sprintf(""))
+	assert.Equal(t, "haha", sprintf("haha"))
+
 }
