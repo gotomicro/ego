@@ -203,23 +203,6 @@ func BenchmarkMultiLogger(b *testing.B) {
 
 }
 
-func Test_debugEncodeLevel(t *testing.T) {
-	type args struct {
-		lv  zapcore.Level
-		enc zapcore.PrimitiveArrayEncoder
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-		})
-	}
-}
-
 func Test_timeEncoder(t *testing.T) {
 	te, _ := time.Parse("2006-01-02 15:04:05", "2021-01-01 10:00:00")
 	enc := &sliceArrayEncoder{}
