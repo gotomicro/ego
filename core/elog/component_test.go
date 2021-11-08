@@ -213,6 +213,7 @@ func TestSetLevel(t *testing.T) {
 	logger := &Component{
 		config: defaultConfig(),
 	}
+	logger.lv = &logger.config.al
 	logger.SetLevel(zapcore.ErrorLevel)
 	assert.Equal(t, "error", logger.lv.String())
 }
