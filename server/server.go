@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
@@ -47,6 +48,11 @@ type Service struct {
 // Label ...
 func (si ServiceInfo) Label() string {
 	return fmt.Sprintf("%s://%s", si.Scheme, si.Address)
+}
+
+// Equal ...
+func (si ServiceInfo) Equal(o interface{}) bool {
+	return reflect.DeepEqual(si, o)
 }
 
 // GetServiceValue ETCD注册需要使用的服务信息
