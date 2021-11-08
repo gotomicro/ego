@@ -67,16 +67,6 @@ func timeDebugEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02 15:04:05"))
 }
 
-func sprintf(template string, args ...interface{}) string {
-	msg := template
-	if msg == "" && len(args) > 0 {
-		msg = fmt.Sprint(args...)
-	} else if msg != "" && len(args) > 0 {
-		msg = fmt.Sprintf(template, args...)
-	}
-	return msg
-}
-
 func panicDetail(msg string, fields ...Field) {
 	enc := zapcore.NewMapObjectEncoder()
 	for _, field := range fields {

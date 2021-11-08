@@ -105,11 +105,3 @@ func Test_defaultDebugConfig(t *testing.T) {
 func Test_normalizeMessage(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%-32s", "hello"), normalizeMessage("hello"))
 }
-
-func Test_sprintf(t *testing.T) {
-	assert.Equal(t, "ego", sprintf("", "ego"))
-	assert.Equal(t, "hello,ego", sprintf("hello,%s", "ego"))
-	assert.Equal(t, "", sprintf(""))
-	assert.Equal(t, "haha", sprintf("haha"))
-
-}

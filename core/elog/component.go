@@ -184,7 +184,7 @@ func (logger *Component) Debugw(msg string, keysAndValues ...interface{}) {
 
 // Debugf ...
 func (logger *Component) Debugf(template string, args ...interface{}) {
-	logger.sugar.Debugw(sprintf(template, args...))
+	logger.sugar.Debugf(template, args...)
 }
 
 // Info ...
@@ -205,7 +205,7 @@ func (logger *Component) Infow(msg string, keysAndValues ...interface{}) {
 
 // Infof ...
 func (logger *Component) Infof(template string, args ...interface{}) {
-	logger.sugar.Infof(sprintf(template, args...))
+	logger.sugar.Infof(template, args...)
 }
 
 // Warn ...
@@ -226,7 +226,7 @@ func (logger *Component) Warnw(msg string, keysAndValues ...interface{}) {
 
 // Warnf ...
 func (logger *Component) Warnf(template string, args ...interface{}) {
-	logger.sugar.Warnf(sprintf(template, args...))
+	logger.sugar.Warnf(template, args...)
 }
 
 // Error ...
@@ -247,7 +247,7 @@ func (logger *Component) Errorw(msg string, keysAndValues ...interface{}) {
 
 // Errorf ...
 func (logger *Component) Errorf(template string, args ...interface{}) {
-	logger.sugar.Errorf(sprintf(template, args...))
+	logger.sugar.Errorf(template, args...)
 }
 
 // Panic ...
@@ -269,7 +269,7 @@ func (logger *Component) Panicw(msg string, keysAndValues ...interface{}) {
 
 // Panicf ...
 func (logger *Component) Panicf(template string, args ...interface{}) {
-	logger.sugar.Panicf(sprintf(template, args...))
+	logger.sugar.Panicf(template, args...)
 }
 
 // DPanic ...
@@ -291,7 +291,7 @@ func (logger *Component) DPanicw(msg string, keysAndValues ...interface{}) {
 
 // DPanicf ...
 func (logger *Component) DPanicf(template string, args ...interface{}) {
-	logger.sugar.DPanicf(sprintf(template, args...))
+	logger.sugar.DPanicf(template, args...)
 }
 
 // Fatal ...
@@ -314,7 +314,7 @@ func (logger *Component) Fatalw(msg string, keysAndValues ...interface{}) {
 
 // Fatalf ...
 func (logger *Component) Fatalf(template string, args ...interface{}) {
-	logger.sugar.Fatalf(sprintf(template, args...))
+	logger.sugar.Fatalf(template, args...)
 }
 
 // With ...
