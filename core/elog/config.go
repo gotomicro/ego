@@ -37,8 +37,8 @@ func (c *Config) Filename() string {
 	return fmt.Sprintf("%s/%s", c.Dir, c.Name)
 }
 
-// DefaultConfig ...
-func DefaultConfig() *Config {
+// defaultConfig ...
+func defaultConfig() *Config {
 	dir := "./logs"
 	if eapp.EgoLogPath() != "" {
 		dir = eapp.EgoLogPath()
@@ -53,6 +53,7 @@ func DefaultConfig() *Config {
 		asyncStopFunc:   func() error { return nil },
 		encoderConfig:   defaultZapConfig(),
 		Writer:          "file",
+		al:              zap.NewAtomicLevelAt(zapcore.InfoLevel),
 	}
 }
 

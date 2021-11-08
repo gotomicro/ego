@@ -31,7 +31,7 @@ type config struct {
 	FlushBufferInterval time.Duration // 缓冲时间，默认5秒
 }
 
-func defaultConfig() *config {
+func defaultRotateConfig() *config {
 	return &config{
 		MaxSize:             500, // 500M
 		MaxAge:              7,   // 7 day
@@ -52,7 +52,7 @@ func (*rotateWriterBuilder) Scheme() string {
 
 // Build constructs a zapcore.Core with stderr syncer
 func (r *rotateWriterBuilder) Build(key string, commonConfig *Config) Writer {
-	c := defaultConfig()
+	c := defaultRotateConfig()
 	if err := econf.UnmarshalKey(key, &c); err != nil {
 		panic(err)
 	}
