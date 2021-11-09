@@ -3,7 +3,9 @@ package ego
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"runtime"
 	"testing"
 
@@ -100,4 +102,30 @@ func resetFlagSet() {
 	flag.String("test.cpu", "", "comma-separated `list` of cpu counts to run each test with")
 	flag.Int("test.parallel", runtime.GOMAXPROCS(0), "run at most `n` tests in parallel")
 	eflag.SetFlagSet(flagObj)
+}
+
+func Test_runSerialFuncReturnError(t *testing.T) {
+	args := []func() error{func() error {
+		return nil
+	}}
+	err := runSerialFuncReturnError(args)
+	assert.Nil(t, err)
+
+	args2 := []func() error{func() error {
+		return fmt.Errorf("error")
+	}}
+	err2 := runSerialFuncReturnError(args2)
+	assert.EqualError(t, err2, "error")
+}
+
+func Test_runSerialFuncLogError(t *testing.T) {
+	args := []func() error{func() error {
+		return fmt.Errorf("Test_runSerialFuncLogError")
+	}}
+	runSerialFuncLogError(args)
+	elog.EgoLogger.Flush()
+	filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"Test_runSerialFuncLogError"`)
 }
