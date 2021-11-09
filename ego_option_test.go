@@ -1,7 +1,12 @@
 package ego
 
 import (
+	"os"
+	"syscall"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWithHang(t *testing.T) {
@@ -110,6 +115,78 @@ func TestWithDisableFlagConfig(t *testing.T) {
 			if app.opts.disableFlagConfig != tt.want {
 				t.Errorf("WithDisableFlagConfig() = %v, want %v", tt.args.disableFlagConfig, tt.want)
 			}
+		})
+	}
+}
+
+func TestWithConfigPrefix(t *testing.T) {
+	type args struct {
+		configPrefix string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			args: args{
+				configPrefix: "/ego",
+			},
+			want: "/ego",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := New(WithConfigPrefix(tt.args.configPrefix))
+			assert.Equal(t, tt.want, app.opts.configPrefix)
+		})
+	}
+}
+
+func TestWithTimeout(t *testing.T) {
+	type args struct {
+		timeout time.Duration
+	}
+	tests := []struct {
+		name string
+		args args
+		want time.Duration
+	}{
+		{
+			args: args{
+				timeout: 1 * time.Second,
+			},
+			want: 1 * time.Second,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := New(WithStopTimeout(tt.args.timeout))
+			assert.Equal(t, tt.want, app.opts.stopTimeout)
+		})
+	}
+}
+
+func TestWithShutdownSignal(t *testing.T) {
+	type args struct {
+		sig os.Signal
+	}
+	tests := []struct {
+		name string
+		args args
+		want os.Signal
+	}{
+		{
+			args: args{
+				sig: syscall.SIGQUIT,
+			},
+			want: syscall.SIGQUIT,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := New(WithShutdownSignal(tt.args.sig))
+			assert.Equal(t, tt.want, app.opts.shutdownSignals[0])
 		})
 	}
 }

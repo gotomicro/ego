@@ -109,7 +109,7 @@ func New(options ...Option) *Ego {
 	e.inits = []func() error{
 		e.parseFlags,
 		e.printBanner,
-		printLogger,
+		//printLogger,
 		loadConfig,
 		initMaxProcs,
 		e.initLogger,

@@ -97,7 +97,7 @@ func (e *Ego) startJobs() error {
 		return nil
 	}
 	var jobs = make([]func() error, 0)
-	// warp jobs
+	// wrap jobs
 	for _, runner := range e.jobs {
 		runner := runner
 		jobs = append(jobs, func() error {
@@ -240,11 +240,11 @@ func initMaxProcs() error {
 	return nil
 }
 
-func printLogger() error {
-	elog.EgoLogger.Info("init default logger", elog.FieldComponent(elog.PackageName))
-	elog.EgoLogger.Info("init ego logger", elog.FieldComponent(elog.PackageName))
-	return nil
-}
+//func printLogger() error {
+//	elog.EgoLogger.Info("init default logger", elog.FieldComponent(elog.PackageName))
+//	elog.EgoLogger.Info("init ego logger", elog.FieldComponent(elog.PackageName))
+//	return nil
+//}
 
 // printBanner init
 func (e *Ego) printBanner() error {
