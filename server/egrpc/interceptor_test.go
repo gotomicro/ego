@@ -71,8 +71,8 @@ func Test_ServerAccessLogger(t *testing.T) {
 		WithLogger(logger),
 	)
 	helloworld.RegisterGreeterServer(cmp.Server, &Greeter{})
+	_ = cmp.Init()
 	go func() {
-		_ = cmp.Init()
 		_ = cmp.Start()
 	}()
 
@@ -103,8 +103,8 @@ func Test_ServerAccessAppName(t *testing.T) {
 		WithLogger(logger),
 	)
 	helloworld.RegisterGreeterServer(cmp.Server, &Greeter{})
+	_ = cmp.Init()
 	go func() {
-		_ = cmp.Init()
 		_ = cmp.Start()
 	}()
 
