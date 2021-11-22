@@ -16,6 +16,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gotomicro/ego/core/transport"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/gotomicro/ego/core/elog"
@@ -23,6 +24,7 @@ import (
 
 func TestPanicInHandler(t *testing.T) {
 	router := gin.New()
+	// 使用非异步日志
 	logger := elog.DefaultContainer().Build(
 		elog.WithDebug(false),
 		elog.WithEnableAddCaller(true),
@@ -31,11 +33,12 @@ func TestPanicInHandler(t *testing.T) {
 	container := DefaultContainer()
 	container.Build(WithLogger(logger))
 
+	// 使用recover组件
 	router.Use(container.defaultServerInterceptor())
 	router.GET("/recovery", func(_ *gin.Context) {
 		panic("we have a panic")
 	})
-	// RUN
+	// 调用触发panic的接口
 	w := performRequest(router, "GET", "/recovery")
 	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
@@ -91,6 +94,32 @@ func TestPanicWithBrokenPipe(t *testing.T) {
 			os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 		})
 	}
+}
+
+func TestPrometheus(t *testing.T) {
+	// 1 获取prometheus的handler的数据
+	ts := httptest.NewServer(promhttp.Handler())
+	defer ts.Close()
+	container := DefaultContainer()
+	cmp := container.Build()
+	cmp.GET("/hello", func(_ *gin.Context) {})
+	// RUN
+	w := performRequest(cmp, "GET", "/hello")
+	assert.Equal(t, 200, w.Code)
+	pc := ts.Client()
+	res, err := pc.Get(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = res.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Contains(t, string(text), `ego_server_handle_seconds_count{method="GET./hello",peer="",type="http"}`)
 }
 
 type header struct {
