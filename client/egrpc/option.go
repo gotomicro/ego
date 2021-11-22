@@ -88,3 +88,10 @@ func WithBufnetServerListener(svc net.Listener) Option {
 		return svc.(*bufconn.Listener).Dial()
 	}))
 }
+
+// WithName name
+func WithName(name string) Option {
+	return func(c *Container) {
+		c.name = name
+	}
+}
