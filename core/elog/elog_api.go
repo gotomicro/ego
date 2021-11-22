@@ -52,71 +52,85 @@ func Fatal(msg string, fields ...Field) {
 	DefaultLogger.Fatal(msg, fields...)
 }
 
+// Deprecated: Will be removed in future versions, use Debug instead.
 // Debugw ...
 func Debugw(msg string, keysAndValues ...interface{}) {
 	DefaultLogger.Debugw(msg, keysAndValues...)
 }
 
+// Deprecated: Will be removed in future versions, use Info instead.
 // Infow ...
 func Infow(msg string, keysAndValues ...interface{}) {
 	DefaultLogger.Infow(msg, keysAndValues...)
 }
 
+// Deprecated: Will be removed in future versions, use Warn instead.
 // Warnw ...
 func Warnw(msg string, keysAndValues ...interface{}) {
 	DefaultLogger.Warnw(msg, keysAndValues...)
 }
 
+// Deprecated: Will be removed in future versions, use Error instead.
 // Errorw ...
 func Errorw(msg string, keysAndValues ...interface{}) {
 	DefaultLogger.Errorw(msg, keysAndValues...)
 }
 
+// Deprecated: Will be removed in future versions, use Panic instead.
 // Panicw ...
 func Panicw(msg string, keysAndValues ...interface{}) {
 	DefaultLogger.Panicw(msg, keysAndValues...)
 }
 
+// Deprecated: Will be removed in future versions, use DPanic instead.
 // DPanicw ...
 func DPanicw(msg string, keysAndValues ...interface{}) {
 	DefaultLogger.DPanicw(msg, keysAndValues...)
 }
 
+// Deprecated: Will be removed in future versions, use Fatal instead.
 // Fatalw ...
 func Fatalw(msg string, keysAndValues ...interface{}) {
 	DefaultLogger.Fatalw(msg, keysAndValues...)
 }
 
+// Deprecated: Will be removed in future versions, use Debug instead.
 // Debugf ...
 func Debugf(msg string, args ...interface{}) {
 	DefaultLogger.Debugf(msg, args...)
 }
 
+// Deprecated: Will be removed in future versions, use Info instead.
 // Infof ...
 func Infof(msg string, args ...interface{}) {
 	DefaultLogger.Infof(msg, args...)
 }
 
+// Deprecated: Will be removed in future versions, use Warn instead.
 // Warnf ...
 func Warnf(msg string, args ...interface{}) {
 	DefaultLogger.Warnf(msg, args...)
 }
 
+// Deprecated: Will be removed in future versions, use Error instead.
 // Errorf ...
 func Errorf(msg string, args ...interface{}) {
 	DefaultLogger.Errorf(msg, args...)
 }
 
+// Deprecated: Will be removed in future versions, use Panic instead.
 // Panicf ...
 func Panicf(msg string, args ...interface{}) {
 	DefaultLogger.Panicf(msg, args...)
 }
 
+// Deprecated: Will be removed in future versions, use DPanic instead.
 // DPanicf ...
 func DPanicf(msg string, args ...interface{}) {
 	DefaultLogger.DPanicf(msg, args...)
 }
 
+// Deprecated: Will be removed in future versions, use Fatal instead.
 // Fatalf ...
 func Fatalf(msg string, args ...interface{}) {
 	DefaultLogger.Fatalf(msg, args...)
