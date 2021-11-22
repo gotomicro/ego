@@ -26,28 +26,28 @@ import (
 )
 
 // metricUnaryClientInterceptor returns grpc unary request metrics collector interceptor
-func metricUnaryClientInterceptor(name string) func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+func (c *Container) metricUnaryClientInterceptor() func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, opts...)
 		statusInfo := ecode.Convert(err)
-		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, name, method, cc.Target(), statusInfo.Message())
-		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, name, method, cc.Target())
+		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, c.name, method, cc.Target(), statusInfo.Message())
+		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, c.name, method, cc.Target())
 		return err
 	}
 }
 
 // debugUnaryClientInterceptor returns grpc unary request request and response details interceptor
-func debugUnaryClientInterceptor(compName, addr string) grpc.UnaryClientInterceptor {
+func (c *Container) debugUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		var p peer.Peer
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, append(opts, grpc.Peer(&p))...)
 		cost := time.Since(beg)
 		if err != nil {
-			log.Println("grpc.response", xdebug.MakeReqResErrorV2(6, compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error()))
+			log.Println("grpc.response", xdebug.MakeReqResErrorV2(6, c.name, c.config.Addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error()))
 		} else {
-			log.Println("grpc.response", xdebug.MakeReqResInfoV2(6, compName, addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
+			log.Println("grpc.response", xdebug.MakeReqResInfoV2(6, c.name, c.config.Addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
 		}
 		return err
 	}
@@ -83,22 +83,22 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 }
 
 // defaultUnaryClientInterceptor returns interceptor inject app name
-func defaultUnaryClientInterceptor(config *Config) grpc.UnaryClientInterceptor {
+func (c *Container) defaultUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
 		ctx = metadata.AppendToOutgoingContext(ctx, "app", eapp.Name())
-		if config.EnableCPUUsage {
+		if c.config.EnableCPUUsage {
 			ctx = metadata.AppendToOutgoingContext(ctx, "enable-cpu-usage", "true")
 		}
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
 
-func defaultStreamClientInterceptor(config *Config) grpc.StreamClientInterceptor {
+func (c *Container) defaultStreamClientInterceptor() grpc.StreamClientInterceptor {
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
 		ctx = metadata.AppendToOutgoingContext(ctx, "app", eapp.Name())
-		if config.EnableCPUUsage {
+		if c.config.EnableCPUUsage {
 			ctx = metadata.AppendToOutgoingContext(ctx, "enable-cpu-usage", "true")
 		}
 		return streamer(ctx, desc, cc, method, opts...)
@@ -106,13 +106,13 @@ func defaultStreamClientInterceptor(config *Config) grpc.StreamClientInterceptor
 }
 
 // timeoutUnaryClientInterceptor settings timeout
-func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duration, slowThreshold time.Duration) grpc.UnaryClientInterceptor {
+func (c *Container) timeoutUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// 若无自定义超时设置，默认设置超时
 		_, ok := ctx.Deadline()
 		if !ok {
 			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, timeout)
+			ctx, cancel = context.WithTimeout(ctx, c.config.ReadTimeout)
 			defer cancel()
 		}
 		return invoker(ctx, method, req, reply, cc, opts...)
@@ -120,7 +120,7 @@ func timeoutUnaryClientInterceptor(_logger *elog.Component, timeout time.Duratio
 }
 
 // loggerUnaryClientInterceptor returns log interceptor for logging
-func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.UnaryClientInterceptor {
+func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
 		loggerKeys := transport.CustomContextKeys()
@@ -150,19 +150,19 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 		)
 
 		// 开启了链路，那么就记录链路id
-		if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+		if c.config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
 			fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
 		}
 
-		if config.EnableAccessInterceptorReq {
+		if c.config.EnableAccessInterceptorReq {
 			fields = append(fields, elog.Any("req", json.RawMessage(xstring.JSON(req))))
 		}
-		if config.EnableAccessInterceptorRes {
+		if c.config.EnableAccessInterceptorRes {
 			fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
 		}
 
-		if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
-			_logger.Warn("slow", fields...)
+		if c.config.SlowLogThreshold > time.Duration(0) && cost > c.config.SlowLogThreshold {
+			c.logger.Warn("slow", fields...)
 		}
 
 		if err != nil {
@@ -170,17 +170,17 @@ func loggerUnaryClientInterceptor(_logger *elog.Component, config *Config) grpc.
 			// 只记录系统级别错误
 			if httpStatusCode >= http.StatusInternalServerError {
 				// 只记录系统级别错误
-				_logger.Error("access", fields...)
+				c.logger.Error("access", fields...)
 				return err
 			}
 			// 业务报错只做warning
-			_logger.Warn("access", fields...)
+			c.logger.Warn("access", fields...)
 			return err
 		}
 
-		if config.EnableAccessInterceptor {
+		if c.config.EnableAccessInterceptor {
 			fields = append(fields, elog.FieldEvent("normal"))
-			_logger.Info("access", fields...)
+			c.logger.Info("access", fields...)
 		}
 		return nil
 	}

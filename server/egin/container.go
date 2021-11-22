@@ -55,7 +55,7 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 	server := newComponent(c.name, c.config, c.logger)
 	server.Use(healthcheck.Default())
-	server.Use(defaultServerInterceptor(c.logger, c.config))
+	server.Use(c.defaultServerInterceptor())
 
 	if c.config.EnableMetricInterceptor {
 		server.Use(metricServerInterceptor())
@@ -66,7 +66,7 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 
 	if c.config.EnableSentinel {
-		server.Use(sentinelMiddleware(c.config))
+		server.Use(c.sentinelMiddleware())
 	}
 
 	return server

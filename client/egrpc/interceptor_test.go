@@ -1,13 +1,20 @@
 package egrpc
 
 import (
+	"bytes"
 	"context"
+	"log"
+	"os"
 	"testing"
+	"time"
 
+	"github.com/gotomicro/ego/core/util/xtime"
+	"github.com/gotomicro/ego/internal/test/helloworld"
 	"github.com/gotomicro/ego/internal/tools"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/test/bufconn"
 )
 
 func Test_customHeader(t *testing.T) {
@@ -28,11 +35,118 @@ func Test_customHeader(t *testing.T) {
 }
 
 func TestMetric(t *testing.T) {
-	interceptor := metricUnaryClientInterceptor("test")
+	cmp := DefaultContainer()
+	cmp.name = "test"
+	interceptor := cmp.metricUnaryClientInterceptor()
 	cc := new(grpc.ClientConn)
 	err := interceptor(context.Background(), "/foo", nil, nil, cc,
 		func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, opts ...grpc.CallOption) error {
 			return nil
 		})
 	assert.Nil(t, err)
+}
+
+func TestTimeout(t *testing.T) {
+	listener := bufconn.Listen(1024 * 1024)
+	server := grpc.NewServer()
+	helloworld.RegisterGreeterServer(server, &GreeterTimeout{})
+	go func() {
+		if err := server.Serve(listener); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	begin := time.Now()
+	cmp := DefaultContainer().Build(
+		WithBufnetServerListener(listener),
+		WithReadTimeout(2*time.Second),
+	)
+	cli := helloworld.NewGreeterClient(cmp.ClientConn)
+	_, _ = cli.SayHello(context.Background(), &helloworld.HelloRequest{})
+	cost := time.Since(begin)
+	assert.True(t, cost > xtime.Duration("1.8s"))
+}
+
+func TestDebugLog(t *testing.T) {
+	buf := new(bytes.Buffer)
+	log.SetOutput(buf)
+	listener := bufconn.Listen(1024 * 1024)
+	server := grpc.NewServer()
+	helloworld.RegisterGreeterServer(server, &GreeterDebuglog{})
+	go func() {
+		if err := server.Serve(listener); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	container := DefaultContainer()
+	cmp := container.Build(
+		WithBufnetServerListener(listener),
+		WithDialOption(grpc.WithChainUnaryInterceptor(container.debugUnaryClientInterceptor())),
+	)
+	cli := helloworld.NewGreeterClient(cmp.ClientConn)
+	_, _ = cli.SayHello(context.Background(), &helloworld.HelloRequest{})
+	line := buf.String()
+	assert.Contains(t, line, "Hello DebugLog")
+	log.SetOutput(os.Stderr)
+}
+
+func TestCustomHeaderAppAndCpu(t *testing.T) {
+	listener := bufconn.Listen(1024 * 1024)
+	server := grpc.NewServer()
+	helloworld.RegisterGreeterServer(server, &GreeterHeader{
+		t: t,
+	})
+	go func() {
+		if err := server.Serve(listener); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	container := DefaultContainer()
+	cmp := container.Build(
+		WithBufnetServerListener(listener),
+	)
+	cli := helloworld.NewGreeterClient(cmp.ClientConn)
+	_, _ = cli.SayHello(context.Background(), &helloworld.HelloRequest{})
+}
+
+// Greeter ...
+type GreeterTimeout struct {
+	helloworld.UnimplementedGreeterServer
+}
+
+// SayHello ...
+func (g GreeterTimeout) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+	time.Sleep(2 * time.Second)
+	return &helloworld.HelloResponse{
+		Message: "Hello",
+	}, nil
+}
+
+// Greeter ...
+type GreeterDebuglog struct {
+	helloworld.UnimplementedGreeterServer
+}
+
+// SayHello ...
+func (g GreeterDebuglog) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+	return &helloworld.HelloResponse{
+		Message: "Hello DebugLog",
+	}, nil
+}
+
+// Greeter ...
+type GreeterHeader struct {
+	t *testing.T
+	helloworld.UnimplementedGreeterServer
+}
+
+// SayHello ...
+func (g GreeterHeader) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+	appName := tools.GrpcHeaderValue(context, "app")
+	cpu := tools.GrpcHeaderValue(context, "enable-cpu-usage")
+	assert.Equal(g.t, "true", cpu)
+	assert.Equal(g.t, "___TestCustomHeaderAppAndCpu_in_github_com_gotomicro_ego_client_egrpc.test", appName)
+
+	return &helloworld.HelloResponse{
+		Message: "Hello",
+	}, nil
 }
