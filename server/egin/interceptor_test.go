@@ -119,7 +119,7 @@ func TestPrometheus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Contains(t, string(text), `ego_server_handle_seconds_count{method="GET./hello",peer="",type="http"} 1`)
+	assert.Contains(t, string(text), `ego_server_handle_seconds_count{method="GET./hello",peer="",type="http"}`)
 }
 
 type header struct {

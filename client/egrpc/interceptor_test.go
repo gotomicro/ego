@@ -146,8 +146,8 @@ func TestPrometheusUnary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Contains(t, string(text), `ego_client_handle_seconds_count{method="/helloworld.Greeter/SayHello",name="hello",peer="bufnet",type="unary"} 1`)
-	assert.Contains(t, string(text), `ego_client_handle_seconds_bucket{method="/helloworld.Greeter/SayHello",name="hello",peer="bufnet",type="unary",le="0.005"} 1`)
+	assert.Contains(t, string(text), `ego_client_handle_seconds_count{method="/helloworld.Greeter/SayHello",name="hello",peer="bufnet",type="unary"}`)
+	assert.Contains(t, string(text), `ego_client_handle_seconds_bucket{method="/helloworld.Greeter/SayHello",name="hello",peer="bufnet",type="unary",le="0.005"}`)
 }
 
 // Greeter ...
