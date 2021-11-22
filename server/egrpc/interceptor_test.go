@@ -72,8 +72,8 @@ func Test_ServerAccessLogger(t *testing.T) {
 	)
 	helloworld.RegisterGreeterServer(cmp.Server, &Greeter{})
 	go func() {
-		cmp.Init()
-		cmp.Start()
+		_ = cmp.Init()
+		_ = cmp.Start()
 	}()
 
 	client, err := grpc.Dial("",
@@ -104,8 +104,8 @@ func Test_ServerAccessAppName(t *testing.T) {
 	)
 	helloworld.RegisterGreeterServer(cmp.Server, &Greeter{})
 	go func() {
-		cmp.Init()
-		cmp.Start()
+		_ = cmp.Init()
+		_ = cmp.Start()
 	}()
 
 	client, err := grpc.Dial("",
