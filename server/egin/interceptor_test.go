@@ -28,7 +28,10 @@ func TestPanicInHandler(t *testing.T) {
 		elog.WithEnableAddCaller(true),
 		elog.WithEnableAsync(false),
 	)
-	router.Use(defaultServerInterceptor(logger, DefaultConfig()))
+	container := DefaultContainer()
+	container.Build(WithLogger(logger))
+
+	router.Use(container.defaultServerInterceptor())
 	router.GET("/recovery", func(_ *gin.Context) {
 		panic("we have a panic")
 	})
@@ -65,7 +68,9 @@ func TestPanicWithBrokenPipe(t *testing.T) {
 				elog.WithEnableAddCaller(true),
 				elog.WithEnableAsync(false),
 			)
-			router.Use(defaultServerInterceptor(logger, DefaultConfig()))
+			container := DefaultContainer()
+			container.Build(WithLogger(logger))
+			router.Use(container.defaultServerInterceptor())
 			router.GET("/recovery", func(c *gin.Context) {
 				// Start writing response
 				c.Header("X-Test", "Value")
