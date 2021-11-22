@@ -2,10 +2,18 @@ package egrpc
 
 import (
 	"context"
+	"io/ioutil"
+	"net"
+	"os"
+	"path"
 	"testing"
 
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/internal/test/helloworld"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/test/bufconn"
 )
 
 func Test_getPeerName(t *testing.T) {
@@ -49,4 +57,81 @@ func Test_enableCPUUsage(t *testing.T) {
 	ctx3 := metadata.NewIncomingContext(context.Background(), md3)
 	value3 := enableCPUUsage(ctx3)
 	assert.Equal(t, false, value3)
+}
+
+func Test_ServerAccessLogger(t *testing.T) {
+	// 使用非异步日志
+	logger := elog.DefaultContainer().Build(
+		elog.WithDebug(false),
+		elog.WithEnableAddCaller(true),
+		elog.WithEnableAsync(false),
+	)
+	cmp := DefaultContainer().Build(
+		WithNetwork("bufnet"),
+		WithLogger(logger),
+	)
+	helloworld.RegisterGreeterServer(cmp.Server, &Greeter{})
+	go func() {
+		cmp.Init()
+		cmp.Start()
+	}()
+
+	client, err := grpc.Dial("",
+		grpc.WithInsecure(),
+		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
+			return cmp.Listener().(*bufconn.Listener).Dial()
+		}))
+	assert.Nil(t, err)
+	cli := helloworld.NewGreeterClient(client)
+	_, err = cli.SayHello(context.Background(), &helloworld.HelloRequest{})
+	assert.Nil(t, err)
+	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), "/helloworld.Greeter/SayHello")
+	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+}
+
+func Test_ServerAccessAppName(t *testing.T) {
+	// 使用非异步日志
+	logger := elog.DefaultContainer().Build(
+		elog.WithDebug(false),
+		elog.WithEnableAddCaller(true),
+		elog.WithEnableAsync(false),
+	)
+	cmp := DefaultContainer().Build(
+		WithNetwork("bufnet"),
+		WithLogger(logger),
+	)
+	helloworld.RegisterGreeterServer(cmp.Server, &Greeter{})
+	go func() {
+		cmp.Init()
+		cmp.Start()
+	}()
+
+	client, err := grpc.Dial("",
+		grpc.WithInsecure(),
+		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
+			return cmp.Listener().(*bufconn.Listener).Dial()
+		}))
+	assert.Nil(t, err)
+	cli := helloworld.NewGreeterClient(client)
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "app", "ego")
+	_, err = cli.SayHello(ctx, &helloworld.HelloRequest{})
+	assert.Nil(t, err)
+	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"peerName":"ego"`)
+	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+}
+
+// Greeter ...
+type Greeter struct {
+	helloworld.UnimplementedGreeterServer
+}
+
+// SayHello ...
+func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+	return &helloworld.HelloResponse{
+		Message: "Hello",
+	}, nil
 }

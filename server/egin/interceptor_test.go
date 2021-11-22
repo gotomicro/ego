@@ -23,6 +23,7 @@ import (
 
 func TestPanicInHandler(t *testing.T) {
 	router := gin.New()
+	// 使用非异步日志
 	logger := elog.DefaultContainer().Build(
 		elog.WithDebug(false),
 		elog.WithEnableAddCaller(true),
@@ -31,11 +32,12 @@ func TestPanicInHandler(t *testing.T) {
 	container := DefaultContainer()
 	container.Build(WithLogger(logger))
 
+	// 使用recover组件
 	router.Use(container.defaultServerInterceptor())
 	router.GET("/recovery", func(_ *gin.Context) {
 		panic("we have a panic")
 	})
-	// RUN
+	// 调用触发panic的接口
 	w := performRequest(router, "GET", "/recovery")
 	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
