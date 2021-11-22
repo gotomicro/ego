@@ -9,16 +9,16 @@ import (
 	"os"
 	"runtime/debug"
 
+	"github.com/felixge/fgprof"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/task/ejob"
-
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
+	"github.com/gotomicro/ego/task/ejob"
 )
 
 var (
@@ -38,6 +38,7 @@ func init() {
 	HandleFunc("/debug/pprof/", pprof.Index)
 	HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	HandleFunc("/debug/pprof/profile", pprof.Profile)
+	HandleFunc("/debug/pprof/fgprofile", fgprof.Handler().ServeHTTP)
 	HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	HandleFunc("/debug/pprof/trace", pprof.Trace)
 	if info, ok := debug.ReadBuildInfo(); ok {

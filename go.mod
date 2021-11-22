@@ -11,11 +11,13 @@ require (
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
 	github.com/dave/dst v0.26.2
 	github.com/davecgh/go-spew v1.1.1
+	github.com/felixge/fgprof v0.9.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gin-gonic/gin v1.7.2-0.20211026101529-1c2aa59b20c8
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/pprof v0.0.0-20211108044417-e9b028704de0 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/gotomicro/logrotate v0.0.0-20211108024517-45d1f9a03ff5 // indirect
 	github.com/iancoleman/strcase v0.2.0
