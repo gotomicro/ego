@@ -144,7 +144,7 @@ func (g GreeterHeader) SayHello(context context.Context, request *helloworld.Hel
 	appName := tools.GrpcHeaderValue(context, "app")
 	cpu := tools.GrpcHeaderValue(context, "enable-cpu-usage")
 	assert.Equal(g.t, "true", cpu)
-	assert.Equal(g.t, "___TestCustomHeaderAppAndCpu_in_github_com_gotomicro_ego_client_egrpc.test", appName)
+	assert.Equal(g.t, "egrpc.test", appName)
 
 	return &helloworld.HelloResponse{
 		Message: "Hello",
