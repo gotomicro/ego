@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
+	"github.com/gotomicro/ego/core/elog"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
@@ -53,4 +54,15 @@ func TestWithUnaryInterceptor(t *testing.T) {
 func TestWithNetwork(t *testing.T) {
 	cmp := newCmp(t, WithNetwork("bufnet"))
 	assert.Equal(t, "bufnet", cmp.config.Network)
+}
+
+func TestWithLogger(t *testing.T) {
+	logger := elog.DefaultContainer().Build(
+		elog.WithDebug(false),
+		elog.WithEnableAddCaller(true),
+		elog.WithEnableAsync(false),
+	)
+
+	comp := DefaultContainer().Build(WithLogger(logger))
+	assert.Equal(t, logger, comp.logger)
 }

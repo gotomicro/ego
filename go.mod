@@ -11,17 +11,20 @@ require (
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
 	github.com/dave/dst v0.26.2
 	github.com/davecgh/go-spew v1.1.1
-	github.com/felixge/fgprof v0.9.1 // indirect
+	github.com/felixge/fgprof v0.9.1
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/gin-gonic/gin v1.7.2-0.20211026101529-1c2aa59b20c8
+	github.com/gin-gonic/gin v1.7.2-0.20211111000755-6aee45608da7
 	github.com/go-ole/go-ole v1.2.5 // indirect
+	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/go-resty/resty/v2 v2.6.0
+	github.com/goccy/go-json v0.7.10 // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/google/pprof v0.0.0-20211108044417-e9b028704de0 // indirect
 	github.com/gorilla/websocket v1.4.2
-	github.com/gotomicro/logrotate v0.0.0-20211108024517-45d1f9a03ff5 // indirect
+	github.com/gotomicro/logrotate v0.0.0-20211108024517-45d1f9a03ff5
 	github.com/iancoleman/strcase v0.2.0
 	github.com/json-iterator/go v1.1.12
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/modern-go/reflect2 v1.0.2
 	github.com/opentracing/opentracing-go v1.1.0
@@ -32,6 +35,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.23.1+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
+	github.com/ugorji/go v1.2.6 // indirect
 	github.com/wk8/go-ordered-map v0.2.0
 	go.opencensus.io v0.22.2
 	go.uber.org/automaxprocs v1.3.0
@@ -42,5 +46,6 @@ require (
 	google.golang.org/genproto v0.0.0-20210708141623-e76da96a951f
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )

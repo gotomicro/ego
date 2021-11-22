@@ -68,3 +68,9 @@ func TestWithReadTimeout(t *testing.T) {
 	cmp := newCmp(t, opt)
 	assert.Equal(t, 1*time.Second, cmp.config.ReadTimeout)
 }
+
+func TestWithName(t *testing.T) {
+	opt := WithName("hello")
+	cmp := newCmp(t, opt)
+	assert.Equal(t, "hello", cmp.name)
+}

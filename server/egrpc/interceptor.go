@@ -96,7 +96,7 @@ func traceStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *g
 	})
 }
 
-func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc.StreamServerInterceptor {
+func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		var beg = time.Now()
 		var fields = make([]elog.Field, 0, 20)
@@ -129,8 +129,8 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 				elog.FieldPeerIP(getPeerIP(stream.Context())),
 			)
 
-			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
-				logger.Warn("slow", fields...)
+			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
+				c.logger.Warn("slow", fields...)
 			}
 
 			if err != nil {
@@ -138,20 +138,20 @@ func defaultStreamServerInterceptor(logger *elog.Component, config *Config) grpc
 				// 只记录系统级别错误
 				if httpStatusCode >= http.StatusInternalServerError {
 					// 只记录系统级别错误
-					logger.Error("access", fields...)
+					c.logger.Error("access", fields...)
 				} else {
 					// 非核心报错只做warning
-					logger.Warn("access", fields...)
+					c.logger.Warn("access", fields...)
 				}
 				return
 			}
-			logger.Info("access", fields...)
+			c.logger.Info("access", fields...)
 		}()
 		return handler(srv, stream)
 	}
 }
 
-func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.UnaryServerInterceptor {
+func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
 		var beg = time.Now()
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
@@ -184,12 +184,12 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 			}
 
 			isSlow := false
-			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
+			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
 				isSlow = true
 			}
 
 			// 如果没有开启日志组件、并且没有错误，没有慢日志，那么直接返回不记录日志
-			if err == nil && !config.EnableAccessInterceptor && !isSlow {
+			if err == nil && !c.config.EnableAccessInterceptor && !isSlow {
 				return
 			}
 
@@ -214,11 +214,11 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				}
 			}
 
-			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+			if c.config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
 			}
 
-			if config.EnableAccessInterceptorReq {
+			if c.config.EnableAccessInterceptorReq {
 				var reqMap = map[string]interface{}{
 					"payload": xstring.JSON(req),
 				}
@@ -227,14 +227,14 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				}
 				fields = append(fields, elog.Any("req", reqMap))
 			}
-			if config.EnableAccessInterceptorRes {
+			if c.config.EnableAccessInterceptorRes {
 				fields = append(fields, elog.Any("res", map[string]interface{}{
 					"payload": xstring.JSON(res),
 				}))
 			}
 
 			if isSlow {
-				logger.Warn("slow", fields...)
+				c.logger.Warn("slow", fields...)
 			}
 
 			if err != nil {
@@ -242,16 +242,16 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				// 只记录系统级别错误
 				if httpStatusCode >= http.StatusInternalServerError {
 					// 只记录系统级别错误
-					logger.Error("access", fields...)
+					c.logger.Error("access", fields...)
 				} else {
 					// 非核心报错只做warning
-					logger.Warn("access", fields...)
+					c.logger.Warn("access", fields...)
 				}
 				return
 			}
 
-			if config.EnableAccessInterceptor {
-				logger.Info("access", fields...)
+			if c.config.EnableAccessInterceptor {
+				c.logger.Info("access", fields...)
 			}
 		}()
 
@@ -263,7 +263,7 @@ func defaultUnaryServerInterceptor(logger *elog.Component, config *Config) grpc.
 				header := metadata.Pairs("cpu-usage", strconv.Itoa(int(stat.Usage)))
 				err = grpc.SetHeader(ctx, header)
 				if err != nil {
-					logger.Error("set header error", elog.FieldErr(err))
+					c.logger.Error("set header error", elog.FieldErr(err))
 				}
 			}
 		}

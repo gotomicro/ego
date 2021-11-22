@@ -1,6 +1,7 @@
 package egrpc
 
 import (
+	"github.com/gotomicro/ego/core/elog"
 	"google.golang.org/grpc"
 )
 
@@ -44,5 +45,12 @@ func WithUnaryInterceptor(interceptors ...grpc.UnaryServerInterceptor) Option {
 func WithNetwork(network string) Option {
 	return func(c *Container) {
 		c.config.Network = network
+	}
+}
+
+// WithLogger inject logger
+func WithLogger(logger *elog.Component) Option {
+	return func(c *Container) {
+		c.logger = logger
 	}
 }

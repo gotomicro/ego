@@ -13,6 +13,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/task/ejob"
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
@@ -35,6 +37,7 @@ func init() {
 	HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
 		_ = json.NewEncoder(resp).Encode(routes)
 	})
+	HandleFunc("/debug/fgprof", fgprof.Handler().(http.HandlerFunc))
 	HandleFunc("/debug/pprof/", pprof.Index)
 	HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	HandleFunc("/debug/pprof/profile", pprof.Profile)

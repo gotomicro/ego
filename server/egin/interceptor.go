@@ -68,20 +68,20 @@ func copyHeaders(headers http.Header) http.Header {
 }
 
 // defaultServerInterceptor 默认拦截器，包含日志记录、Recover等功能
-func defaultServerInterceptor(logger *elog.Component, config *Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
 		var beg = time.Now()
 		var rw *resWriter
 		var rb bytes.Buffer
 
 		// 只有开启了EnableAccessInterceptorRes时拷贝request body
-		if config.EnableAccessInterceptorReq {
-			c.Request.Body = ioutil.NopCloser(io.TeeReader(c.Request.Body, &rb))
+		if c.config.EnableAccessInterceptorReq {
+			ctx.Request.Body = ioutil.NopCloser(io.TeeReader(ctx.Request.Body, &rb))
 		}
 		// 只有开启了EnableAccessInterceptorRes时才替换response writer
-		if config.EnableAccessInterceptorRes {
-			rw = &resWriter{c.Writer, &bytes.Buffer{}}
-			c.Writer = rw
+		if c.config.EnableAccessInterceptorRes {
+			rw = &resWriter{ctx.Writer, &bytes.Buffer{}}
+			ctx.Writer = rw
 		}
 
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
@@ -93,7 +93,7 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 		// 必须在defer外层，因为要赋值，替换ctx
 		for _, key := range loggerKeys {
 			// 赋值context
-			getHeaderValue(c, key, config.EnableTrustedCustomHeader)
+			getHeaderValue(ctx, key, c.config.EnableTrustedCustomHeader)
 		}
 
 		defer func() {
@@ -101,40 +101,40 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 			fields = append(fields,
 				elog.FieldType("http"), // GET, POST
 				elog.FieldCost(cost),
-				elog.FieldMethod(c.Request.Method+"."+c.FullPath()),
-				elog.FieldAddr(c.Request.URL.RequestURI()),
-				elog.FieldIP(c.ClientIP()),
-				elog.FieldSize(int32(c.Writer.Size())),
-				elog.FieldPeerIP(getPeerIP(c.Request.RemoteAddr)),
+				elog.FieldMethod(ctx.Request.Method+"."+ctx.FullPath()),
+				elog.FieldAddr(ctx.Request.URL.RequestURI()),
+				elog.FieldIP(ctx.ClientIP()),
+				elog.FieldSize(int32(ctx.Writer.Size())),
+				elog.FieldPeerIP(getPeerIP(ctx.Request.RemoteAddr)),
 			)
 
 			for _, key := range loggerKeys {
-				if value := tools.ContextValue(c.Request.Context(), key); value != "" {
+				if value := tools.ContextValue(ctx.Request.Context(), key); value != "" {
 					fields = append(fields, elog.FieldCustomKeyValue(key, value))
 				}
 			}
 
-			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
-				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(c.Request.Context())))
+			if c.config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx.Request.Context())))
 			}
 
-			if config.EnableAccessInterceptorReq {
+			if c.config.EnableAccessInterceptorReq {
 				fields = append(fields, elog.Any("req", map[string]interface{}{
-					"metadata": copyHeaders(c.Request.Header),
+					"metadata": copyHeaders(ctx.Request.Header),
 					"payload":  rb.String(),
 				}))
 			}
 
-			if config.EnableAccessInterceptorRes {
+			if c.config.EnableAccessInterceptorRes {
 				fields = append(fields, elog.Any("res", map[string]interface{}{
-					"metadata": copyHeaders(c.Writer.Header()),
+					"metadata": copyHeaders(ctx.Writer.Header()),
 					"payload":  rw.body.String(),
 				}))
 			}
 
 			// slow log
-			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
-				logger.Warn("slow", fields...)
+			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
+				c.logger.Warn("slow", fields...)
 			}
 
 			if rec := recover(); rec != nil {
@@ -148,36 +148,35 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 
 				if brokenPipe {
 					// If the connection is dead, we can't write a status to it.
-					c.Error(rec.(error)) // nolint: errcheck
-					c.Abort()
+					ctx.Error(rec.(error)) // nolint: errcheck
+					ctx.Abort()
 				} else {
-					c.AbortWithStatus(http.StatusInternalServerError)
+					ctx.AbortWithStatus(http.StatusInternalServerError)
 				}
 
 				event = "recover"
 				stackInfo := stack(3)
-
 				fields = append(fields,
 					elog.FieldEvent(event),
 					zap.ByteString("stack", stackInfo),
 					elog.FieldErrAny(rec),
-					elog.FieldCode(int32(c.Writer.Status())),
-					elog.FieldUniformCode(int32(c.Writer.Status())),
+					elog.FieldCode(int32(ctx.Writer.Status())),
+					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
-				logger.Error("access", fields...)
+				c.logger.Error("access", fields...)
 				return
 			}
 			// todo 如果不记录日志的时候，应该早点return
-			if config.EnableAccessInterceptor {
+			if c.config.EnableAccessInterceptor {
 				fields = append(fields,
 					elog.FieldEvent(event),
-					elog.FieldErrAny(c.Errors.ByType(gin.ErrorTypePrivate).String()),
-					elog.FieldCode(int32(c.Writer.Status())),
+					elog.FieldErrAny(ctx.Errors.ByType(gin.ErrorTypePrivate).String()),
+					elog.FieldCode(int32(ctx.Writer.Status())),
 				)
-				logger.Info("access", fields...)
+				c.logger.Info("access", fields...)
 			}
 		}()
-		c.Next()
+		ctx.Next()
 	}
 }
 
@@ -279,12 +278,12 @@ func traceServerInterceptor() gin.HandlerFunc {
 // Default resource name is {method}:{path}, such as "GET:/api/users/:id"
 // Default block fallback is returning 429 code
 // Define your own behavior by setting options
-func sentinelMiddleware(config *Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		resourceName := c.Request.Method + "." + c.FullPath()
+func (c *Container) sentinelMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		resourceName := ctx.Request.Method + "." + ctx.FullPath()
 
-		if config.resourceExtract != nil {
-			resourceName = config.resourceExtract(c)
+		if c.config.resourceExtract != nil {
+			resourceName = c.config.resourceExtract(ctx)
 		}
 
 		entry, err := sentinel.Entry(
@@ -294,16 +293,16 @@ func sentinelMiddleware(config *Config) gin.HandlerFunc {
 		)
 
 		if err != nil {
-			if config.blockFallback != nil {
-				config.blockFallback(c)
+			if c.config.blockFallback != nil {
+				c.config.blockFallback(ctx)
 			} else {
-				c.AbortWithStatus(http.StatusTooManyRequests)
+				ctx.AbortWithStatus(http.StatusTooManyRequests)
 			}
 			return
 		}
 
 		defer entry.Exit()
-		c.Next()
+		ctx.Next()
 	}
 }
 
