@@ -21,7 +21,17 @@ var interceptors []func(name string, cfg *Config, logger *elog.Component) (resty
 
 func logAccess(name string, config *Config, logger *elog.Component, req *resty.Request, res *resty.Response, err error) {
 	rr := req.RawRequest
-	fullMethod := req.Method + "." + rr.URL.RequestURI() // GET./hello
+	var (
+		url  string
+		host string
+	)
+	// 修复err 不是 *resty.ResponseError错误的时候，可能为nil
+	if rr != nil {
+		url = rr.URL.RequestURI()
+		host = rr.URL.Host
+	}
+
+	fullMethod := req.Method + "." + url // GET./hello
 	var cost = time.Since(beg(req.Context()))
 	var respBody string
 	if res != nil {
@@ -40,7 +50,7 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 		elog.FieldMethod(fullMethod),
 		elog.FieldName(name),
 		elog.FieldCost(cost),
-		elog.FieldAddr(rr.URL.Host),
+		elog.FieldAddr(host),
 	)
 
 	// 开启了链路，那么就记录链路id
