@@ -13,7 +13,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/felixge/fgprof v0.9.1
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/gin-gonic/gin v1.7.2-0.20211111000755-6aee45608da7
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/go-resty/resty/v2 v2.6.0
