@@ -258,7 +258,7 @@ func traceServerInterceptor() gin.HandlerFunc {
 	tracer := etrace.NewTracer(trace.SpanKindServer)
 	return func(c *gin.Context) {
 		// 该方法会在v0.9.0移除
-		etrace.CompatibleExtractHttpTraceId(c.Request.Header)
+		etrace.CompatibleExtractHTTPTraceID(c.Request.Header)
 		ctx, span := tracer.Start(c.Request.Context(), c.Request.Method+"."+c.FullPath(), propagation.HeaderCarrier(c.Request.Header))
 		span.SetAttributes(
 			etrace.TagComponent("http"),

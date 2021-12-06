@@ -53,7 +53,7 @@ func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 			md = metadata.New(nil)
 		}
 		// Deprecated 该方法会在v0.9.0移除
-		etrace.CompatibleExtractGrpcTraceId(md)
+		etrace.CompatibleExtractGrpcTraceID(md)
 		ctx, span := tracer.Start(ctx, info.FullMethod, transport.GrpcHeaderCarrier(md))
 		span.SetAttributes(
 			etrace.TagComponent("grpc"),
@@ -93,7 +93,7 @@ func traceStreamServerInterceptor() grpc.StreamServerInterceptor {
 			md = metadata.New(nil)
 		}
 		// Deprecated 该方法会在v0.9.0移除
-		etrace.CompatibleExtractGrpcTraceId(md)
+		etrace.CompatibleExtractGrpcTraceID(md)
 		ctx, span := tracer.Start(ss.Context(), info.FullMethod, transport.GrpcHeaderCarrier(md))
 		span.SetAttributes(
 			etrace.TagComponent("grpc"),
