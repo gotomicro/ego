@@ -4,13 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/internal/ecode"
 )
 
@@ -124,14 +122,4 @@ func FromError(err error) *EgoError {
 		}
 	}
 	return New(int(codes.Unknown), UnknownReason, err.Error())
-}
-
-// PrintEgoErrLog ...
-func PrintEgoErrLog(msg string, err error) {
-	switch e := err.(type) {
-	case *EgoError:
-		elog.Error(e.GetMessage(), zap.Any("meta", e.GetMetadata()))
-	default:
-		elog.Error(msg, zap.Error(e))
-	}
 }

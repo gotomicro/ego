@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gotomicro/ego/core/eerrors"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
@@ -18,13 +19,12 @@ import (
 	"github.com/gotomicro/ego/internal/ecode"
 	"github.com/gotomicro/ego/internal/tools"
 	"github.com/gotomicro/ego/internal/xcpu"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
-	"google.golang.org/grpc/status"
 )
 
 func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -45,28 +45,34 @@ func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, in
 	return err
 }
 
-func traceUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	span, ctx := etrace.StartSpanFromContext(
-		ctx,
-		info.FullMethod,
-		etrace.FromIncomingContext(ctx),
-		etrace.TagComponent("gRPC"),
-		etrace.TagSpanKind("server.unary"),
-	)
-
-	defer span.Finish()
-	resp, err := handler(ctx, req)
-
-	if err != nil {
-		code := codes.Unknown
-		if s, ok := status.FromError(err); ok {
-			code = s.Code()
+func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
+	tracer := etrace.NewTracer(trace.SpanKindServer)
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (reply interface{}, err error) {
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			md = metadata.New(nil)
 		}
-		span.SetTag("code", code)
-		ext.Error.Set(span, true)
-		span.LogFields(etrace.String("event", "error"), etrace.String("message", err.Error()))
+		// Deprecated 该方法会在v0.9.0移除
+		etrace.CompatibleExtractGrpcTraceId(md)
+		ctx, span := tracer.Start(ctx, info.FullMethod, transport.GrpcHeaderCarrier(md))
+		span.SetAttributes(
+			etrace.TagComponent("grpc"),
+			etrace.TagSpanKind("server.unary"),
+		)
+		defer func() {
+			if err != nil {
+				span.RecordError(err)
+				if e := eerrors.FromError(err); e != nil {
+					span.SetAttributes(attribute.Key("rpc.status_code").Int64(int64(e.Code)))
+				}
+				span.SetStatus(codes.Error, err.Error())
+			} else {
+				span.SetStatus(codes.Ok, "OK")
+			}
+			span.End()
+		}()
+		return handler(ctx, req)
 	}
-	return resp, err
 }
 
 type contextedServerStream struct {
@@ -79,21 +85,26 @@ func (css contextedServerStream) Context() context.Context {
 	return css.ctx
 }
 
-func traceStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	span, ctx := etrace.StartSpanFromContext(
-		ss.Context(),
-		info.FullMethod,
-		etrace.FromIncomingContext(ss.Context()),
-		etrace.TagComponent("gRPC"),
-		etrace.TagSpanKind("server.stream"),
-		etrace.CustomTag("isServerStream", info.IsServerStream),
-	)
-	defer span.Finish()
-
-	return handler(srv, contextedServerStream{
-		ServerStream: ss,
-		ctx:          ctx,
-	})
+func traceStreamServerInterceptor() grpc.StreamServerInterceptor {
+	tracer := etrace.NewTracer(trace.SpanKindServer)
+	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		md, ok := metadata.FromIncomingContext(ss.Context())
+		if !ok {
+			md = metadata.New(nil)
+		}
+		// Deprecated 该方法会在v0.9.0移除
+		etrace.CompatibleExtractGrpcTraceId(md)
+		ctx, span := tracer.Start(ss.Context(), info.FullMethod, transport.GrpcHeaderCarrier(md))
+		span.SetAttributes(
+			etrace.TagComponent("grpc"),
+			etrace.TagSpanKind("server.stream"),
+		)
+		defer span.End()
+		return handler(srv, contextedServerStream{
+			ServerStream: ss,
+			ctx:          ctx,
+		})
+	}
 }
 
 func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerInterceptor {
@@ -214,7 +225,7 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				}
 			}
 
-			if c.config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+			if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
 			}
 
