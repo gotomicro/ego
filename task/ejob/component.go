@@ -7,7 +7,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/gotomicro/ego/core/eflag"
@@ -32,6 +33,7 @@ const PackageName = "task.ejob"
 // Component ...
 type Component struct {
 	name   string
+	tracer *etrace.Tracer
 	config *Config
 	logger *elog.Component
 }
@@ -44,10 +46,12 @@ type Context struct {
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
+	tracer := etrace.NewTracer(trace.SpanKindServer)
 	return &Component{
 		name:   name,
 		config: config,
 		logger: logger,
+		tracer: tracer,
 	}
 }
 
@@ -74,7 +78,7 @@ func (c *Component) trace(ctx context.Context) {
 	)
 
 	// 如果设置了链路，增加链路信息
-	if opentracing.IsGlobalTracerRegistered() {
+	if etrace.IsGlobalTracerRegistered() {
 		fields = append(fields, elog.FieldTid(traceID))
 	}
 	beg := time.Now()
@@ -104,13 +108,9 @@ func (c *Component) trace(ctx context.Context) {
 
 // StartHTTP ...
 func (c *Component) StartHTTP(w http.ResponseWriter, r *http.Request) (err error) {
-	span, ctx := etrace.StartSpanFromContext(
-		r.Context(),
-		"ego-job",
-		etrace.HeaderExtractor(r.Header),
-	)
+	ctx, span := c.tracer.Start(r.Context(), "ego-job", propagation.HeaderCarrier(r.Header))
+	defer span.End()
 	r = r.WithContext(ctx)
-	defer span.Finish()
 	c.trace(ctx)
 	return c.config.startFunc(Context{
 		Ctx:     ctx,
@@ -121,11 +121,9 @@ func (c *Component) StartHTTP(w http.ResponseWriter, r *http.Request) (err error
 
 // Start 启动
 func (c *Component) Start() (err error) {
-	span, ctx := etrace.StartSpanFromContext(
-		context.Background(),
-		"ego-job",
-	)
-	defer span.Finish()
+	ctx, span := c.tracer.Start(context.Background(), "ego-job", nil)
+	defer span.End()
+
 	c.trace(ctx)
 	return c.config.startFunc(Context{
 		Ctx: ctx,

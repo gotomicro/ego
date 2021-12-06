@@ -3,40 +3,84 @@ package etrace
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"github.com/uber/jaeger-client-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
 	// String ...
-	String = log.String
+	String = attribute.String
+)
+
+type registeredTracer struct {
+	isRegistered bool
+}
+
+var (
+	globalTracer = registeredTracer{false}
 )
 
 // SetGlobalTracer ...
-func SetGlobalTracer(tracer opentracing.Tracer) {
-	opentracing.SetGlobalTracer(tracer)
+func SetGlobalTracer(tp trace.TracerProvider) {
+	globalTracer = registeredTracer{true}
+	otel.SetTracerProvider(tp)
 }
 
-// StartSpanFromContext ...
-func StartSpanFromContext(ctx context.Context, op string, opts ...opentracing.StartSpanOption) (opentracing.Span, context.Context) {
-	return opentracing.StartSpanFromContext(ctx, op, opts...)
-}
-
-// SpanFromContext ...
-func SpanFromContext(ctx context.Context) opentracing.Span {
-	return opentracing.SpanFromContext(ctx)
+// IsGlobalTracerRegistered returns a `bool` to indicate if a tracer has been globally registered
+func IsGlobalTracerRegistered() bool {
+	return globalTracer.isRegistered
 }
 
 // ExtractTraceID HTTP使用request.Context，不要使用错了
 func ExtractTraceID(ctx context.Context) string {
-	if !opentracing.IsGlobalTracerRegistered() {
+	if !IsGlobalTracerRegistered() {
 		return ""
 	}
-
-	span := opentracing.SpanFromContext(ctx)
-	if span == nil {
-		return ""
+	span := trace.SpanContextFromContext(ctx)
+	if span.HasTraceID() {
+		return span.TraceID().String()
 	}
-	return span.(*jaeger.Span).Context().(jaeger.SpanContext).TraceID().String()
+	return ""
 }
+
+// Tracer is otel span tracer
+type Tracer struct {
+	tracer trace.Tracer
+	kind   trace.SpanKind
+	opt    *options
+}
+
+// NewTracer create tracer instance
+func NewTracer(kind trace.SpanKind, opts ...Option) *Tracer {
+	op := options{
+		propagator: propagation.NewCompositeTextMapPropagator(propagation.Baggage{}, propagation.TraceContext{}),
+	}
+	for _, o := range opts {
+		o(&op)
+	}
+	return &Tracer{tracer: otel.Tracer("ego"), kind: kind, opt: &op}
+}
+
+// Start start tracing span
+func (t *Tracer) Start(ctx context.Context, operation string, carrier propagation.TextMapCarrier) (context.Context, trace.Span) {
+	if t.kind == trace.SpanKindServer && carrier != nil {
+		ctx = t.opt.propagator.Extract(ctx, carrier)
+	}
+	ctx, span := t.tracer.Start(ctx,
+		operation,
+		trace.WithSpanKind(t.kind),
+	)
+	if t.kind == trace.SpanKindClient && carrier != nil {
+		t.opt.propagator.Inject(ctx, carrier)
+	}
+	return ctx, span
+}
+
+type options struct {
+	propagator propagation.TextMapPropagator
+}
+
+// Option is tracing option.
+type Option func(*options)

@@ -21,8 +21,8 @@ import (
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/internal/tools"
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -114,7 +114,7 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 				}
 			}
 
-			if c.config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+			if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx.Request.Context())))
 			}
 
@@ -255,21 +255,20 @@ func metricServerInterceptor() gin.HandlerFunc {
 }
 
 func traceServerInterceptor() gin.HandlerFunc {
+	tracer := etrace.NewTracer(trace.SpanKindServer)
 	return func(c *gin.Context) {
-		span, ctx := etrace.StartSpanFromContext(
-			c.Request.Context(),
-			c.Request.Method+"."+c.FullPath(),
+		// 该方法会在v0.9.0移除
+		etrace.CompatibleExtractHTTPTraceID(c.Request.Header)
+		ctx, span := tracer.Start(c.Request.Context(), c.Request.Method+"."+c.FullPath(), propagation.HeaderCarrier(c.Request.Header))
+		span.SetAttributes(
 			etrace.TagComponent("http"),
-			etrace.TagSpanKind("server"),
-			etrace.HeaderExtractor(c.Request.Header),
 			etrace.CustomTag("http.url", c.Request.URL.Path),
 			etrace.CustomTag("http.method", c.Request.Method),
 			etrace.CustomTag("peer.ipv4", c.ClientIP()),
 		)
 		c.Request = c.Request.WithContext(ctx)
-		defer span.Finish()
-		// 判断了全局jaeger的设置，所以这里一定能够断言为jaeger
-		c.Header(eapp.EgoTraceIDName(), span.(*jaeger.Span).Context().(jaeger.SpanContext).TraceID().String())
+		defer span.End()
+		c.Header(eapp.EgoTraceIDName(), span.SpanContext().TraceID().String())
 		c.Next()
 	}
 }

@@ -1,0 +1,6 @@
+[server.grpc]
+port = 9005
+enableAccessInterceptor = true
+enableAccessInterceptorReq = true
+enableAccessInterceptorRes = true
+#enableLocalMainIP = true 获取网卡ip

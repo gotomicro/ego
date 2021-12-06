@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
@@ -54,7 +52,7 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 	)
 
 	// 开启了链路，那么就记录链路id
-	if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+	if config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
 		fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(req.Context())))
 	}
 

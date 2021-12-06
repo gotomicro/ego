@@ -2,10 +2,9 @@ package egin
 
 import (
 	healthcheck "github.com/RaMin0/gin-health-check"
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/util/xnet"
 )
 
@@ -61,7 +60,7 @@ func (c *Container) Build(options ...Option) *Component {
 		server.Use(metricServerInterceptor())
 	}
 
-	if c.config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+	if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
 		server.Use(traceServerInterceptor())
 	}
 

@@ -52,8 +52,8 @@ func (c *Container) Build(options ...Option) *Component {
 	var unaryInterceptors []grpc.UnaryServerInterceptor
 	// trace 必须在最外层，否则无法取到trace信息，传递到其他中间件
 	if c.config.EnableTraceInterceptor {
-		unaryInterceptors = []grpc.UnaryServerInterceptor{traceUnaryServerInterceptor, c.defaultUnaryServerInterceptor()}
-		streamInterceptors = []grpc.StreamServerInterceptor{traceStreamServerInterceptor, c.defaultStreamServerInterceptor()}
+		unaryInterceptors = []grpc.UnaryServerInterceptor{traceUnaryServerInterceptor(), c.defaultUnaryServerInterceptor()}
+		streamInterceptors = []grpc.StreamServerInterceptor{traceStreamServerInterceptor(), c.defaultStreamServerInterceptor()}
 	} else {
 		unaryInterceptors = []grpc.UnaryServerInterceptor{c.defaultUnaryServerInterceptor()}
 		streamInterceptors = []grpc.StreamServerInterceptor{c.defaultStreamServerInterceptor()}

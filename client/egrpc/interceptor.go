@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/eerrors"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
@@ -17,9 +18,10 @@ import (
 	"github.com/gotomicro/ego/core/util/xstring"
 	"github.com/gotomicro/ego/internal/ecode"
 	"github.com/gotomicro/ego/internal/tools"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -55,30 +57,29 @@ func (c *Container) debugUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 
 // traceUnaryClientInterceptor returns grpc unary opentracing interceptor
 func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	tracer := etrace.NewTracer(trace.SpanKindClient)
+	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
 		md, ok := metadata.FromOutgoingContext(ctx)
 		if !ok {
 			md = metadata.New(nil)
-		} else {
-			md = md.Copy()
 		}
-
-		span, ctx := etrace.StartSpanFromContext(
-			ctx,
-			method,
-			etrace.TagSpanKind("client"),
-			etrace.TagComponent("grpc"),
-		)
-		defer span.Finish()
-
-		err := invoker(etrace.MetadataInjector(ctx, md), method, req, reply, cc, opts...)
-		if err != nil {
-			span.SetTag("response_code", ecode.Convert(err).Code())
-			ext.Error.Set(span, true)
-
-			span.LogFields(etrace.String("event", "error"), etrace.String("message", err.Error()))
-		}
-		return err
+		ctx, span := tracer.Start(ctx, method, transport.GrpcHeaderCarrier(md))
+		span.SetAttributes(attribute.String("component", "grpc"))
+		// 因为我们最新执行trace，所以这里，直接new出来metadata
+		ctx = metadata.NewOutgoingContext(ctx, md)
+		defer func() {
+			if err != nil {
+				span.RecordError(err)
+				if e := eerrors.FromError(err); e != nil {
+					span.SetAttributes(attribute.Key("rpc.status_code").Int64(int64(e.Code)))
+				}
+				span.SetStatus(codes.Error, err.Error())
+			} else {
+				span.SetStatus(codes.Ok, "OK")
+			}
+			span.End()
+		}()
+		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
 
@@ -150,7 +151,7 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		)
 
 		// 开启了链路，那么就记录链路id
-		if c.config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
+		if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
 			fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
 		}
 
