@@ -18,7 +18,6 @@ type Config struct {
 	Addr         string
 	Fraction     float64
 	PanicOnError bool
-	closer       func() error
 	options      []tracesdk.TracerProviderOption
 }
 
@@ -34,30 +33,12 @@ func Load(key string) *Config {
 // DefaultConfig ...
 func DefaultConfig() *Config {
 	agentAddr := "127.0.0.1:6831"
-	//headerName := eapp.EgoTraceIDName()
 	if addr := os.Getenv("JAEGER_AGENT_ADDR"); addr != "" {
 		agentAddr = addr
 	}
 	return &Config{
-		ServiceName: eapp.Name(),
-		Addr:        agentAddr,
-		//Sampler: &jconfig.SamplerConfig{
-		//	Type:  "probabilistic",
-		//	Param: 0.001,
-		//},
-		//Reporter: &jconfig.ReporterConfig{
-		//	LogSpans:            false,
-		//	BufferFlushInterval: 1 * time.Second,
-		//	LocalAgentHostPort:  agentAddr,
-		//},
-		//EnableRPCMetrics: true,
-		//Headers: &jaeger.HeadersConfig{
-		//	TraceBaggageHeaderPrefix: "ctx-",
-		//	TraceContextHeaderName:   headerName,
-		//},
-		//tags: []opentracing.Tag{
-		//	{Key: "hostname", Value: eapp.HostName()},
-		//},
+		ServiceName:  eapp.Name(),
+		Addr:         agentAddr,
 		PanicOnError: true,
 	}
 }
@@ -75,18 +56,17 @@ func (config *Config) Build(ops ...Option) trace.TracerProvider {
 	if err != nil {
 		return nil
 	}
-	options := make([]tracesdk.TracerProviderOption, 0)
-	// Set the sampling rate based on the parent span to 100%
-	options = append(options, tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(config.Fraction))))
-	// Always be sure to batch in production.
-	options = append(options, tracesdk.WithBatcher(exp))
-	// Record information about this application in an Resource.
-	options = append(options, tracesdk.WithResource(resource.NewSchemaless(
-		semconv.ServiceNameKey.String(config.ServiceName),
-	)))
-	for _, value := range config.options {
-		options = append(options, value)
+	options := []tracesdk.TracerProviderOption{
+		// Set the sampling rate based on the parent span to 100%
+		tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(config.Fraction))),
+		// Always be sure to batch in production.
+		tracesdk.WithBatcher(exp),
+		// Record information about this application in an Resource.
+		tracesdk.WithResource(resource.NewSchemaless(
+			semconv.ServiceNameKey.String(config.ServiceName),
+		)),
 	}
+	options = append(options, config.options...)
 	tp := tracesdk.NewTracerProvider(options...)
 	return tp
 }

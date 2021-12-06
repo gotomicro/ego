@@ -4,6 +4,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// GrpcHeaderCarrier ...
 type GrpcHeaderCarrier metadata.MD
 
 // Get returns the value associated with the passed key.
