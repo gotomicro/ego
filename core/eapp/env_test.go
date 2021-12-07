@@ -88,3 +88,11 @@ func TestEgoLogExtraKeys(t *testing.T) {
 	out := EgoLogExtraKeys()
 	assert.Equal(t, []string{"x-ego-uid"}, out)
 }
+
+func TestEgoLogWriter(t *testing.T) {
+	os.Setenv(constant.EgoLogWriter, "stderr")
+	defer os.Unsetenv(constant.EgoLogWriter)
+	initEnv()
+	out := EgoLogWriter()
+	assert.Equal(t, "stderr", out)
+}

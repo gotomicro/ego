@@ -17,6 +17,7 @@ var (
 	egoLogAddApp    string
 	egoTraceIDName  string
 	egoLogExtraKeys []string
+	egoLogWriter    string
 )
 
 func initEnv() {
@@ -35,6 +36,10 @@ func initEnv() {
 		egoTraceIDName = "x-trace-id"
 	}
 	egoLogExtraKeys = strings.Split(os.Getenv(constant.EgoLogExtraKeys), ",")
+	egoLogWriter = os.Getenv(constant.EgoLogWriter)
+	if egoLogWriter == "" {
+		egoLogWriter = "file"
+	}
 }
 
 // AppMode 获取应用运行的环境
@@ -80,4 +85,8 @@ func EgoTraceIDName() string {
 // EgoLogExtraKeys 获取自定义loggerKeys
 func EgoLogExtraKeys() []string {
 	return egoLogExtraKeys
+}
+
+func EgoLogWriter() string {
+	return egoLogWriter
 }
