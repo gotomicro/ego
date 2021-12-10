@@ -32,9 +32,13 @@ func callHTTP() error {
 	tracer := etrace.NewTracer(trace.SpanKindClient)
 
 	req := httpComp.R()
+	carrier := propagation.HeaderCarrier(req.Header)
+	fmt.Printf("carrier--------------->"+"%+v\n", carrier.Keys())
 
-	ctx, span := tracer.Start(context.Background(), "callHTTP()", propagation.HeaderCarrier(req.Header))
+	ctx, span := tracer.Start(context.Background(), "callHTTP()", carrier)
 	defer span.End()
+
+	fmt.Printf("carrier--------------->"+"%+v\n", carrier.Keys())
 
 	// Inject traceId Into Header
 	//c1 := etrace.HeaderInjector(ctx, req.Header)

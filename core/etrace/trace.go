@@ -55,7 +55,7 @@ type Tracer struct {
 // NewTracer create tracer instance
 func NewTracer(kind trace.SpanKind, opts ...Option) *Tracer {
 	op := options{
-		propagator: propagation.NewCompositeTextMapPropagator(propagation.Baggage{}, propagation.TraceContext{}),
+		propagator: propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}),
 	}
 	for _, o := range opts {
 		o(&op)
@@ -65,14 +65,14 @@ func NewTracer(kind trace.SpanKind, opts ...Option) *Tracer {
 
 // Start start tracing span
 func (t *Tracer) Start(ctx context.Context, operation string, carrier propagation.TextMapCarrier) (context.Context, trace.Span) {
-	if t.kind == trace.SpanKindServer && carrier != nil {
+	if (t.kind == trace.SpanKindServer || t.kind == trace.SpanKindConsumer) && carrier != nil {
 		ctx = t.opt.propagator.Extract(ctx, carrier)
 	}
 	ctx, span := t.tracer.Start(ctx,
 		operation,
 		trace.WithSpanKind(t.kind),
 	)
-	if t.kind == trace.SpanKindClient && carrier != nil {
+	if (t.kind == trace.SpanKindClient || t.kind == trace.SpanKindProducer) && carrier != nil {
 		t.opt.propagator.Inject(ctx, carrier)
 	}
 	return ctx, span
