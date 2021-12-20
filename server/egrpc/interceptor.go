@@ -164,6 +164,11 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 
 func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+		// 默认过滤掉该探活日志
+		if c.config.EnableSkipHealthLog && info.FullMethod == "/grpc.health.v1.Health/Check" {
+			return handler(ctx, req)
+		}
+
 		var beg = time.Now()
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
 		loggerKeys := transport.CustomContextKeys()

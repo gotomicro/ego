@@ -30,6 +30,6 @@ const (
 	EgoLogWriter = "EGO_LOG_WRITER"
 	// EgoTraceIDName 应用链路ID环境变量，不配置，默认x-trace-id
 	EgoTraceIDName = "EGO_TRACE_ID_NAME"
-	// DefaultDeployment ...
-	DefaultDeployment = ""
+	// EgoGovernorEnableConfig 是否开启查看config
+	EgoGovernorEnableConfig = "EGO_GOVERNOR_ENABLE_CONFIG"
 )

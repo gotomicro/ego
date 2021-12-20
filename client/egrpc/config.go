@@ -19,6 +19,7 @@ type Config struct {
 	ReadTimeout                  time.Duration // 读超时，默认1s
 	SlowLogThreshold             time.Duration // 慢日志记录的阈值，默认600ms
 	EnableBlock                  bool          // 是否开启阻塞，默认开启
+	EnableOfficialGrpcLog        bool          // 是否开启官方grpc日志
 	EnableWithInsecure           bool          // 是否开启非安全传输，默认开启
 	EnableMetricInterceptor      bool          // 是否开启监控，默认开启
 	EnableTraceInterceptor       bool          // 是否开启链路追踪，默认开启
