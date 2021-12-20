@@ -52,8 +52,8 @@ func init() {
 		})
 	}
 
-	// 调试模式开启配置输出
-	if eapp.IsDevelopmentMode() {
+	// 调试模式开启配置输出，或者手动打开探测配置信息
+	if eapp.IsDevelopmentMode() || eapp.EgoGovernorEnableConfig() {
 		HandleFunc("/config/json", func(w http.ResponseWriter, r *http.Request) {
 			encoder := json.NewEncoder(w)
 			if r.URL.Query().Get("pretty") == "true" {
@@ -61,7 +61,6 @@ func init() {
 			}
 			_ = encoder.Encode(econf.Traverse("."))
 		})
-
 		HandleFunc("/config/raw", func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write(econf.RawConfig())
 		})

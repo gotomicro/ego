@@ -8,16 +8,17 @@ import (
 )
 
 var (
-	appMode         string
-	appRegion       string
-	appZone         string
-	appInstance     string // 通常是实例的机器名
-	egoDebug        string
-	egoLogPath      string
-	egoLogAddApp    string
-	egoTraceIDName  string
-	egoLogExtraKeys []string
-	egoLogWriter    string
+	appMode                 string
+	appRegion               string
+	appZone                 string
+	appInstance             string // 通常是实例的机器名
+	egoDebug                string
+	egoLogPath              string
+	egoLogAddApp            string
+	egoTraceIDName          string
+	egoLogExtraKeys         []string
+	egoLogWriter            string
+	egoGovernorEnableConfig string
 )
 
 func initEnv() {
@@ -32,6 +33,7 @@ func initEnv() {
 	egoLogPath = os.Getenv(constant.EgoLogPath)
 	egoLogAddApp = os.Getenv(constant.EgoLogAddApp)
 	egoTraceIDName = os.Getenv(constant.EgoTraceIDName)
+	egoGovernorEnableConfig = os.Getenv(constant.EgoGovernorEnableConfig)
 	if egoTraceIDName == "" {
 		egoTraceIDName = "x-trace-id"
 	}
@@ -87,6 +89,12 @@ func EgoLogExtraKeys() []string {
 	return egoLogExtraKeys
 }
 
+// EgoLogWriter ...
 func EgoLogWriter() string {
 	return egoLogWriter
+}
+
+// EgoGovernorEnableConfig ...
+func EgoGovernorEnableConfig() bool {
+	return egoGovernorEnableConfig == "true"
 }

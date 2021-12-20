@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/gotomicro/ego/internal/egrpclog"
 	"go.uber.org/zap/zapgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
@@ -24,7 +25,10 @@ type Component struct {
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
-	grpclog.SetLoggerV2(zapgrpc.NewLogger(logger.ZapLogger()))
+	if config.EnableOfficialGrpcLog {
+		// grpc框架日志，因为官方grpc日志是单例，所以这里要处理下
+		grpclog.SetLoggerV2(zapgrpc.NewLogger(egrpclog.Build().ZapLogger()))
+	}
 	var ctx = context.Background()
 	var dialOptions = config.dialOptions
 	// 默认配置使用block
@@ -49,6 +53,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	dialOptions = append(dialOptions, grpc.WithBalancerName(config.BalancerName)) //nolint
 	dialOptions = append(dialOptions, grpc.FailOnNonTempDialError(config.EnableFailOnNonTempDialError))
 
+	startTime := time.Now()
 	cc, err := grpc.DialContext(ctx, config.Addr, dialOptions...)
 
 	component := &Component{
@@ -61,13 +66,13 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	if err != nil {
 		component.err = err
 		if config.OnFail == "panic" {
-			logger.Panic("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err), elog.FieldKey(name), elog.FieldAddr(config.Addr))
+			logger.Panic("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err), elog.FieldKey(name), elog.FieldAddr(config.Addr), elog.FieldCost(time.Since(startTime)))
 			return component
 		}
-		logger.Error("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err), elog.FieldKey(name), elog.FieldAddr(config.Addr))
+		logger.Error("dial grpc server", elog.FieldErrKind("request err"), elog.FieldErr(err), elog.FieldKey(name), elog.FieldAddr(config.Addr), elog.FieldCost(time.Since(startTime)))
 		return component
 	}
-	logger.Info("start grpc client", elog.FieldName(name))
+	logger.Info("start grpc client", elog.FieldName(name), elog.FieldCost(time.Since(startTime)))
 	return component
 }
 
