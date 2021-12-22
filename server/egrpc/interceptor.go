@@ -56,14 +56,17 @@ func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		etrace.CompatibleExtractGrpcTraceID(md)
 		ctx, span := tracer.Start(ctx, info.FullMethod, transport.GrpcHeaderCarrier(md))
 		span.SetAttributes(
-			etrace.TagComponent("grpc"),
+			attribute.String("rpc.system", "grpc"),
+			attribute.String("rpc.method", info.FullMethod),
+			attribute.String("net.peer.name", getPeerName(ctx)),
+			attribute.String("net.peer.ip", getPeerIP(ctx)),
 			etrace.TagSpanKind("server.unary"),
 		)
 		defer func() {
 			if err != nil {
 				span.RecordError(err)
 				if e := eerrors.FromError(err); e != nil {
-					span.SetAttributes(attribute.Key("rpc.status_code").Int64(int64(e.Code)))
+					span.SetAttributes(attribute.Key("rpc.grpc.status_code").Int64(int64(e.Code)))
 				}
 				span.SetStatus(codes.Error, err.Error())
 			} else {
