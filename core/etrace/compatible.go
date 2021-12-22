@@ -1,7 +1,6 @@
 package etrace
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -21,7 +20,6 @@ func CompatibleExtractHTTPTraceID(header http.Header) {
 // Deprecated 该方法会在v0.9.0移除
 func CompatibleExtractGrpcTraceID(header metadata.MD) {
 	xTraceID := header.Get("x-trace-id")
-	fmt.Println(len(xTraceID))
 	if len(xTraceID) > 0 {
 		header.Set("Traceparent", CompatibleParse(xTraceID[0]))
 	}

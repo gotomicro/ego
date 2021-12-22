@@ -12,21 +12,25 @@ import (
 
 func TestDefaultConfig(t *testing.T) {
 	assert.True(t, reflect.DeepEqual(&Config{
+		Addr:                         "",
 		BalancerName:                 roundrobin.Name,
 		OnFail:                       "panic",
 		DialTimeout:                  time.Second * 3,
 		ReadTimeout:                  xtime.Duration("1s"),
 		SlowLogThreshold:             xtime.Duration("600ms"),
 		EnableBlock:                  true,
-		EnableTraceInterceptor:       true,
+		EnableOfficialGrpcLog:        false,
 		EnableWithInsecure:           true,
+		EnableMetricInterceptor:      true,
+		EnableTraceInterceptor:       true,
 		EnableAppNameInterceptor:     true,
 		EnableTimeoutInterceptor:     true,
-		EnableMetricInterceptor:      true,
-		EnableFailOnNonTempDialError: true,
 		EnableAccessInterceptor:      false,
 		EnableAccessInterceptorReq:   false,
 		EnableAccessInterceptorRes:   false,
 		EnableCPUUsage:               true,
+		EnableFailOnNonTempDialError: true,
+		keepAlive:                    nil,
+		dialOptions:                  nil,
 	}, DefaultConfig()))
 }

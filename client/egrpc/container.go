@@ -42,11 +42,10 @@ func Load(key string) *Container {
 
 // Build 构建组件
 func (c *Container) Build(options ...Option) *Component {
-
 	// 最先执行trace
 	if c.config.EnableTraceInterceptor {
 		options = append(options,
-			WithDialOption(grpc.WithChainUnaryInterceptor(traceUnaryClientInterceptor())),
+			WithDialOption(grpc.WithChainUnaryInterceptor(c.traceUnaryClientInterceptor())),
 		)
 	}
 

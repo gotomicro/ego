@@ -56,7 +56,7 @@ func (c *Container) debugUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 }
 
 // traceUnaryClientInterceptor returns grpc unary opentracing interceptor
-func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
+func (c *Container) traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	tracer := etrace.NewTracer(trace.SpanKindClient)
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
 		md, ok := metadata.FromOutgoingContext(ctx)
@@ -64,14 +64,18 @@ func traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			md = metadata.New(nil)
 		}
 		ctx, span := tracer.Start(ctx, method, transport.GrpcHeaderCarrier(md))
-		span.SetAttributes(attribute.String("component", "grpc"))
+		span.SetAttributes(
+			attribute.String("rpc.system", "grpc"),
+			attribute.String("rpc.method", method),
+			attribute.String("net.peer.name", c.config.Addr),
+		)
 		// 因为我们最新执行trace，所以这里，直接new出来metadata
 		ctx = metadata.NewOutgoingContext(ctx, md)
 		defer func() {
 			if err != nil {
 				span.RecordError(err)
 				if e := eerrors.FromError(err); e != nil {
-					span.SetAttributes(attribute.Key("rpc.status_code").Int64(int64(e.Code)))
+					span.SetAttributes(attribute.Key("rpc.grpc.status_code").Int64(int64(e.Code)))
 				}
 				span.SetStatus(codes.Error, err.Error())
 			} else {

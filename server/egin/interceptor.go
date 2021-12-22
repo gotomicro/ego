@@ -263,8 +263,9 @@ func traceServerInterceptor() gin.HandlerFunc {
 		span.SetAttributes(
 			etrace.TagComponent("http"),
 			etrace.CustomTag("http.url", c.Request.URL.Path),
+			etrace.CustomTag("http.target", c.FullPath()),
 			etrace.CustomTag("http.method", c.Request.Method),
-			etrace.CustomTag("peer.ipv4", c.ClientIP()),
+			etrace.CustomTag("net.peer.ip", c.ClientIP()),
 		)
 		c.Request = c.Request.WithContext(ctx)
 		defer span.End()
