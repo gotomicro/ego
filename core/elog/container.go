@@ -52,5 +52,10 @@ func (c *Container) Build(options ...Option) *Component {
 		c.config.fields = append(c.config.fields, FieldApp(eapp.Name()))
 	}
 
+	// 设置ego日志的log name，用于stderr区分系统日志和业务日志
+	if eapp.EgoLogWriter() == "stderr" {
+		c.config.fields = append(c.config.fields, FieldLogName(c.config.Name))
+	}
+
 	return newLogger(c.name, c.name, c.config)
 }

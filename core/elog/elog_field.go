@@ -148,3 +148,8 @@ func FieldPeerName(value string) Field {
 func FieldCustomKeyValue(key string, value string) Field {
 	return String(strings.ToLower(key), value)
 }
+
+// FieldLogName 设置ego日志的log name，用于stderr区分系统日志和业务日志
+func FieldLogName(value string) Field {
+	return String("lname", value)
+}
