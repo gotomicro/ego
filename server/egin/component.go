@@ -27,15 +27,15 @@ const PackageName = "server.egin"
 
 // Component ...
 type Component struct {
-	mu     sync.Mutex
-	name   string
-	config *Config
-	logger *elog.Component
 	*gin.Engine
+	mu               sync.Mutex
+	name             string
+	config           *Config
+	logger           *elog.Component
 	Server           *http.Server
 	listener         net.Listener
 	routerCommentMap map[string]string // router的中文注释，非并发安全
-	embedWrapper     *embedWrapper
+	embedWrapper     *EmbedWrapper
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
@@ -50,7 +50,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 
 	if config.EmbedPath != "" {
-		comp.embedWrapper = &embedWrapper{
+		comp.embedWrapper = &EmbedWrapper{
 			embedFs: config.embedFs,
 			path:    config.EmbedPath,
 		}
@@ -183,14 +183,19 @@ func (c *Component) HTTPEmbedFs() http.FileSystem {
 	return http.FS(c.embedWrapper)
 }
 
-// embedWrapper 嵌入普通的静态资源的wrapper
-type embedWrapper struct {
+// GetEmbedWrapper http的文件系统
+func (c *Component) GetEmbedWrapper() *EmbedWrapper {
+	return c.embedWrapper
+}
+
+// EmbedWrapper 嵌入普通的静态资源的wrapper
+type EmbedWrapper struct {
 	embedFs embed.FS // 静态资源
 	path    string   // 设置embed文件到静态资源的相对路径，也就是embed注释里的路径
 }
 
 // Open 静态资源被访问的核心逻辑
-func (e *embedWrapper) Open(name string) (fs.File, error) {
+func (e *EmbedWrapper) Open(name string) (fs.File, error) {
 	if filepath.Separator != '/' && strings.ContainsRune(name, filepath.Separator) {
 		return nil, errors.New("http: invalid character in file path")
 	}
