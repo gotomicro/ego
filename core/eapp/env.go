@@ -19,6 +19,7 @@ var (
 	egoLogExtraKeys         []string
 	egoLogWriter            string
 	egoGovernorEnableConfig string
+	egoLogTimeType          string
 )
 
 func initEnv() {
@@ -42,6 +43,14 @@ func initEnv() {
 	if egoLogWriter == "" {
 		egoLogWriter = "file"
 	}
+	egoLogTimeType = os.Getenv(constant.EgoLogTimeType)
+	if IsDevelopmentMode() {
+		egoLogTimeType = "%Y-%m-%d %H:%M:%S"
+	}
+	if egoLogTimeType == "" {
+		egoLogTimeType = "second"
+	}
+
 }
 
 // AppMode 获取应用运行的环境
@@ -64,7 +73,7 @@ func AppInstance() string {
 	return appInstance
 }
 
-// IsDevelopmentMode 判断是否是生产模式
+// IsDevelopmentMode 判断是否是测试模式
 func IsDevelopmentMode() bool {
 	return egoDebug == "true"
 }
@@ -97,4 +106,9 @@ func EgoLogWriter() string {
 // EgoGovernorEnableConfig ...
 func EgoGovernorEnableConfig() bool {
 	return egoGovernorEnableConfig == "true"
+}
+
+// EgoLogTimeType ...
+func EgoLogTimeType() string {
+	return egoLogTimeType
 }

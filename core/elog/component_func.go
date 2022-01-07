@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -36,7 +37,7 @@ func defaultDebugConfig() *zapcore.EncoderConfig {
 		StacktraceKey:  "stack",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    debugEncodeLevel,
-		EncodeTime:     timeDebugEncoder,
+		EncodeTime:     timeEncoder,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
@@ -60,11 +61,17 @@ func debugEncodeLevel(lv zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
 }
 
 func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendInt64(t.Unix())
-}
-
-func timeDebugEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(t.Format("2006-01-02 15:04:05"))
+	switch eapp.EgoLogTimeType() {
+	case "second":
+		enc.AppendInt64(t.Unix())
+	case "millisecond":
+		enc.AppendInt64(t.UnixNano() / 1e6)
+	// 后期写个通用格式支持这种
+	case "%Y-%m-%d %H:%M:%S":
+		enc.AppendString(t.Format("2006-01-02 15:04:05"))
+	default:
+		enc.AppendInt64(t.Unix())
+	}
 }
 
 func panicDetail(msg string, fields ...Field) {
