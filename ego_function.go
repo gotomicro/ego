@@ -233,18 +233,12 @@ func initMaxProcs() error {
 		runtime.GOMAXPROCS(maxProcs)
 	} else {
 		if _, err := maxprocs.Set(); err != nil {
-			elog.EgoLogger.Panic("init max procs", elog.FieldComponent("app"), elog.FieldErr(err))
+			elog.EgoLogger.Error("init max procs", elog.FieldComponent("app"), elog.FieldErr(err))
 		}
 	}
 	elog.EgoLogger.Info("init app", elog.FieldComponent("app"), elog.Int("pid", os.Getpid()), elog.Int("coreNum", runtime.GOMAXPROCS(-1)))
 	return nil
 }
-
-//func printLogger() error {
-//	elog.EgoLogger.Info("init default logger", elog.FieldComponent(elog.PackageName))
-//	elog.EgoLogger.Info("init ego logger", elog.FieldComponent(elog.PackageName))
-//	return nil
-//}
 
 // printBanner init
 func (e *Ego) printBanner() error {
