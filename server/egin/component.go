@@ -4,10 +4,15 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -30,6 +35,7 @@ type Component struct {
 	Server           *http.Server
 	listener         net.Listener
 	routerCommentMap map[string]string // router的中文注释，非并发安全
+	embedWrapper     *embedWrapper
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
@@ -42,6 +48,14 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		listener:         nil,
 		routerCommentMap: make(map[string]string),
 	}
+
+	if config.EmbedPath != "" {
+		comp.embedWrapper = &embedWrapper{
+			embedFs: config.embedFs,
+			path:    config.EmbedPath,
+		}
+	}
+
 	// 设置信任的header头
 	comp.Engine.TrustedPlatform = config.TrustedPlatform
 	return comp
@@ -162,4 +176,25 @@ func (c *Component) buildTLSConfig() (*tls.Config, error) {
 		}
 	}
 	return tlsConfig, nil
+}
+
+// HTTPEmbedFs http的文件系统
+func (c *Component) HTTPEmbedFs() http.FileSystem {
+	return http.FS(c.embedWrapper)
+}
+
+// embedWrapper 嵌入普通的静态资源的wrapper
+type embedWrapper struct {
+	embedFs embed.FS // 静态资源
+	path    string   // 设置embed文件到静态资源的相对路径，也就是embed注释里的路径
+}
+
+// Open 静态资源被访问的核心逻辑
+func (e *embedWrapper) Open(name string) (fs.File, error) {
+	if filepath.Separator != '/' && strings.ContainsRune(name, filepath.Separator) {
+		return nil, errors.New("http: invalid character in file path")
+	}
+	fullName := filepath.Join(e.path, filepath.FromSlash(path.Clean("/"+name)))
+	file, err := e.embedFs.Open(fullName)
+	return file, err
 }

@@ -2,6 +2,7 @@ package egin
 
 import (
 	"crypto/tls"
+	"embed"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gotomicro/ego/core/elog"
@@ -45,5 +46,12 @@ func WithTrustedPlatform(trustedPlatform string) Option {
 func WithLogger(logger *elog.Component) Option {
 	return func(c *Container) {
 		c.logger = logger
+	}
+}
+
+// WithEmbedFs 设置embed fs
+func WithEmbedFs(fs embed.FS) Option {
+	return func(c *Container) {
+		c.config.embedFs = fs
 	}
 }
