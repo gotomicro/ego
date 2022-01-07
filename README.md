@@ -97,7 +97,11 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 
 * 更多组件请查看:[https://github.com/gotomicro/ego-component](https://github.com/gotomicro/ego-component)
 
-## 5 下载工具
+## 5 版本要求
+* v0.8.2以下  需要 go大于go1.13
+* v0.8.3后   需要 go大于go1.16
+
+## 6 下载工具
 ```bash
 bash <(curl -L https://raw.githubusercontent.com/gotomicro/egoctl/main/getlatest.sh)
 ```
@@ -111,7 +115,7 @@ bash <(curl -L https://raw.githubusercontent.com/gotomicro/egoctl/main/getlatest
 * /usr/local/bin/protoc-gen-go-http   生成HTTP工具
 
 
-## 6 特性介绍
+## 7 特性介绍
 * 配置驱动
   所有组件启动方式为`组件名称.Load("配置名称").Build()`，可以创建一个组件实例。如以下`http server`，`egin`是组件名称，`server.http`是配置名称
 ```go
@@ -149,9 +153,9 @@ egin.Load("server.http").Build()
 
 ![](docs/images/metric.png)
 
-## 7 Quick Start
+## 8 Quick Start
 
-### 7.1 HelloWorld
+### 8.1 HelloWorld
 配置
 
 ```toml
@@ -185,13 +189,13 @@ func main() {
 }
 ```
 
-### 7.2 使用命令行运行
+### 8.2 使用命令行运行
 ```
 export EGO_DEBUG=true # 默认日志输出到logs目录，开启dev后日志输出到终端
 go run main.go --config=config.toml
 ```
 
-### 7.3 如下所示
+### 8.3 如下所示
 ![图片](./docs/images/startup.png)
 
 
@@ -201,16 +205,16 @@ go run main.go --config=config.toml
 "Hello Ego"%  
 ```
 
-### 7.4 更加友好的包编译
+### 8.4 更加友好的包编译
 
 使用scripts文件夹里的[包编译](examples/build)，可以看到优雅的version提示
 
 ![图片](./docs/images/version.png)
 
-## 8 更新日志
+## 9 更新日志
 [Releases](https://github.com/gotomicro/ego/releases)
 
-## 9 加入我们
+## 10 加入我们
 加入我们，请在验证信息里添加``ego``关键字
 
 ![image](./docs/images/join.jpeg)
