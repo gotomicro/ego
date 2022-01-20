@@ -50,6 +50,14 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		dialOptions = append(dialOptions, grpc.WithKeepaliveParams(*config.keepAlive))
 	}
 
+	// 因为默认是开启这个配置
+	// 并且开启后，在grpc 1.40以上会导致dns多一次解析txt内容（目测是为了做grpc的load balance策略，但我们实际上不会用到）
+	// 因为这个service config dns域名通常是没有设置dns解析，所以会跳过k8s的dns，穿透到上一级的dns，而如果dns配置有问题或者不存在，那么会查询非常长的时间（通常在20s或者更长）
+	// 那么为false的时候，禁用他，可以加快我们的启动实际或者提升我们的性能
+	if !config.EnableServiceConfig {
+		dialOptions = append(dialOptions, grpc.WithDisableServiceConfig())
+	}
+
 	dialOptions = append(dialOptions, grpc.WithBalancerName(config.BalancerName)) //nolint
 	dialOptions = append(dialOptions, grpc.FailOnNonTempDialError(config.EnableFailOnNonTempDialError))
 
