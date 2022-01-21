@@ -85,7 +85,7 @@ We consider everything to be a component and divide the component into four part
 |gRPC Client|[Code](./client/egrpc)|[Example](./examples/grpc/direct)|[Doc](https://ego.gocn.vip/frame/client/grpc.html#_4-%E7%9B%B4%E8%BF%9Egrpc)|
 |gRPC Client using ETCD||[Example](https://github.com/gotomicro/ego-component/tree/master/eetcd/examples)|[Doc](https://ego.gocn.vip/frame/client/grpc.html#_5-%E4%BD%BF%E7%94%A8etcd%E7%9A%84grpc)|
 |gRPC Client using k8s||[Example](https://github.com/gotomicro/ego-component/tree/master/ek8s/examples)|[Doc](https://ego.gocn.vip/frame/client/grpc.html#_6-%E4%BD%BF%E7%94%A8k8s%E7%9A%84grpc)|
-|Rate limiting throttling Sentinel|[Code](https://github.com/gotomicro/ego/tree/master/core/esentinel)|[Example](https://github.com/gotomicro/ego/tree/master/examples/sentinel/http)|[Doc](https://ego.gocn.vip/frame/client/sentinel.html)|
+|Sentinel|[Code](https://github.com/gotomicro/ego/tree/master/core/esentinel)|[Example](https://github.com/gotomicro/ego/tree/master/examples/sentinel/http)|[Doc](https://ego.gocn.vip/frame/client/sentinel.html)|
 |MySQL|[Code](https://github.com/gotomicro/ego-component/tree/master/egorm)|[Example](https://github.com/gotomicro/ego-component/tree/master/egorm/examples/gorm)|[Doc](https://ego.gocn.vip/frame/client/gorm.html#example)|
 |Redis|[Code](https://github.com/gotomicro/ego-component/tree/master/eredis)|[Example](https://github.com/gotomicro/ego-component/tree/master/eredis/examples/redis)|[Doc](https://ego.gocn.vip/frame/client/redis.html#example)|
 |Redis Distributed lock|[Code](https://github.com/gotomicro/ego-component/tree/master/eredis)|||
