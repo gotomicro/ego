@@ -5,6 +5,7 @@ import (
 
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/elog"
 	jaegerv2 "go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
@@ -14,11 +15,16 @@ import (
 
 // Config ...
 type Config struct {
-	ServiceName  string
-	Addr         string
-	Fraction     float64
-	PanicOnError bool
-	options      []tracesdk.TracerProviderOption
+	ServiceName        string
+	AgentHost          string // agent host
+	AgentPort          string // agent port
+	JaegerEndpointType string // type: agent,collector
+	CollectorEndpoint  string // collector endpoint
+	CollectorUser      string // collector user
+	CollectorPassword  string // collector password
+	Fraction           float64
+	PanicOnError       bool
+	options            []tracesdk.TracerProviderOption
 }
 
 // Load 加载配置key
@@ -32,15 +38,24 @@ func Load(key string) *Config {
 
 // DefaultConfig ...
 func DefaultConfig() *Config {
-	agentAddr := "127.0.0.1:6831"
-	if addr := os.Getenv("JAEGER_AGENT_ADDR"); addr != "" {
-		agentAddr = addr
-	}
 	return &Config{
-		ServiceName:  eapp.Name(),
-		Addr:         agentAddr,
-		PanicOnError: true,
+		ServiceName:        eapp.Name(),
+		AgentHost:          envOr("OTEL_EXPORTER_JAEGER_AGENT_HOST", "localhost"),
+		AgentPort:          envOr("OTEL_EXPORTER_JAEGER_AGENT_PORT", "6831"),
+		CollectorEndpoint:  envOr("OTEL_EXPORTER_JAEGER_ENDPOINT", "http://localhost:14268/api/traces"),
+		CollectorUser:      envOr("OTEL_EXPORTER_JAEGER_USER", ""),
+		CollectorPassword:  envOr("OTEL_EXPORTER_JAEGER_PASSWORD", ""),
+		JaegerEndpointType: "agent",
+		PanicOnError:       true,
 	}
+}
+
+// envOr returns an env variable's value if it is exists or the default if not
+func envOr(key, defaultValue string) string {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
+		return v
+	}
+	return defaultValue
 }
 
 // WithTracerProviderOption ...
@@ -51,8 +66,25 @@ func (config *Config) WithTracerProviderOption(options ...tracesdk.TracerProvide
 
 // Build ...
 func (config *Config) Build(ops ...Option) trace.TracerProvider {
-	// Create the Jaeger exporter
-	exp, err := jaegerv2.New(jaegerv2.WithCollectorEndpoint(jaegerv2.WithEndpoint(config.Addr)))
+	var endpoint jaegerv2.EndpointOption
+	switch config.JaegerEndpointType {
+	case "agent":
+		// Create the Jaeger exporter
+		endpoint = jaegerv2.WithAgentEndpoint(
+			jaegerv2.WithAgentHost(config.AgentHost),
+			jaegerv2.WithAgentPort(config.AgentPort),
+		)
+	case "collector":
+		endpoint = jaegerv2.WithCollectorEndpoint(
+			jaegerv2.WithEndpoint(config.CollectorEndpoint),
+			jaegerv2.WithUsername(config.CollectorUser),
+			jaegerv2.WithPassword(config.CollectorPassword),
+		)
+	default:
+		elog.Panic("jaeger type error", elog.FieldName(config.JaegerEndpointType))
+	}
+
+	exp, err := jaegerv2.New(endpoint)
 	if err != nil {
 		return nil
 	}
