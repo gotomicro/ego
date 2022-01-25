@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 
 	"go.uber.org/zap"
 
@@ -22,7 +23,17 @@ func main() {
 	}
 }
 
+type data struct {
+	Test int
+}
+
+// 测试job链接  export EGO_DEBUG=true && go run main.go --config=config.toml --job=jobrunner --job-data='{"test":1}' --job-header='test=3;asdf=4'
+// 支持job里存入data数据，和http请求保持统一
 func runner(ctx ejob.Context) error {
+	str, _ := ioutil.ReadAll(ctx.Request.Body)
+	fmt.Printf("str--------------->"+"%+v\n", string(str))
+	fmt.Printf("str--------------->"+"%+v\n", ctx.Request.Header.Get("test"))
+	fmt.Printf("ctx.Request.URL--------------->%s", ctx.Request)
 	fmt.Println("i am job runner, traceId: ", etrace.ExtractTraceID(ctx.Ctx))
 	return errors.New("i am error")
 }
