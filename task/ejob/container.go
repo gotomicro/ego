@@ -109,7 +109,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	w.WriteHeader(200)
+	//w.WriteHeader(200)
 }
 
 // HandleJobList job列表
