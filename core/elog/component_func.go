@@ -66,6 +66,13 @@ func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 		enc.AppendInt64(t.Unix())
 	case "millisecond":
 		enc.AppendInt64(t.UnixNano() / 1e6)
+		// 秒后面跟小数
+	case "%S.%f":
+		// 参考python日期格式
+		// 使用zapcore.EpochTimeEncoder代码
+		nanos := t.UnixNano()
+		sec := float64(nanos) / float64(time.Second)
+		enc.AppendFloat64(sec)
 	// 后期写个通用格式支持这种
 	case "%Y-%m-%d %H:%M:%S":
 		enc.AppendString(t.Format("2006-01-02 15:04:05"))
