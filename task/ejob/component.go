@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"runtime"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/otel/propagation"
@@ -22,6 +24,20 @@ func init() {
 		&eflag.StringFlag{
 			Name:    "job",
 			Usage:   "--job",
+			Default: "",
+		},
+	)
+	eflag.Register(
+		&eflag.StringFlag{
+			Name:    "job-data",
+			Usage:   "--job-data",
+			Default: "",
+		},
+	)
+	eflag.Register(
+		&eflag.StringFlag{
+			Name:    "job-header",
+			Usage:   "--job-header",
 			Default: "",
 		},
 	)
@@ -121,13 +137,23 @@ func (c *Component) StartHTTP(w http.ResponseWriter, r *http.Request) (err error
 
 // Start 启动
 func (c *Component) Start() (err error) {
-	ctx, span := c.tracer.Start(context.Background(), "ego-job", nil)
-	defer span.End()
-
-	c.trace(ctx)
-	return c.config.startFunc(Context{
-		Ctx: ctx,
-	})
+	w := httptest.NewRecorder()
+	// 解析数据
+	// 模拟HTTP服务，跟start http服务的数据保持一致
+	r, err := http.NewRequestWithContext(context.Background(), "POST", "job", strings.NewReader(eflag.String("job-data")))
+	if err != nil {
+		return err
+	}
+	headersOrigin := eflag.String("job-header")
+	// 解析header头
+	headersArr := strings.Split(headersOrigin, ";")
+	for _, value := range headersArr {
+		kvs := strings.Split(value, "=")
+		if len(kvs) == 2 {
+			r.Header.Set(kvs[0], kvs[1])
+		}
+	}
+	return c.StartHTTP(w, r)
 }
 
 // Stop ...
