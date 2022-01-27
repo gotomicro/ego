@@ -12,7 +12,9 @@ import (
 	"go.uber.org/zap"
 )
 
-// export EGO_DEBUG=true && go run main.go --job=jobrunner  --config=config.toml
+// 如果是Job 命令行执行  export EGO_DEBUG=true && go run main.go --config=config.toml --job=job --job-data='{"username":"ego"}' --job-header='test=1'
+// 如果是Job HTTP执行  1 export EGO_DEBUG=true && go run main.go --config=config.toml
+// 如果是Job HTTP执行  2 curl -v -XPOST -d '{"username":"ego"}' -H 'X-Ego-Job-Name:job' -H 'X-Ego-Job-RunID:xxxx' -H 'test=1' http://127.0.0.1:9003/jobs
 func main() {
 	if err := ego.New().Job(
 		ejob.Job("job", job),
@@ -27,9 +29,6 @@ type data struct {
 	Username string
 }
 
-// 如果是Job 命令行执行  export EGO_DEBUG=true && go run main.go --config=config.toml --job=job --job-data='{"username":"ego"}' --job-header='test=1'
-// 如果是Job HTTP执行  1 export EGO_DEBUG=true && go run main.go --config=config.toml
-// 如果是Job HTTP执行  2 curl -v -XPOST -d '{"username":"ego"}' -H 'X-Ego-Job-Name:job' -H 'X-Ego-Job-RunID:xxxx' -H 'test=1' http://127.0.0.1:9003/jobs
 func job(ctx ejob.Context) error {
 	bytes, _ := ioutil.ReadAll(ctx.Request.Body)
 	d := data{}
