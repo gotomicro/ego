@@ -12,6 +12,7 @@ import (
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"github.com/gotomicro/ego/core/util/xtime"
+	"github.com/gotomicro/ego/internal/ienv"
 )
 
 var (
@@ -33,10 +34,7 @@ var (
 
 func init() {
 	if appName == "" {
-		appName = os.Getenv(constant.EnvAppName)
-		if appName == "" {
-			appName = filepath.Base(os.Args[0])
-		}
+		appName = ienv.EnvOrStr(constant.EnvAppName, filepath.Base(os.Args[0]))
 	}
 
 	name, err := os.Hostname()
