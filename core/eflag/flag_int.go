@@ -1,9 +1,9 @@
 package eflag
 
 import (
-	"os"
-	"strconv"
 	"strings"
+
+	"github.com/gotomicro/ego/internal/ienv"
 )
 
 // IntFlag is an int flag implements of Flag interface.
@@ -21,18 +21,10 @@ func (f *IntFlag) Apply(set *FlagSet) {
 	for _, field := range strings.Split(f.Name, ",") {
 		field = strings.TrimSpace(field)
 		if f.Variable != nil {
-			set.FlagSet.IntVar(f.Variable, field, getValueByEnvAndDefaultIntValue(f.EnvVar, f.Default), f.Usage)
+			set.FlagSet.IntVar(f.Variable, field, ienv.EnvOrInt(f.EnvVar, f.Default), f.Usage)
+		} else {
+			set.FlagSet.Int(field, ienv.EnvOrInt(f.EnvVar, f.Default), f.Usage)
 		}
-		set.FlagSet.Int(field, getValueByEnvAndDefaultIntValue(f.EnvVar, f.Default), f.Usage)
 		set.actions[field] = f.Action
 	}
-}
-
-func getValueByEnvAndDefaultIntValue(envVar string, defaultValue int) int {
-	env := os.Getenv(envVar)
-	if env != "" {
-		intValue, _ := strconv.ParseInt(env, 10, 64)
-		return int(intValue)
-	}
-	return defaultValue
 }

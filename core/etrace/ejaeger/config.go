@@ -1,11 +1,10 @@
 package ejaeger
 
 import (
-	"os"
-
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/internal/ienv"
 	jaegerv2 "go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
@@ -40,22 +39,14 @@ func Load(key string) *Config {
 func DefaultConfig() *Config {
 	return &Config{
 		ServiceName:        eapp.Name(),
-		AgentHost:          envOr("OTEL_EXPORTER_JAEGER_AGENT_HOST", "localhost"),
-		AgentPort:          envOr("OTEL_EXPORTER_JAEGER_AGENT_PORT", "6831"),
-		CollectorEndpoint:  envOr("OTEL_EXPORTER_JAEGER_ENDPOINT", "http://localhost:14268/api/traces"),
-		CollectorUser:      envOr("OTEL_EXPORTER_JAEGER_USER", ""),
-		CollectorPassword:  envOr("OTEL_EXPORTER_JAEGER_PASSWORD", ""),
+		AgentHost:          ienv.EnvOrStr("OTEL_EXPORTER_JAEGER_AGENT_HOST", "localhost"),
+		AgentPort:          ienv.EnvOrStr("OTEL_EXPORTER_JAEGER_AGENT_PORT", "6831"),
+		CollectorEndpoint:  ienv.EnvOrStr("OTEL_EXPORTER_JAEGER_ENDPOINT", "http://localhost:14268/api/traces"),
+		CollectorUser:      ienv.EnvOrStr("OTEL_EXPORTER_JAEGER_USER", ""),
+		CollectorPassword:  ienv.EnvOrStr("OTEL_EXPORTER_JAEGER_PASSWORD", ""),
 		JaegerEndpointType: "agent",
 		PanicOnError:       true,
 	}
-}
-
-// envOr returns an env variable's value if it is exists or the default if not
-func envOr(key, defaultValue string) string {
-	if v, ok := os.LookupEnv(key); ok && v != "" {
-		return v
-	}
-	return defaultValue
 }
 
 // WithTracerProviderOption ...

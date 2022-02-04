@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/internal/ienv"
 )
 
 var (
@@ -26,31 +27,18 @@ func initEnv() {
 	appMode = os.Getenv(constant.EnvAppMode)
 	appRegion = os.Getenv(constant.EnvAppRegion)
 	appZone = os.Getenv(constant.EnvAppZone)
-	appInstance = os.Getenv(constant.EnvAppInstance)
-	if appInstance == "" {
-		appInstance = HostName()
-	}
+	appInstance = ienv.EnvOrStr(constant.EnvAppInstance, HostName())
 	egoDebug = os.Getenv(constant.EgoDebug)
 	egoLogPath = os.Getenv(constant.EgoLogPath)
 	egoLogAddApp = os.Getenv(constant.EgoLogAddApp)
-	egoTraceIDName = os.Getenv(constant.EgoTraceIDName)
+	egoTraceIDName = ienv.EnvOrStr(constant.EgoTraceIDName, "x-trace-id")
 	egoGovernorEnableConfig = os.Getenv(constant.EgoGovernorEnableConfig)
-	if egoTraceIDName == "" {
-		egoTraceIDName = "x-trace-id"
-	}
 	egoLogExtraKeys = strings.Split(os.Getenv(constant.EgoLogExtraKeys), ",")
-	egoLogWriter = os.Getenv(constant.EgoLogWriter)
-	if egoLogWriter == "" {
-		egoLogWriter = "file"
-	}
-	egoLogTimeType = os.Getenv(constant.EgoLogTimeType)
+	egoLogWriter = ienv.EnvOrStr(constant.EgoLogWriter, "file")
+	egoLogTimeType = ienv.EnvOrStr(constant.EgoLogTimeType, "second")
 	if IsDevelopmentMode() {
 		egoLogTimeType = "%Y-%m-%d %H:%M:%S"
 	}
-	if egoLogTimeType == "" {
-		egoLogTimeType = "second"
-	}
-
 }
 
 // AppMode 获取应用运行的环境
