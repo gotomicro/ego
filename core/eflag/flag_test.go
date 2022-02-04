@@ -29,6 +29,35 @@ func TestFlagSet_Register_Length(t *testing.T) {
 	assert.Equal(t, 1, len(flagset.flags))
 }
 
+func TestFlagSetInt_Register_Length(t *testing.T) {
+	resetFlagSet()
+	Register(&IntFlag{
+		Name:   "int",
+		Usage:  "--int",
+		Action: func(name string, fs *FlagSet) {},
+	})
+	assert.Equal(t, 1, len(flagset.flags))
+}
+
+func TestFlagSetUint_Register_Length(t *testing.T) {
+	resetFlagSet()
+	Register(&UintFlag{
+		Name:   "uint",
+		Usage:  "--uint",
+		Action: func(name string, fs *FlagSet) {},
+	})
+	assert.Equal(t, 1, len(flagset.flags))
+}
+
+func TestFlagSetFloat64_Register_Length(t *testing.T) {
+	resetFlagSet()
+	Register(&UintFlag{
+		Name:   "float64",
+		Usage:  "--float64",
+		Action: func(name string, fs *FlagSet) {},
+	})
+	assert.Equal(t, 1, len(flagset.flags))
+}
 func TestFlagSet_Register_Default(t *testing.T) {
 	resetFlagSet()
 	Register(&StringFlag{
