@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"testing"
 )
 
 var (
@@ -18,7 +17,6 @@ func init() {
 		flags:   defaultFlags,
 		actions: make(map[string]func(string, *FlagSet)),
 	}
-	testing.Init()
 }
 
 // Flag ...
