@@ -74,11 +74,6 @@ func EgoVersion() string {
 	return egoVersion
 }
 
-// BuildTime get buildTime
-func BuildTime() string {
-	return buildTime
-}
-
 // BuildUser get buildUser
 func BuildUser() string {
 	return buildUser
@@ -87,6 +82,16 @@ func BuildUser() string {
 // BuildHost get buildHost
 func BuildHost() string {
 	return buildHost
+}
+
+// BuildStatus get buildStatus
+func BuildStatus() string {
+	return buildStatus
+}
+
+// BuildTime get buildTime
+func BuildTime() string {
+	return buildTime
 }
 
 // setBuildTime set buildTime
@@ -109,17 +114,17 @@ func GoVersion() string {
 	return goVersion
 }
 
-// PrintVersion print formated version info
+// PrintVersion print formatted version info
 func PrintVersion() {
 	fmt.Printf("%-20s : %s\n", xcolor.Green("EGO"), xcolor.Blue("I am EGO"))
 	fmt.Printf("%-20s : %s\n", xcolor.Green("AppName"), xcolor.Blue(appName))
 	fmt.Printf("%-20s : %s\n", xcolor.Green("AppHost"), xcolor.Blue(HostName()))
 	fmt.Printf("%-20s : %s\n", xcolor.Green("Region"), xcolor.Blue(AppRegion()))
 	fmt.Printf("%-20s : %s\n", xcolor.Green("Zone"), xcolor.Blue(AppZone()))
-	fmt.Printf("%-20s : %s\n", xcolor.Green("AppVersion"), xcolor.Blue(buildAppVersion))
-	fmt.Printf("%-20s : %s\n", xcolor.Green("EgoVersion"), xcolor.Blue(egoVersion))
-	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildUser"), xcolor.Blue(buildUser))
-	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildHost"), xcolor.Blue(buildHost))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("AppVersion"), xcolor.Blue(AppVersion()))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("EgoVersion"), xcolor.Blue(EgoVersion()))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildUser"), xcolor.Blue(BuildUser()))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildHost"), xcolor.Blue(BuildHost()))
 	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildTime"), xcolor.Blue(BuildTime()))
-	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildStatus"), xcolor.Blue(buildStatus))
+	fmt.Printf("%-20s : %s\n", xcolor.Green("BuildStatus"), xcolor.Blue(BuildStatus()))
 }
