@@ -12,6 +12,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -110,6 +111,11 @@ aliApiMaxIdleConns = 25
 	return Load("ali").Build()
 }
 
+func newZapLogger() *zap.Logger {
+	logger, _ := zap.NewProduction()
+	return logger
+}
+
 func fakeMessages(n int) []string {
 	messages := make([]string, n)
 	for i := range messages {
@@ -122,14 +128,40 @@ func getMessage(iter int) string {
 	return messages[iter%1000]
 }
 
-func BenchmarkStderrWriter(b *testing.B) {
+func BenchmarkFileWriter(b *testing.B) {
 	b.Logf("Logging at a disabled level with some accumulated context.")
-	logger1 := newStderrLogger()
-	b.Run("stderr", func(b *testing.B) {
+	logger := newFileLogger("./benchmark-file-writer.log")
+	b.Run("file", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				logger1.Info(getMessage(0))
+				logger.Info(getMessage(0))
+			}
+		})
+	})
+}
+
+func BenchmarkStderrWriter(b *testing.B) {
+	b.Logf("Logging at a disabled level with some accumulated context.")
+	logger := newStderrLogger()
+	b.Run("stderr\n", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0))
+			}
+		})
+	})
+}
+
+func BenchmarkZapWriter(b *testing.B) {
+	b.Logf("Logging at a disabled level with some accumulated context.")
+	logger := newZapLogger()
+	b.Run("file", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0))
 			}
 		})
 	})
@@ -137,12 +169,12 @@ func BenchmarkStderrWriter(b *testing.B) {
 
 func BenchmarkAliWriter(b *testing.B) {
 	b.Logf("Logging at a disabled level with some accumulated context.")
-	aliLogger := newAliLogger()
+	logger := newAliLogger()
 	b.Run("ali", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				aliLogger.Info(getMessage(0))
+				logger.Info(getMessage(0))
 			}
 		})
 	})

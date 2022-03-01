@@ -21,7 +21,6 @@ type stderrWriter struct {
 	io.Closer
 }
 
-// Load constructs a zapcore.Core with stderr syncer
 func (s *stderrWriterBuilder) Build(key string, c *Config) Writer {
 	// Debug output to console and file by default
 	w := &stderrWriter{}
