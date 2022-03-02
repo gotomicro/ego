@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/davecgh/go-spew/spew"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/gotomicro/ego"
@@ -27,6 +29,10 @@ var grpcComp helloworld.GreeterClient
 func invokerGrpc() error {
 	grpcConn := egrpc.Load("grpc.test").Build()
 	grpcComp = helloworld.NewGreeterClient(grpcConn.ClientConn)
+	info := balancer.Get("grpclb")
+	info2 := balancer.Get("round_robin")
+	fmt.Printf("info--------------->"+"%+v\n", info)
+	fmt.Printf("info--------------->"+"%+v\n", info2)
 	return nil
 }
 

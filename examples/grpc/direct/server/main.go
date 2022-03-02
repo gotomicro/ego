@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/gotomicro/ego/server/egovernor"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -19,7 +20,7 @@ func main() {
 		component := egrpc.Load("server.grpc").Build()
 		helloworld.RegisterGreeterServer(component.Server, &Greeter{server: component})
 		return component
-	}()).Run(); err != nil {
+	}(), egovernor.Load("server.governor").Build()).Run(); err != nil {
 		elog.Panic("startup", elog.FieldErr(err))
 	}
 }

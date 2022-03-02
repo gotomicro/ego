@@ -19,6 +19,7 @@ import (
 	"github.com/gotomicro/ego/internal/ecode"
 	"github.com/gotomicro/ego/internal/tools"
 	"github.com/gotomicro/ego/internal/xcpu"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -31,7 +32,10 @@ func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info
 	startTime := time.Now()
 	resp, err := handler(ctx, req)
 	statusInfo := ecode.Convert(err)
-	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx))
+
+	emetric.ServerHandleHistogram.ObserveWithExemplar(time.Since(startTime).Seconds(), prometheus.Labels{
+		"tid": etrace.ExtractTraceID(ctx),
+	}, emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx))
 	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
 	return resp, err
 }
