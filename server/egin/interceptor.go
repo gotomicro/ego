@@ -21,6 +21,7 @@ import (
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/internal/tools"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -249,7 +250,9 @@ func metricServerInterceptor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		beg := time.Now()
 		c.Next()
-		emetric.ServerHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c))
+		emetric.ServerHandleHistogram.ObserveWithExemplar(time.Since(beg).Seconds(), prometheus.Labels{
+			"tid": etrace.ExtractTraceID(c.Request.Context()),
+		}, emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c))
 		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c), http.StatusText(c.Writer.Status()), http.StatusText(c.Writer.Status()))
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"runtime/debug"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gotomicro/ego/core/econf"
@@ -134,7 +135,14 @@ func (c *Component) Init() error {
 // Start 开始
 func (c *Component) Start() error {
 	HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		promhttp.Handler().ServeHTTP(w, r)
+		promhttp.HandlerFor(
+			prometheus.DefaultGatherer,
+			promhttp.HandlerOpts{
+				// Opt into OpenMetrics to support exemplars.
+				EnableOpenMetrics: true,
+			},
+		).ServeHTTP(w, r)
+		//promhttp.Handler().ServeHTTP(w, r)
 	})
 	err := c.Server.Serve(c.listener)
 	if err == http.ErrServerClosed {
