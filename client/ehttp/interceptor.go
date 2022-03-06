@@ -8,14 +8,16 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/spf13/cast"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/util/xdebug"
 )
-
-var interceptors []func(name string, cfg *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook)
 
 func logAccess(name string, config *Config, logger *elog.Component, req *resty.Request, res *resty.Response, err error) {
 	rr := req.RawRequest
@@ -127,4 +129,41 @@ func metricInterceptor(name string, config *Config, logger *elog.Component) (res
 		emetric.ClientHandleHistogram.Observe(time.Since(beg(req.Context())).Seconds(), emetric.TypeHTTP, name, method, addr)
 	}
 	return nil, afterFn, errorFn
+}
+
+func traceInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
+	tracer := etrace.NewTracer(trace.SpanKindClient)
+	beforeFn := func(cli *resty.Client, req *resty.Request) error {
+		ctx, span := tracer.Start(req.Context(), req.Method, nil)
+
+		span.SetAttributes(
+			etrace.String("peer.service", name),
+			etrace.String("http.method", req.Method),
+			etrace.String("http.url", req.URL),
+		)
+
+		req.SetContext(ctx)
+		return nil
+	}
+
+	afterFn := func(cli *resty.Client, res *resty.Response) error {
+		span := trace.SpanFromContext(res.Request.Context())
+		span.SetAttributes(
+			etrace.String("http.status_code", cast.ToString(res.StatusCode())),
+		)
+
+		span.End()
+		return nil
+	}
+	errorFn := func(req *resty.Request, err error) {
+		span := trace.SpanFromContext(req.Context())
+
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+
+		span.End()
+	}
+	return beforeFn, afterFn, errorFn
 }
