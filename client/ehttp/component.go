@@ -27,7 +27,9 @@ type Component struct {
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
 	// resty的默认方法，无法设置长连接个数，和是否开启长连接，这里重新构造http client。
 	cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
-	interceptors = append(interceptors, fixedInterceptor, logInterceptor, metricInterceptor)
+	var interceptors []func(name string, cfg *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook)
+	interceptors = append(interceptors, fixedInterceptor, logInterceptor, metricInterceptor, traceInterceptor)
+
 	cli := resty.NewWithClient(&http.Client{Transport: createTransport(config), Jar: cookieJar}).
 		SetDebug(config.RawDebug).
 		SetTimeout(config.ReadTimeout).
