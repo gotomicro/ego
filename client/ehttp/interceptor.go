@@ -19,12 +19,11 @@ import (
 	"github.com/gotomicro/ego/core/util/xdebug"
 )
 
+type interceptor func(name string, cfg *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook)
+
 func logAccess(name string, config *Config, logger *elog.Component, req *resty.Request, res *resty.Response, err error) {
 	rr := req.RawRequest
-	var (
-		url  string
-		host string
-	)
+	var url, host string
 	// 修复err 不是 *resty.ResponseError错误的时候，可能为nil
 	if rr != nil {
 		url = rr.URL.RequestURI()
