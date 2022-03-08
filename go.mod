@@ -32,10 +32,10 @@ require (
 	github.com/ugorji/go v1.2.6 // indirect
 	github.com/wk8/go-ordered-map v0.2.0
 	go.opencensus.io v0.22.4
-	go.opentelemetry.io/otel v1.2.0
-	go.opentelemetry.io/otel/exporters/jaeger v1.2.0
-	go.opentelemetry.io/otel/sdk v1.2.0
-	go.opentelemetry.io/otel/trace v1.2.0
+	go.opentelemetry.io/otel v1.4.1
+	go.opentelemetry.io/otel/exporters/jaeger v1.4.1
+	go.opentelemetry.io/otel/sdk v1.4.1
+	go.opentelemetry.io/otel/trace v1.4.1
 	go.uber.org/automaxprocs v1.3.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
