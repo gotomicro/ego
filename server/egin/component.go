@@ -199,7 +199,7 @@ func (e *EmbedWrapper) Open(name string) (fs.File, error) {
 	if filepath.Separator != '/' && strings.ContainsRune(name, filepath.Separator) {
 		return nil, errors.New("http: invalid character in file path")
 	}
-	fullName := filepath.Join(e.path, filepath.FromSlash(path.Clean("/"+name)))
+	fullName := path.Join(e.path, filepath.FromSlash(path.Clean("/"+name)))
 	file, err := e.embedFs.Open(fullName)
 	return file, err
 }
