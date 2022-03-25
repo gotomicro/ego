@@ -17,6 +17,7 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
@@ -199,7 +200,7 @@ func (e *EmbedWrapper) Open(name string) (fs.File, error) {
 	if filepath.Separator != '/' && strings.ContainsRune(name, filepath.Separator) {
 		return nil, errors.New("http: invalid character in file path")
 	}
-	fullName := path.Join(e.path, filepath.FromSlash(path.Clean("/"+name)))
+	fullName := filepath.ToSlash(path.Join(e.path, path.Clean("/"+name)))
 	file, err := e.embedFs.Open(fullName)
 	return file, err
 }
