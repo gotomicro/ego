@@ -37,9 +37,9 @@ func callHTTP() error {
 	defer span.End()
 
 	// Inject traceId Into Header
-	//c1 := etrace.HeaderInjector(ctx, req.Header)
+	// c1 := etrace.HeaderInjector(ctx, req.Header)
 	fmt.Println(span.SpanContext().TraceID())
-	info, err := req.SetContext(ctx).Get("http://127.0.0.1:9007/hello")
+	info, err := req.SetContext(ctx).SetHeader("x-uid", "101").Get("/hello?aa=bb")
 	if err != nil {
 		return err
 	}

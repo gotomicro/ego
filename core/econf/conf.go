@@ -57,6 +57,7 @@ func (c *Configuration) Sub(key string) *Configuration {
 	return &Configuration{
 		keyDelim: c.keyDelim,
 		override: c.GetStringMap(key),
+		keyMap:   &sync.Map{},
 	}
 }
 

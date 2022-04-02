@@ -28,6 +28,11 @@ func main() {
 		server.GET("/hello", func(ctx *gin.Context) {
 			ctx.JSON(200, "Hello client: "+ctx.GetHeader("app"))
 		})
+
+		server.GET("/500", func(ctx *gin.Context) {
+			ctx.JSON(500, "Hello client: "+ctx.GetHeader("app"))
+		})
+
 		return server
 	}()).Run(); err != nil {
 		elog.Panic("startup", elog.FieldErr(err))

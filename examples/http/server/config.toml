@@ -3,6 +3,7 @@ port = 9007
 EnableAccessInterceptor = true
 EnableAccessInterceptorReq = true
 EnableAccessInterceptorRes = true
+AccessInterceptorReqResFilter = ''
+
 [trace.jaeger]
 ServiceName = "server"
-

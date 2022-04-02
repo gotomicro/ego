@@ -1,11 +1,16 @@
 package egin
 
 import (
+	"fmt"
+
 	healthcheck "github.com/RaMin0/gin-health-check"
+	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/checker/decls"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/util/xnet"
+	rpcpb "google.golang.org/genproto/googleapis/rpc/context/attribute_context"
 )
 
 // Container 容器
@@ -31,10 +36,11 @@ func Load(key string) *Container {
 		c.logger.Panic("parse config error", elog.FieldErr(err), elog.FieldKey(key))
 		return c
 	}
-	var (
-		host string
-		err  error
-	)
+	var host string
+	var err error
+	if err := c.setAiReqResCelPrg(); err != nil {
+		c.logger.Warn("init AccessInterceptorReqResFilter fail", elog.FieldErr(err), elog.String("AccessInterceptorReqResFilter", c.config.AccessInterceptorReqResFilter))
+	}
 	// 获取网卡ip
 	if c.config.EnableLocalMainIP {
 		host, _, err = xnet.GetLocalMainIP()
@@ -45,6 +51,45 @@ func Load(key string) *Container {
 	}
 	c.name = key
 	return c
+}
+
+var aiReqResCelEnv *cel.Env
+
+func init() {
+	var err error
+	aiReqResCelEnv, err = cel.NewEnv(
+		cel.Types(&rpcpb.AttributeContext_Request{}),
+		cel.Types(&rpcpb.AttributeContext_Response{}),
+		cel.Declarations(
+			decls.NewVar("request",
+				decls.NewObjectType("google.rpc.context.AttributeContext.Request"),
+			),
+			decls.NewVar("response",
+				decls.NewObjectType("google.rpc.context.AttributeContext.Response"),
+			),
+		),
+	)
+	if err != nil {
+		elog.Warn("invalid aiReqResCelEnv", elog.FieldErr(err))
+	}
+}
+
+func (c *Container) setAiReqResCelPrg() error {
+	if c.config.AccessInterceptorReqResFilter != "" {
+		elog.Info("load new AccessInterceptorReqResFilter", elog.String("filter", c.config.AccessInterceptorReqResFilter))
+		ast, iss := aiReqResCelEnv.Compile(c.config.AccessInterceptorReqResFilter)
+		if iss.Err() != nil {
+			return fmt.Errorf("invalid AccessInterceptorReqResFilter, %w", iss.Err())
+		}
+		prg, err := aiReqResCelEnv.Program(ast)
+		if err != nil {
+			return fmt.Errorf("build cel program fail , %w", err)
+		}
+		c.config.aiReqResCelPrg = prg
+		return nil
+	}
+	c.config.aiReqResCelPrg = nil
+	return nil
 }
 
 // Build 构建组件
@@ -67,6 +112,19 @@ func (c *Container) Build(options ...Option) *Component {
 	if c.config.EnableSentinel {
 		server.Use(c.sentinelMiddleware())
 	}
+	econf.OnChange(func(newConf *econf.Configuration) {
+		c.config.mu.Lock()
+		cf := newConf.Sub(c.name)
+		c.config.EnableAccessInterceptorReq = cf.GetBool("EnableAccessInterceptorReq")
+		c.config.EnableAccessInterceptorRes = cf.GetBool("EnableAccessInterceptorRes")
+		if c.config.AccessInterceptorReqResFilter != cf.GetString("AccessInterceptorReqResFilter") {
+			c.config.AccessInterceptorReqResFilter = cf.GetString("AccessInterceptorReqResFilter")
+			if err := c.setAiReqResCelPrg(); err != nil {
+				c.logger.Warn("init AccessInterceptorReqResFilter fail", elog.FieldErr(err), elog.String("AccessInterceptorReqResFilter", c.config.AccessInterceptorReqResFilter))
+			}
+		}
+		c.config.mu.Unlock()
+	})
 
 	return server
 }

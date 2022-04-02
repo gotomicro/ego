@@ -99,6 +99,7 @@ func (c *Component) trace(ctx context.Context) {
 	}
 	beg := time.Now()
 	c.logger.Info("start ejob", fields...)
+	// TODO fix cost time calculation
 	defer func() {
 		if rec := recover(); rec != nil {
 			switch rec := rec.(type) {
