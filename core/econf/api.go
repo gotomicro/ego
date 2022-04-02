@@ -36,6 +36,11 @@ func OnChange(fn func(*Configuration)) {
 	defaultConfiguration.OnChange(fn)
 }
 
+// Sub return sub-configuration of defaultConfiguration
+func Sub(key string) *Configuration {
+	return defaultConfiguration.Sub(key)
+}
+
 // LoadFromDataSource load configuration from data source
 // if data source supports dynamic config, a monitor goroutinue
 // would be

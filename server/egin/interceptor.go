@@ -15,6 +15,7 @@ import (
 	sentinel "github.com/alibaba/sentinel-golang/api"
 	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
+	"github.com/google/cel-go/common/types"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
@@ -25,6 +26,8 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
+	rpcpb "google.golang.org/genproto/googleapis/rpc/context/attribute_context"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var (
@@ -76,14 +79,17 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 		var rb bytes.Buffer
 
 		// 只有开启了EnableAccessInterceptorRes时拷贝request body
-		if c.config.EnableAccessInterceptorReq {
+		// 也可以直接使用econf.Sub(c.name).GetBool("EnableAccessInterceptorReq")，不过从econf动态查找配置性能可能会比较差，暂时先用锁代替
+		c.config.mu.RLock()
+		if c.config.EnableAccessInterceptorReq || c.config.AccessInterceptorReqResFilter != "" {
 			ctx.Request.Body = ioutil.NopCloser(io.TeeReader(ctx.Request.Body, &rb))
 		}
 		// 只有开启了EnableAccessInterceptorRes时才替换response writer
-		if c.config.EnableAccessInterceptorRes {
+		if c.config.EnableAccessInterceptorRes || c.config.AccessInterceptorReqResFilter != "" {
 			rw = &resWriter{ctx.Writer, &bytes.Buffer{}}
 			ctx.Writer = rw
 		}
+		c.config.mu.RUnlock()
 
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
 		loggerKeys := transport.CustomContextKeys()
@@ -119,19 +125,24 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx.Request.Context())))
 			}
 
-			if c.config.EnableAccessInterceptorReq {
-				fields = append(fields, elog.Any("req", map[string]interface{}{
-					"metadata": copyHeaders(ctx.Request.Header),
-					"payload":  rb.String(),
-				}))
-			}
+			c.config.mu.RLock()
+			if c.config.EnableAccessInterceptorReq || c.config.EnableAccessInterceptorRes {
+				out := c.checkFilter(ctx.Request, rw)
+				if c.config.EnableAccessInterceptorReq && out {
+					fields = append(fields, elog.Any("req", map[string]interface{}{
+						"metadata": copyHeaders(ctx.Request.Header),
+						"payload":  rb.String(),
+					}))
+				}
 
-			if c.config.EnableAccessInterceptorRes {
-				fields = append(fields, elog.Any("res", map[string]interface{}{
-					"metadata": copyHeaders(ctx.Writer.Header()),
-					"payload":  rw.body.String(),
-				}))
+				if c.config.EnableAccessInterceptorRes && out {
+					fields = append(fields, elog.Any("res", map[string]interface{}{
+						"metadata": copyHeaders(ctx.Writer.Header()),
+						"payload":  rw.body.String(),
+					}))
+				}
 			}
+			c.config.mu.RUnlock()
 
 			// slow log
 			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
@@ -181,9 +192,9 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 	}
 }
 
-//func copyBody(r io.Reader, w io.Writer) io.ReadCloser {
+// func copyBody(r io.Reader, w io.Writer) io.ReadCloser {
 //	return ioutil.NopCloser(io.TeeReader(r, w))
-//}
+// }
 
 // stack returns a nicely formatted stack frame, skipping skip frames.
 func stack(skip int) []byte {
@@ -309,7 +320,6 @@ func (c *Container) sentinelMiddleware() gin.HandlerFunc {
 	}
 }
 
-// 获取对端ip
 func getPeerIP(addr string) string {
 	addSlice := strings.Split(addr, ":")
 	if len(addSlice) > 1 {
@@ -332,4 +342,46 @@ func getHeaderValue(c *gin.Context, key string, enableTrustedCustomHeader bool) 
 		c.Request = c.Request.WithContext(transport.WithValue(c.Request.Context(), key, value))
 	}
 	return value
+}
+
+func convert2googleResponse(rw *resWriter) *rpcpb.AttributeContext_Response {
+	return &rpcpb.AttributeContext_Response{
+		Code:    int64(rw.Status()),
+		Headers: convertHeader(rw.Header()),
+		Time:    timestamppb.New(time.Now()),
+	}
+}
+
+func convert2googleRequest(r *http.Request) *rpcpb.AttributeContext_Request {
+	return &rpcpb.AttributeContext_Request{
+		Method:  r.Method,
+		Headers: convertHeader(r.Header),
+		Path:    r.URL.Path,
+		Host:    r.Host,
+		Scheme:  r.URL.Scheme,
+		Query:   r.URL.RawQuery,
+		Time:    timestamppb.New(time.Now()),
+	}
+}
+
+func convertHeader(headers http.Header) map[string]string {
+	h := make(map[string]string)
+	for name, val := range headers {
+		h[strings.ToLower(name)] = strings.Join(val, ";")
+	}
+	return h
+}
+
+func (c *Container) checkFilter(req *http.Request, rw *resWriter) bool {
+	if c.config.aiReqResCelPrg == nil {
+		return true
+	}
+	out, _, err := c.config.aiReqResCelPrg.Eval(map[string]interface{}{
+		"request":  convert2googleRequest(req),
+		"response": convert2googleResponse(rw),
+	})
+	if err != nil {
+		c.logger.Warn("cel eval fail", elog.FieldErr(err))
+	}
+	return out == types.True
 }

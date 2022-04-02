@@ -17,6 +17,7 @@ require (
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/cel-go v0.11.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/gotomicro/logrotate v0.0.0-20211108024517-45d1f9a03ff5
 	github.com/iancoleman/strcase v0.2.0
@@ -41,8 +42,8 @@ require (
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/tools v0.1.6
-	google.golang.org/genproto v0.0.0-20210708141623-e76da96a951f
-	google.golang.org/grpc v1.42.0
+	google.golang.org/genproto v0.0.0-20220310185008-1973136f34c6
+	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )

@@ -258,5 +258,5 @@ Thanks for these wonderful people:
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-## Thanks JetBrains for Open Source licenses support
+## Thank JetBrains for Open Source licenses support
 <a href="https://www.jetbrains.com/?from=Ego"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand_icon.svg" height="120" alt="JetBrains"/></a>
