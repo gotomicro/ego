@@ -40,6 +40,7 @@ func (histogram *HistogramVec) Observe(v float64, labels ...string) {
 	histogram.WithLabelValues(labels...).Observe(v)
 }
 
+// ObserveWithExemplar ...
 func (histogram *HistogramVec) ObserveWithExemplar(v float64, exemplar prometheus.Labels, labels ...string) {
 	histogram.WithLabelValues(labels...).(prometheus.ExemplarObserver).ObserveWithExemplar(v, exemplar)
 }

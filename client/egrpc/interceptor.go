@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/eerrors"
 	"github.com/gotomicro/ego/core/elog"
@@ -33,8 +36,11 @@ func (c *Container) metricUnaryClientInterceptor() func(ctx context.Context, met
 		beg := time.Now()
 		err := invoker(ctx, method, req, reply, cc, opts...)
 		statusInfo := ecode.Convert(err)
+
+		emetric.ClientHandleHistogram.ObserveWithExemplar(time.Since(beg).Seconds(), prometheus.Labels{
+			"tid": etrace.ExtractTraceID(ctx),
+		}, emetric.TypeGRPCUnary, c.name, method, cc.Target())
 		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, c.name, method, cc.Target(), statusInfo.Message())
-		emetric.ClientHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeGRPCUnary, c.name, method, cc.Target())
 		return err
 	}
 }
@@ -58,16 +64,18 @@ func (c *Container) debugUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 // traceUnaryClientInterceptor returns grpc unary opentracing interceptor
 func (c *Container) traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	tracer := etrace.NewTracer(trace.SpanKindClient)
+	attrs := []attribute.KeyValue{
+		semconv.RPCSystemKey.String("grpc"),
+	}
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
 		md, ok := metadata.FromOutgoingContext(ctx)
 		if !ok {
 			md = metadata.New(nil)
 		}
-		ctx, span := tracer.Start(ctx, method, transport.GrpcHeaderCarrier(md))
+		ctx, span := tracer.Start(ctx, method, transport.GrpcHeaderCarrier(md), trace.WithAttributes(attrs...))
 		span.SetAttributes(
-			attribute.String("rpc.system", "grpc"),
-			attribute.String("rpc.method", method),
-			attribute.String("net.peer.name", c.config.Addr),
+			semconv.RPCMethodKey.String(method),
+			semconv.NetPeerNameKey.String(c.config.Addr),
 		)
 		// 因为我们最新执行trace，所以这里，直接new出来metadata
 		ctx = metadata.NewOutgoingContext(ctx, md)
@@ -75,7 +83,7 @@ func (c *Container) traceUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			if err != nil {
 				span.RecordError(err)
 				if e := eerrors.FromError(err); e != nil {
-					span.SetAttributes(attribute.Key("rpc.grpc.status_code").Int64(int64(e.Code)))
+					span.SetAttributes(semconv.RPCGRPCStatusCodeKey.Int64(int64(e.Code)))
 				}
 				span.SetStatus(codes.Error, err.Error())
 			} else {

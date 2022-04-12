@@ -23,7 +23,9 @@ import (
 	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/internal/tools"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	rpcpb "google.golang.org/genproto/googleapis/rpc/context/attribute_context"
@@ -73,6 +75,7 @@ func copyHeaders(headers http.Header) http.Header {
 
 // defaultServerInterceptor 默认拦截器，包含日志记录、Recover等功能
 func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
+
 	return func(ctx *gin.Context) {
 		var beg = time.Now()
 		var rw *resWriter
@@ -268,23 +271,31 @@ func metricServerInterceptor() gin.HandlerFunc {
 	}
 }
 
+// todo 如果业务崩了，logger recover
 func traceServerInterceptor() gin.HandlerFunc {
 	tracer := etrace.NewTracer(trace.SpanKindServer)
+	attrs := []attribute.KeyValue{
+		semconv.RPCSystemKey.String("http"),
+	}
 	return func(c *gin.Context) {
 		// 该方法会在v0.9.0移除
 		etrace.CompatibleExtractHTTPTraceID(c.Request.Header)
-		ctx, span := tracer.Start(c.Request.Context(), c.Request.Method+"."+c.FullPath(), propagation.HeaderCarrier(c.Request.Header))
+		ctx, span := tracer.Start(c.Request.Context(), c.Request.Method+"."+c.FullPath(), propagation.HeaderCarrier(c.Request.Header), trace.WithAttributes(attrs...))
 		span.SetAttributes(
-			etrace.TagComponent("http"),
-			etrace.CustomTag("http.url", c.Request.URL.Path),
-			etrace.CustomTag("http.target", c.FullPath()),
-			etrace.CustomTag("http.method", c.Request.Method),
-			etrace.CustomTag("net.peer.ip", c.ClientIP()),
+			semconv.HTTPURLKey.String(c.Request.URL.String()),
+			semconv.HTTPTargetKey.String(c.Request.URL.Path),
+			semconv.HTTPMethodKey.String(c.Request.Method),
+			semconv.HTTPUserAgentKey.String(c.Request.UserAgent()),
+			semconv.HTTPClientIPKey.String(c.ClientIP()),
+			etrace.CustomTag("http.fullPath", c.FullPath()),
 		)
 		c.Request = c.Request.WithContext(ctx)
-		defer span.End()
 		c.Header(eapp.EgoTraceIDName(), span.SpanContext().TraceID().String())
 		c.Next()
+		span.SetAttributes(
+			semconv.HTTPStatusCodeKey.Int64(int64(c.Writer.Status())),
+		)
+		span.End()
 	}
 }
 
