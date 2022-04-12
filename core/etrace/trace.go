@@ -64,14 +64,14 @@ func NewTracer(kind trace.SpanKind, opts ...Option) *Tracer {
 }
 
 // Start start tracing span
-func (t *Tracer) Start(ctx context.Context, operation string, carrier propagation.TextMapCarrier) (context.Context, trace.Span) {
+func (t *Tracer) Start(ctx context.Context, operation string, carrier propagation.TextMapCarrier, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
 	if (t.kind == trace.SpanKindServer || t.kind == trace.SpanKindConsumer) && carrier != nil {
 		ctx = t.opt.propagator.Extract(ctx, carrier)
 	}
-	ctx, span := t.tracer.Start(ctx,
-		operation,
-		trace.WithSpanKind(t.kind),
-	)
+	opts = append(opts, trace.WithSpanKind(t.kind))
+
+	ctx, span := t.tracer.Start(ctx, operation, opts...)
+
 	if (t.kind == trace.SpanKindClient || t.kind == trace.SpanKindProducer) && carrier != nil {
 		t.opt.propagator.Inject(ctx, carrier)
 	}
@@ -84,3 +84,9 @@ type options struct {
 
 // Option is tracing option.
 type Option func(*options)
+
+// CustomTag ...
+func CustomTag(key string, val string) attribute.KeyValue {
+	return attribute.String(key, val)
+
+}

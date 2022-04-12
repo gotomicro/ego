@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/spf13/cast"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gotomicro/ego/core/eapp"
@@ -139,12 +140,15 @@ func metricInterceptor(name string, config *Config, logger *elog.Component) (res
 
 func traceInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
 	tracer := etrace.NewTracer(trace.SpanKindClient)
+	attrs := []attribute.KeyValue{
+		semconv.RPCSystemKey.String("grpc"),
+	}
 	beforeFn := func(cli *resty.Client, req *resty.Request) error {
-		ctx, span := tracer.Start(req.Context(), req.Method, nil)
+		ctx, span := tracer.Start(req.Context(), req.Method, nil, trace.WithAttributes(attrs...))
 		span.SetAttributes(
-			etrace.String("peer.service", name),
-			etrace.String("http.method", req.Method),
-			etrace.String("http.url", req.URL),
+			semconv.PeerServiceKey.String(name),
+			semconv.HTTPMethodKey.String(req.Method),
+			semconv.HTTPURLKey.String(req.URL),
 		)
 		req.SetContext(ctx)
 		return nil
@@ -152,7 +156,7 @@ func traceInterceptor(name string, config *Config, logger *elog.Component) (rest
 	afterFn := func(cli *resty.Client, res *resty.Response) error {
 		span := trace.SpanFromContext(res.Request.Context())
 		span.SetAttributes(
-			etrace.String("http.status_code", cast.ToString(res.StatusCode())),
+			semconv.HTTPStatusCodeKey.Int64(int64(res.StatusCode())),
 		)
 		span.End()
 		return nil

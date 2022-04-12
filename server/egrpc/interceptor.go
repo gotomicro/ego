@@ -22,9 +22,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+
 	"google.golang.org/grpc/peer"
 )
 
@@ -51,6 +53,9 @@ func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, in
 
 func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	tracer := etrace.NewTracer(trace.SpanKindServer)
+	attrs := []attribute.KeyValue{
+		semconv.RPCSystemKey.String("grpc"),
+	}
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (reply interface{}, err error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
@@ -58,19 +63,18 @@ func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		}
 		// Deprecated 该方法会在v0.9.0移除
 		etrace.CompatibleExtractGrpcTraceID(md)
-		ctx, span := tracer.Start(ctx, info.FullMethod, transport.GrpcHeaderCarrier(md))
+		ctx, span := tracer.Start(ctx, info.FullMethod, transport.GrpcHeaderCarrier(md), trace.WithAttributes(attrs...))
 		span.SetAttributes(
-			attribute.String("rpc.system", "grpc"),
-			attribute.String("rpc.method", info.FullMethod),
-			attribute.String("net.peer.name", getPeerName(ctx)),
-			attribute.String("net.peer.ip", getPeerIP(ctx)),
-			etrace.TagSpanKind("server.unary"),
+			semconv.RPCMethodKey.String(info.FullMethod),
+			semconv.NetPeerNameKey.String(getPeerName(ctx)),
+			semconv.NetPeerIPKey.String(getPeerIP(ctx)),
+			etrace.CustomTag("span.kind", "server.unary"),
 		)
 		defer func() {
 			if err != nil {
 				span.RecordError(err)
 				if e := eerrors.FromError(err); e != nil {
-					span.SetAttributes(attribute.Key("rpc.grpc.status_code").Int64(int64(e.Code)))
+					span.SetAttributes(semconv.RPCGRPCStatusCodeKey.Int64(int64(e.Code)))
 				}
 				span.SetStatus(codes.Error, err.Error())
 			} else {
@@ -94,6 +98,9 @@ func (css contextedServerStream) Context() context.Context {
 
 func traceStreamServerInterceptor() grpc.StreamServerInterceptor {
 	tracer := etrace.NewTracer(trace.SpanKindServer)
+	attrs := []attribute.KeyValue{
+		semconv.RPCSystemKey.String("grpc"),
+	}
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		md, ok := metadata.FromIncomingContext(ss.Context())
 		if !ok {
@@ -101,10 +108,12 @@ func traceStreamServerInterceptor() grpc.StreamServerInterceptor {
 		}
 		// Deprecated 该方法会在v0.9.0移除
 		etrace.CompatibleExtractGrpcTraceID(md)
-		ctx, span := tracer.Start(ss.Context(), info.FullMethod, transport.GrpcHeaderCarrier(md))
+		ctx, span := tracer.Start(ss.Context(), info.FullMethod, transport.GrpcHeaderCarrier(md), trace.WithAttributes(attrs...))
 		span.SetAttributes(
-			etrace.TagComponent("grpc"),
-			etrace.TagSpanKind("server.stream"),
+			semconv.RPCMethodKey.String(info.FullMethod),
+			semconv.NetPeerNameKey.String(getPeerName(ctx)),
+			semconv.NetPeerIPKey.String(getPeerIP(ctx)),
+			etrace.CustomTag("span.kind", "server.stream"),
 		)
 		defer span.End()
 		return handler(srv, contextedServerStream{

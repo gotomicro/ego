@@ -8,7 +8,7 @@ import (
 )
 
 // CompatibleExtractHTTPTraceID ...
-// Deprecated 该方法会在v0.9.0移除
+// Deprecated 该方法会在v1.2.0移除
 func CompatibleExtractHTTPTraceID(header http.Header) {
 	xTraceID := header.Get("X-Trace-Id")
 	if xTraceID != "" {
@@ -17,7 +17,7 @@ func CompatibleExtractHTTPTraceID(header http.Header) {
 }
 
 // CompatibleExtractGrpcTraceID ...
-// Deprecated 该方法会在v0.9.0移除
+// Deprecated 该方法会在v1.2.0移除
 func CompatibleExtractGrpcTraceID(header metadata.MD) {
 	xTraceID := header.Get("x-trace-id")
 	if len(xTraceID) > 0 {
