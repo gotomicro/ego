@@ -287,7 +287,7 @@ func traceServerInterceptor() gin.HandlerFunc {
 			semconv.HTTPMethodKey.String(c.Request.Method),
 			semconv.HTTPUserAgentKey.String(c.Request.UserAgent()),
 			semconv.HTTPClientIPKey.String(c.ClientIP()),
-			etrace.CustomTag("http.fullPath", c.FullPath()),
+			etrace.CustomTag("http.full_path", c.FullPath()),
 		)
 		c.Request = c.Request.WithContext(ctx)
 		c.Header(eapp.EgoTraceIDName(), span.SpanContext().TraceID().String())
