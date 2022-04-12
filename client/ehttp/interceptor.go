@@ -141,7 +141,7 @@ func metricInterceptor(name string, config *Config, logger *elog.Component) (res
 func traceInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
 	tracer := etrace.NewTracer(trace.SpanKindClient)
 	attrs := []attribute.KeyValue{
-		semconv.RPCSystemKey.String("grpc"),
+		semconv.RPCSystemKey.String("http"),
 	}
 	beforeFn := func(cli *resty.Client, req *resty.Request) error {
 		ctx, span := tracer.Start(req.Context(), req.Method, nil, trace.WithAttributes(attrs...))
