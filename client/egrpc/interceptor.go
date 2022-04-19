@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -53,9 +56,9 @@ func (c *Container) debugUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		err := invoker(ctx, method, req, reply, cc, append(opts, grpc.Peer(&p))...)
 		cost := time.Since(beg)
 		if err != nil {
-			log.Println("grpc.response", xdebug.MakeReqResErrorV2(6, c.name, c.config.Addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error()))
+			log.Println("grpc.response", xdebug.MakeReqAndResError(fileWithLineNum(), c.name, c.config.Addr, cost, method+" | "+fmt.Sprintf("%v", req), err.Error()))
 		} else {
-			log.Println("grpc.response", xdebug.MakeReqResInfoV2(6, c.name, c.config.Addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
+			log.Println("grpc.response", xdebug.MakeReqAndResInfo(fileWithLineNum(), c.name, c.config.Addr, cost, method+" | "+fmt.Sprintf("%v", req), reply))
 		}
 		return err
 	}
@@ -209,4 +212,18 @@ func customHeader(egoLogExtraKeys []string) grpc.UnaryClientInterceptor {
 		}
 		return invoker(ctx, method, req, res, cc, opts...)
 	}
+}
+
+func fileWithLineNum() string {
+	// the second caller usually from internal, so set i start from 2
+	for i := 2; i < 20; i++ {
+		_, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break
+		}
+		if (!strings.HasSuffix(file, "ego/client/egrpc/interceptor.go") && !strings.HasSuffix(file, ".pb.go") && !strings.Contains(file, "google.golang.org")) || strings.HasSuffix(file, "_test.go") {
+			return file + ":" + strconv.FormatInt(int64(line), 10)
+		}
+	}
+	return ""
 }

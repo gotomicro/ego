@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -33,9 +35,9 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 	}
 	if eapp.IsDevelopmentMode() {
 		if err != nil {
-			log.Println("http.response", xdebug.MakeReqResErrorV2(6, name, config.Addr, cost, fullMethod, err.Error()))
+			log.Println("http.response", xdebug.MakeReqAndResError(fileWithLineNum(), name, config.Addr, cost, fullMethod, err.Error()))
 		} else {
-			log.Println("http.response", xdebug.MakeReqResInfoV2(6, name, config.Addr, cost, fullMethod, respBody))
+			log.Println("http.response", xdebug.MakeReqAndResInfo(fileWithLineNum(), name, config.Addr, cost, fullMethod, respBody))
 		}
 	}
 
@@ -170,4 +172,18 @@ func traceInterceptor(name string, config *Config, logger *elog.Component) (rest
 		span.End()
 	}
 	return beforeFn, afterFn, errorFn
+}
+
+func fileWithLineNum() string {
+	// the second caller usually from internal, so set i start from 2
+	for i := 2; i < 20; i++ {
+		_, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break
+		}
+		if (!strings.HasSuffix(file, "ego/client/ehttp/interceptor.go") && !strings.Contains(file, "go-resty/resty")) || strings.HasSuffix(file, "_test.go") {
+			return file + ":" + strconv.FormatInt(int64(line), 10)
+		}
+	}
+	return ""
 }
