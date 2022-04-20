@@ -52,57 +52,60 @@ Once you have mastered one component, you can use other components by inference.
 * Use the Go1.16 feature `embed`, start the webUI, and generate code
 * Project: [https://github.com/gotomicro/egoctl](https://github.com/gotomicro/egoctl)
 
-## 3 Definition
-### 3.1 Framework Layer
+## 3 Ego Component
+We have Many EGO components to support your rapid development
+
+| Component Name            | Code                                                                  | Example                                                                        | Doc                                                                                                                 |
+|---------------------------|-----------------------------------------------------------------------|--------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| HTTP Server               | [Code](https://github.com/gotomicro/ego/tree/master/server/egin)      | [Example](https://github.com/gotomicro/ego/tree/master/examples/server/http)   | [Doc](https://ego.gocn.vip/frame/server/http.html)                                                                  |
+| gRPC Server               | [Code](./server/egrpc)                                                | [Example](https://github.com/gotomicro/ego/tree/master/examples/server/grpc)   | [Doc](https://ego.gocn.vip/frame/server/grpc.html#example)                                                          |
+| Governance Service        | [Code](https://github.com/gotomicro/ego/tree/master/server/egovernor) | [Example](https://github.com/gotomicro/ego/tree/master/examples/server/governor) | [Doc](https://ego.gocn.vip/frame/server/governor.html)                                                              |
+| Job                       | [Code](https://github.com/gotomicro/ego/tree/master/task/ejob)        | [Example](.https://github.com/gotomicro/ego/tree/master/examples/task/job)     | [Doc](https://ego.gocn.vip/frame/task/job.html)                                                                     |
+| Corn job                  | [Code](https://github.com/gotomicro/ego/tree/master/task/ecron)       | [Example](https://github.com/gotomicro/ego/tree/master/examples/task/cron)     | [Doc](https://ego.gocn.vip/frame/task/cron.html#_3-%E5%B8%B8%E8%A7%84%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1)          |
+| Distributed Scheduled Job | [Code](https://github.com/gotomicro/ego/tree/master/task/ecron)       | [Example](https://github.com/gotomicro/ego/tree/master/examples/task/cron)     | [Doc](https://ego.gocn.vip/frame/task/cron.html#_4-%E5%88%86%E5%B8%83%E5%BC%8F%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1) |
+| HTTP Client               | [Code](https://github.com/gotomicro/ego/tree/master/client/ehttp)     | [Example](https://github.com/gotomicro/ego/tree/master/examples/http/client)   | [Doc](https://ego.gocn.vip/frame/client/http.html#example)                                                          |
+| gRPC Client               | [Code](https://github.com/gotomicro/ego/tree/master/client/egrpc)     | [Example](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)   | [Doc](https://ego.gocn.vip/frame/client/grpc.html#_4-%E7%9B%B4%E8%BF%9Egrpc)                                        |
+| gRPC Client using ETCD    | [Code](https://github.com/ego-component/tree/master/eetcd)            | [Example](https://github.com/ego-component/tree/master/eetcd/examples)         | [Doc](https://ego.gocn.vip/frame/client/grpc.html#_5-%E4%BD%BF%E7%94%A8etcd%E7%9A%84grpc)                           |
+| gRPC Client using k8s     | [Code](https://github.com/ego-component/tree/master/ek8s)             | [Example](https://github.com/ego-component/tree/master/ek8s/examples)          | [Doc](https://ego.gocn.vip/frame/client/grpc.html#_6-%E4%BD%BF%E7%94%A8k8s%E7%9A%84grpc)                            |
+| Sentinel                  | [Code](https://github.com/gotomicro/ego/tree/master/core/esentinel)   | [Example](https://github.com/gotomicro/ego/tree/master/examples/sentinel/http) | [Doc](https://ego.gocn.vip/frame/client/sentinel.html)                                                              |
+| MySQL                     | [Code](https://github.com/ego-component/tree/master/egorm)            | [Example](https://github.com/ego-component/tree/master/egorm/examples)         | [Doc](https://ego.gocn.vip/frame/client/gorm.html#example)                                                          |
+| Redis                     | [Code](https://github.com/ego-component/tree/master/eredis)           | [Example](https://github.com/ego-component/tree/master/eredis/examples)        | [Doc](https://ego.gocn.vip/frame/client/redis.html#example)                                                         |
+| Redis Distributed lock    | [Code](https://github.com/ego-component/tree/master/eredis)           | [Example](https://github.com/ego-component/tree/master/eredis/examples)        | [Doc](https://ego.gocn.vip/frame/client/redis.html#example)                                                         |
+| Mongo                     | [Code](https://github.com/ego-component/tree/master/emongo)           | [Example](https://github.com/ego-component/tree/master/emongo/examples)        | [Doc](https://ego.gocn.vip/frame/client/mongo.html)                                                                 |
+| Kafka                     | [Code](https://github.com/ego-component/tree/master/ekafka)           | [Example](https://github.com/ego-component/tree/master/ekafka/examples)        | [Doc](https://ego.gocn.vip/frame/client/kafka.html)                                                                 |
+| ETCD                      | [Code](https://github.com/ego-component/tree/master/eetcd)            | [Example](https://github.com/ego-component/tree/master/eetcd/examples)         | [Doc](https://ego.gocn.vip/frame/client/eetcd.html)                                                                 |
+| K8S                       | [Code](https://github.com/ego-component/tree/master/ek8s)             | [Example](https://github.com/ego-component/tree/master/ek8s/examples)          | [Doc](https://ego.gocn.vip/frame/client/ek8s.html)                                                                  |
+| Oauth2                    | [Code](https://github.com/ego-component/tree/master/eoauth2)          | [Example](https://github.com/ego-component/tree/master/eoauth2/examples)       ||
+* 
+* For more components please visit the website: [https://github.com/ego-component](https://github.com/ego-component)
+
+
+## 4 Definition
+### 4.1 Framework Layer
 EGO framework has three layers:
 * The core layer provides configuration, logging, monitoring and links, and is the cornerstone of other components.
 * The component layer provides various components in the client, server and task.
 * The glue layer controls the life cycle of various components, error handling.
 
-### 3.2 Architecture
+### 4.2 Architecture
 ![](./docs/images/ego_frame.png)
 
-### 3.3 Life cycle
+### 4.3 Life cycle
 ![](./docs/images/ego_flow.png)
 
-### 3.4 Component Layer
+### 4.4 Component Layer
 We consider everything to be a component and divide the component into four parts:
 - **Container** handles component type, configuration and component startup
 - **Config** configure parameters
 - **Component** The calling method of the component
 - **Options** the options of configuration and component 
 
-## 4 功能
-|Component Name|Code|Example|Doc|
-| --- | --- | --- | --- |
-|HTTP Server|[Code](./server/egin)|[Example](./examples/server/http)|[Doc](https://ego.gocn.vip/frame/server/http.html)|
-|gRPC Server|[Code](./server/egrpc)|[Example](./examples/server/grpc)|[Doc](https://ego.gocn.vip/frame/server/grpc.html#example)|
-|Governance Service|[Code](./server/egovernor)|[Example](./examples/server/governor)|[Doc](https://ego.gocn.vip/frame/server/governor.html)|
-|Job|[Code](./task/ejob)|[Example](./examples/task/job)|[Doc](https://ego.gocn.vip/frame/task/job.html)|
-|Corn job|[Code](./task/ecron)|[Example](./examples/task/job)|[Doc](https://ego.gocn.vip/frame/task/cron.html#_3-%E5%B8%B8%E8%A7%84%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1)|
-|Distributed scheduled Job|||[Doc](https://ego.gocn.vip/frame/task/cron.html#_4-%E5%88%86%E5%B8%83%E5%BC%8F%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1)|
-|HTTP Client|[Code](./client/ehttp)|[Example](./examples/http/client)|[Doc](https://ego.gocn.vip/frame/client/http.html#example)|
-|gRPC Client|[Code](./client/egrpc)|[Example](./examples/grpc/direct)|[Doc](https://ego.gocn.vip/frame/client/grpc.html#_4-%E7%9B%B4%E8%BF%9Egrpc)|
-|gRPC Client using ETCD||[Example](https://github.com/gotomicro/ego-component/tree/master/eetcd/examples)|[Doc](https://ego.gocn.vip/frame/client/grpc.html#_5-%E4%BD%BF%E7%94%A8etcd%E7%9A%84grpc)|
-|gRPC Client using k8s||[Example](https://github.com/gotomicro/ego-component/tree/master/ek8s/examples)|[Doc](https://ego.gocn.vip/frame/client/grpc.html#_6-%E4%BD%BF%E7%94%A8k8s%E7%9A%84grpc)|
-|Sentinel|[Code](https://github.com/gotomicro/ego/tree/master/core/esentinel)|[Example](https://github.com/gotomicro/ego/tree/master/examples/sentinel/http)|[Doc](https://ego.gocn.vip/frame/client/sentinel.html)|
-|MySQL|[Code](https://github.com/gotomicro/ego-component/tree/master/egorm)|[Example](https://github.com/gotomicro/ego-component/tree/master/egorm/examples/gorm)|[Doc](https://ego.gocn.vip/frame/client/gorm.html#example)|
-|Redis|[Code](https://github.com/gotomicro/ego-component/tree/master/eredis)|[Example](https://github.com/gotomicro/ego-component/tree/master/eredis/examples/redis)|[Doc](https://ego.gocn.vip/frame/client/redis.html#example)|
-|Redis Distributed lock|[Code](https://github.com/gotomicro/ego-component/tree/master/eredis)|||
-|Mongo|[Code](https://github.com/gotomicro/ego-component/tree/master/emongo)||[Doc](https://ego.gocn.vip/frame/client/mongo.html)|
-|Kafka|[Code](https://github.com/gotomicro/ego-component/tree/master/ekafka)||[Doc](https://ego.gocn.vip/frame/client/kafka.html)|
-|ETCD|[Code](https://github.com/gotomicro/ego-component/tree/master/eetcd)|||
-|K8S|[Code](https://github.com/gotomicro/ego-component/tree/master/ek8s)||[Doc](https://ego.gocn.vip/frame/client/ek8s.html)|
-|Oauth2|[Code](https://github.com/gotomicro/ego-component/tree/master/eoauth2)|||
-|Wechat|[Code](https://github.com/gotomicro/ego-component/tree/master/ewechat)|||
-|Dingtalk|[Code](https://github.com/gotomicro/ego-component/tree/master/edingtalk)|||
-|Jira|[Code](https://github.com/gotomicro/ego-component/tree/master/ejira)|||
 
-* For more components please visit the website: [https://github.com/gotomicro/ego-component](https://github.com/gotomicro/ego-component)
 
 ## 5 Version Requirements
 * Below v0.8.2, Go version needs to be greater than Go1.13.
 * After v0.8.3, Go version needs to be greater than Go1.16.
+* After v1.0.0, Go version needs to be greater than Go1.17.
 
 ## 6 Download Tool
 ```bash
