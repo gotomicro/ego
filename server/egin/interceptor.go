@@ -178,7 +178,7 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					elog.FieldCode(int32(ctx.Writer.Status())),
 					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
-				c.logger.Error("access", fields...)
+				c.logger.Panic("access", fields...)
 				return
 			}
 			// todo 如果不记录日志的时候，应该早点return
