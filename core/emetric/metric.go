@@ -61,12 +61,6 @@ var (
 		Labels:    []string{"type", "name", "index"},
 	}.Build()
 
-	ClientStatsSummary = SummaryVecOpts{
-		Namespace: DefaultNamespace,
-		Name:      "client_stats_summary",
-		Labels:    []string{"type", "name", "index"},
-	}.Build()
-
 	// JobHandleCounter ...
 	JobHandleCounter = CounterVecOpts{
 		Namespace: DefaultNamespace,
