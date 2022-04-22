@@ -19,22 +19,8 @@ var (
 	TypeGorm = "gorm"
 	// TypeWebsocket ...
 	TypeWebsocket = "ws"
-
 	// TypeMySQL ...
 	TypeMySQL = "mysql"
-
-	// CodeJobSuccess ...
-	CodeJobSuccess = "ok"
-	// CodeJobFail ...
-	CodeJobFail = "fail"
-	// CodeJobReentry ...
-	CodeJobReentry = "reentry"
-
-	// CodeCacheMiss ...
-	CodeCacheMiss = "miss"
-	// CodeCacheHit ...
-	CodeCacheHit = "hit"
-
 	// DefaultNamespace ...
 	DefaultNamespace = "ego"
 )
@@ -68,6 +54,13 @@ var (
 		Labels:    []string{"type", "name", "method", "peer"},
 	}.Build()
 
+	// ClientStatsGauge ...
+	ClientStatsGauge = GaugeVecOpts{
+		Namespace: DefaultNamespace,
+		Name:      "client_stats",
+		Labels:    []string{"type", "name", "index"},
+	}.Build()
+
 	// JobHandleCounter ...
 	JobHandleCounter = CounterVecOpts{
 		Namespace: DefaultNamespace,
@@ -87,6 +80,7 @@ var (
 		Name:      "lib_handle_seconds",
 		Labels:    []string{"type", "method", "address"},
 	}.Build()
+
 	// LibHandleCounter ...
 	LibHandleCounter = CounterVecOpts{
 		Namespace: DefaultNamespace,
