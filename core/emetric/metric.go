@@ -57,7 +57,13 @@ var (
 	// ClientStatsGauge ...
 	ClientStatsGauge = GaugeVecOpts{
 		Namespace: DefaultNamespace,
-		Name:      "client_stats",
+		Name:      "client_stats_gauge",
+		Labels:    []string{"type", "name", "index"},
+	}.Build()
+
+	ClientStatsSummary = SummaryVecOpts{
+		Namespace: DefaultNamespace,
+		Name:      "client_stats_summary",
 		Labels:    []string{"type", "name", "index"},
 	}.Build()
 
@@ -74,7 +80,9 @@ var (
 		Name:      "job_handle_seconds",
 		Labels:    []string{"type", "name"},
 	}.Build()
+
 	// LibHandleHistogram ...
+	// Deprecated LibHandleHistogram
 	LibHandleHistogram = HistogramVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "lib_handle_seconds",
@@ -82,12 +90,15 @@ var (
 	}.Build()
 
 	// LibHandleCounter ...
+	// Deprecated LibHandleCounter
 	LibHandleCounter = CounterVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "lib_handle_total",
 		Labels:    []string{"type", "method", "address", "code"},
 	}.Build()
+
 	// LibHandleSummary ...
+	// Deprecated LibHandleSummary
 	LibHandleSummary = SummaryVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "lib_handle_stats",
