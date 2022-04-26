@@ -100,3 +100,8 @@ func EgoGovernorEnableConfig() bool {
 func EgoLogTimeType() string {
 	return egoLogTimeType
 }
+
+// SetEgoDebug 设置调试模式，"true" or "false"
+func SetEgoDebug(flag string) {
+	egoDebug = flag
+}
