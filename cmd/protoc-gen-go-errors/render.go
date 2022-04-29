@@ -22,6 +22,7 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -84,6 +85,15 @@ func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *proto
 		annos := getAnnotations(string(v.Comments.Leading))
 		eCode := annos[fieldLevelCommentAnnotation]
 		desc := string(v.Desc.Name())
+
+		comment := v.Comments.Leading.String()
+		if comment == "" {
+			comment = v.Comments.Trailing.String()
+		}
+
+		upperCamelValue := strcase.ToCamel(strings.ToLower(desc))
+		comment = buildComment(upperCamelValue, comment)
+
 		err := &errorInfo{
 			Name:            string(enum.Desc.Name()),
 			Value:           desc,
@@ -91,6 +101,8 @@ func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *proto
 			LowerCamelValue: strcase.ToLowerCamel(strings.ToLower(desc)),
 			Code:            strcase.ToCamel(strings.ToLower(eCode.val)),
 			Key:             string(v.Desc.FullName()),
+			Comment:         comment,
+			HasComment:      len(comment) > 0,
 		}
 		ew.Errors = append(ew.Errors, err)
 	}
@@ -99,6 +111,16 @@ func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *proto
 	}
 	g.P(ew.execute())
 	return false
+}
+
+// buildComment returns comment content with prefix //
+func buildComment(upperCamelValue, comment string) string {
+	if comment == "" {
+		return ""
+	}
+
+	comment = strings.Replace(comment, "//", "", 1)
+	return fmt.Sprintf("// %s %s", upperCamelValue, comment)
 }
 
 var filedLevelCommentRgx, _ = regexp.Compile(`@(\w+)=([_a-zA-Z0-9-,]+)`)
