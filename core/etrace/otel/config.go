@@ -159,6 +159,7 @@ func (config *Config) buildOtlpTP() trace.TracerProvider {
 	ctx := context.Background()
 	traceExp, err := otlptrace.New(ctx, traceClient)
 	if err != nil {
+		elog.Error("otlp exporter error", elog.FieldErr(err))
 		return nil
 	}
 
@@ -174,7 +175,8 @@ func (config *Config) buildOtlpTP() trace.TracerProvider {
 	resOptions = append(resOptions, config.Otlp.resOptions...)
 	res, err := resource.New(ctx, resOptions...)
 	if err != nil {
-		elog.Panic("otlp resource New error", elog.FieldErr(err))
+		elog.Error("otlp resource New error", elog.FieldErr(err))
+		return nil
 	}
 
 	//tp
