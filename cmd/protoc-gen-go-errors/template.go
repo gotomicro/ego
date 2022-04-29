@@ -42,7 +42,7 @@ eerrors.Register({{.LowerCamelValue}})
 }
 
 {{ range .Errors }}
-func {{.UpperCamelValue}}() eerrors.Error {
+{{if .HasComment}}{{.Comment}}{{end}}func {{.UpperCamelValue}}() eerrors.Error {
 	 return {{.LowerCamelValue}}
 }
 {{ end }}
@@ -55,6 +55,8 @@ type errorInfo struct {
 	UpperCamelValue string
 	LowerCamelValue string
 	Key             string
+	Comment         string
+	HasComment      bool
 }
 
 type errorWrapper struct {
