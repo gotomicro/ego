@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gotomicro/ego/core/etrace/otel"
 	"os"
 	"os/signal"
 	"runtime"
@@ -22,7 +23,6 @@ import (
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/etrace"
-	"github.com/gotomicro/ego/core/etrace/ejaeger"
 	"github.com/gotomicro/ego/core/util/xcolor"
 )
 
@@ -195,18 +195,18 @@ func (e *Ego) initLogger() error {
 // initTracer init global tracer
 func (e *Ego) initTracer() error {
 	var (
-		container *ejaeger.Config
+		container *otel.Config
 	)
 
-	if econf.Get(e.opts.configPrefix+"trace.jaeger") != nil {
-		container = ejaeger.Load(e.opts.configPrefix + "trace.jaeger")
+	if econf.Get(e.opts.configPrefix+"trace") != nil {
+		container = otel.Load(e.opts.configPrefix + "trace")
 	} else {
 		// 设置默认trace
-		container = ejaeger.DefaultConfig()
+		container = otel.DefaultConfig()
 	}
 
 	// 禁用trace
-	if econf.GetBool(e.opts.configPrefix + "trace.jaeger.disable") {
+	if econf.GetBool(e.opts.configPrefix + "trace.disable") {
 		elog.EgoLogger.Info("disable trace", elog.FieldComponent("app"))
 		return nil
 	}

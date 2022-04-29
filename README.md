@@ -253,6 +253,7 @@ Thanks for these wonderful people:
   <tr>
     <td align="center"><a href="http://blog.lincolnzhou.com/"><img src="https://avatars.githubusercontent.com/u/3911154?v=4" width="64px;" alt=""/><br /><sub><b>LincolnZhou</b></sub></a></td>
     <td align="center"><a href="https://github.com/optimistic9527"><img src="https://avatars.githubusercontent.com/u/37545032?v=4" width="64px;" alt=""/><br /><sub><b>optimistic9527</b></sub></a></td>
+    <td align="center"><a href="https://github.com/livepo"><img src="https://avatars.githubusercontent.com/u/17000001?s=400&u=0336f4726acdf82e13f4c19f28d6e1de39ea0b9b&v=4" width="64px;" alt=""/><br /><sub><b>soeluc</b></sub></a></td>
   </tr>
 </table>
 
