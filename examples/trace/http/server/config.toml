@@ -3,6 +3,7 @@ port = 9007
 EnableAccessInterceptor = true
 EnableAccessInterceptorReq = true
 EnableAccessInterceptorRes = true
-[trace.jaeger]
+[trace]
+OtelType = "jaeger"
 ServiceName = "server"
 
