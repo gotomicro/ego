@@ -140,7 +140,7 @@ Through the above script, you can download the protoc tools, EGO protoc plugin a
 And using ``Goland``, you can directly click to the corresponding code path through the line number (gRPC, HTTP client support line number)
 
 * Tracing
-   Use the opentrace protocol to automatically add Tracing to the log
+   Use the opentelemetry protocol to automatically add Tracing to the log
      * gRPC Tracing
          * test code
            [gRPC view Tracing id](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
@@ -153,7 +153,11 @@ And using ``Goland``, you can directly click to the corresponding code path thro
      * HTTP Tracing
 
        ![](docs/images/trace.png)
+  
+     * Ali arms Tracing
 
+       ![](docs/images/trace-arms.png)
+  
 * [Unified error message](https://ego.gocn.vip/awesome/errors.html)
 
 * Unified monitoring information

@@ -133,7 +133,7 @@ egin.Load("server.http").Build()
 并且使用``Goland``同学，可以直接通过行号点击到对应的代码路径(gRPC、HTTP客户端支持行号)
 
 * 链路
-  使用opentrace协议，自动将链路加入到日志里
+  使用opentelemetry协议，自动将链路加入到日志里，支持oltp协议上报到阿里arms。
     * gRPC链路
         * 测试代码
           [gRPC直连查看链路id](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
@@ -146,6 +146,11 @@ egin.Load("server.http").Build()
     * HTTP链路
 
       ![](docs/images/trace.png)
+
+    * 阿里arms链路   
+       自动记录各个组件的span信息
+
+      ![](docs/images/trace-arms.png)
 
 * [统一的错误信息](https://ego.gocn.vip/awesome/errors.html)
 

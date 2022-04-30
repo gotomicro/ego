@@ -30,6 +30,7 @@ require (
 	github.com/shirou/gopsutil v3.21.3+incompatible
 	github.com/spf13/cast v1.3.1
 	github.com/stretchr/testify v1.7.1
+	github.com/ugorji/go v1.2.6 // indirect
 	github.com/wk8/go-ordered-map v0.2.0
 	go.opencensus.io v0.22.4
 	go.opentelemetry.io/otel v1.6.3
