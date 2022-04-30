@@ -30,28 +30,21 @@ require (
 	github.com/shirou/gopsutil v3.21.3+incompatible
 	github.com/spf13/cast v1.3.1
 	github.com/stretchr/testify v1.7.1
-	github.com/ugorji/go v1.2.6 // indirect
 	github.com/wk8/go-ordered-map v0.2.0
 	go.opencensus.io v0.22.4
-	go.opentelemetry.io/otel v1.7.0
-	go.opentelemetry.io/otel/exporters/jaeger v1.4.1
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.7.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.7.0
-	go.opentelemetry.io/otel/sdk v1.7.0
-	go.opentelemetry.io/otel/trace v1.7.0
+	go.opentelemetry.io/otel v1.6.3
+	go.opentelemetry.io/otel/exporters/jaeger v1.6.3
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.6.3
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.6.3
+	go.opentelemetry.io/otel/sdk v1.6.3
+	go.opentelemetry.io/otel/trace v1.6.3
 	go.uber.org/automaxprocs v1.3.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/tools v0.1.6
 	google.golang.org/genproto v0.0.0-20220310185008-1973136f34c6
-	google.golang.org/grpc v1.46.0
+	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-)
-
-replace (
-    //todo undefined: grpc.WithBalancerName
-	google.golang.org/grpc v1.46.0 => google.golang.org/grpc v1.44.0
-	google.golang.org/protobuf v1.28.0 => google.golang.org/protobuf v1.27.1
 )
