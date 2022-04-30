@@ -69,7 +69,7 @@ func DefaultConfig() *Config {
 		Otlp: otlpConfig{
 			Endpoint: ienv.EnvOrStr("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
 		},
-		OtelType:     "otlp",
+		OtelType:     "jaeger",
 		PanicOnError: true,
 	}
 }
