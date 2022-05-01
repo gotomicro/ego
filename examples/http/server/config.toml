@@ -5,5 +5,5 @@ EnableAccessInterceptorReq = true
 EnableAccessInterceptorRes = true
 AccessInterceptorReqResFilter = ''
 
-[trace.jaeger]
+[trace]
 ServiceName = "server"

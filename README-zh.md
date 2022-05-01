@@ -106,7 +106,7 @@ EGO是一个集成里各种工程实践的框架。通过组件化的设计模�
 bash <(curl -L https://raw.githubusercontent.com/gotomicro/egoctl/main/getlatest.sh)
 ```
 通过以上脚本，可以下载protoc工具全家桶，以及ego的protoc插件和egoctl
-* /usr/local/bin/egoctl               EGO工具 
+* /usr/local/bin/egoctl               EGO工具
 * /usr/local/bin/protoc               生成Pb工具
 * /usr/local/bin/protoc-gen-go        生成Pb工具
 * /usr/local/bin/protoc-gen-go-grpc   生成gRPC工具
@@ -133,7 +133,7 @@ egin.Load("server.http").Build()
 并且使用``Goland``同学，可以直接通过行号点击到对应的代码路径(gRPC、HTTP客户端支持行号)
 
 * 链路
-  使用opentrace协议，自动将链路加入到日志里
+  使用opentelemetry协议，自动将链路加入到日志里，支持oltp协议上报到阿里arms。
     * gRPC链路
         * 测试代码
           [gRPC直连查看链路id](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
@@ -146,6 +146,11 @@ egin.Load("server.http").Build()
     * HTTP链路
 
       ![](docs/images/trace.png)
+
+    * 阿里arms链路   
+      自动记录各个组件的span信息
+
+      ![](docs/images/trace-arms.png)
 
 * [统一的错误信息](https://ego.gocn.vip/awesome/errors.html)
 
@@ -248,6 +253,7 @@ Thanks for these wonderful people:
   <tr>
     <td align="center"><a href="http://blog.lincolnzhou.com/"><img src="https://avatars.githubusercontent.com/u/3911154?v=4" width="64px;" alt=""/><br /><sub><b>LincolnZhou</b></sub></a></td>
     <td align="center"><a href="https://github.com/optimistic9527"><img src="https://avatars.githubusercontent.com/u/37545032?v=4" width="64px;" alt=""/><br /><sub><b>optimistic9527</b></sub></a></td>
+    <td align="center"><a href="https://github.com/livepo"><img src="https://avatars.githubusercontent.com/u/17000001?s=400&u=0336f4726acdf82e13f4c19f28d6e1de39ea0b9b&v=4" width="64px;" alt=""/><br /><sub><b>soeluc</b></sub></a></td>
   </tr>
 </table>
 

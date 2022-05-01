@@ -9,14 +9,14 @@
 [![Example](https://img.shields.io/badge/Examples-2ca5e0?style=flat&logo=appveyor)](https://github.com/gotomicro/ego/tree/master/examples)
 [![Doc](https://img.shields.io/badge/Docs-1?style=flat&logo=appveyor)](https://ego.gocn.vip)
 
-English | [简体中文](./README-zh.md) 
+English | [简体中文](./README-zh.md)
 
 ## 1 Docs
 The offical docs for developers.
 
 View [https://ego.gocn.vip](https://ego.gocn.vip)
 
-## 2 Introduction 
+## 2 Introduction
 EGO is a microservice-oriented governance framework implemented by golang, which integrates various engineering practices. Through the component-based design pattern, it is guaranteed that the business development can use various components in a unified way.
 
 Advantages of EGO:
@@ -98,7 +98,7 @@ We consider everything to be a component and divide the component into four part
 - **Container** handles component type, configuration and component startup
 - **Config** configure parameters
 - **Component** The calling method of the component
-- **Options** the options of configuration and component 
+- **Options** the options of configuration and component
 
 
 
@@ -123,14 +123,14 @@ Through the above script, you can download the protoc tools, EGO protoc plugin a
 ## 7 Features
 
 * Configuration driver
-   The startup method of all components is `component name.Load("configuration name").Build()`, which can create a component instance. For example, `http server` below, `egin` is the component name, `server.http` is the configuration name
+  The startup method of all components is `component name.Load("configuration name").Build()`, which can create a component instance. For example, `http server` below, `egin` is the component name, `server.http` is the configuration name
   ````go
   egin.Load("server.http").Build()
   ````
 * friendly debug
-   By enabling the ``debug`` configuration and ``export EGO_DEBUG=true`` on the command line,
-   
-   We can see the line number, configuration name, request address, time-consuming, request data, and response data in the request of all components in the test environment
+  By enabling the ``debug`` configuration and ``export EGO_DEBUG=true`` on the command line,
+
+  We can see the line number, configuration name, request address, time-consuming, request data, and response data in the request of all components in the test environment
 
 ![](docs/images/client_grpc1.png)
 ![](docs/images/client-http.png)
@@ -140,19 +140,23 @@ Through the above script, you can download the protoc tools, EGO protoc plugin a
 And using ``Goland``, you can directly click to the corresponding code path through the line number (gRPC, HTTP client support line number)
 
 * Tracing
-   Use the opentrace protocol to automatically add Tracing to the log
-     * gRPC Tracing
-         * test code
-           [gRPC view Tracing id](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
-         * Server Tracing information
+  Use the opentelemetry protocol to automatically add Tracing to the log
+    * gRPC Tracing
+        * test code
+          [gRPC view Tracing id](https://github.com/gotomicro/ego/tree/master/examples/grpc/direct)
+        * Server Tracing information
 
-       ![image](docs/images/trace-server-grpc.png)
-         * Client Tracing information
+      ![image](docs/images/trace-server-grpc.png)
+        * Client Tracing information
 
-       ![image](docs/images/trace-client-grpc.png)
-     * HTTP Tracing
+      ![image](docs/images/trace-client-grpc.png)
+    * HTTP Tracing
 
-       ![](docs/images/trace.png)
+      ![](docs/images/trace.png)
+
+    * Ali arms Tracing
+
+      ![](docs/images/trace-arms.png)
 
 * [Unified error message](https://ego.gocn.vip/awesome/errors.html)
 
@@ -194,7 +198,7 @@ func main() {
 }
 ```
 
-### 8.2 Using the command line to run 
+### 8.2 Using the command line to run
 ```bash
 export EGO_DEBUG=true # The default log is output to the logs directory, and after dev mode is enabled, the log is output to the terminal
 go run main.go --config=config.toml
@@ -253,6 +257,7 @@ Thanks for these wonderful people:
   <tr>
     <td align="center"><a href="http://blog.lincolnzhou.com/"><img src="https://avatars.githubusercontent.com/u/3911154?v=4" width="64px;" alt=""/><br /><sub><b>LincolnZhou</b></sub></a></td>
     <td align="center"><a href="https://github.com/optimistic9527"><img src="https://avatars.githubusercontent.com/u/37545032?v=4" width="64px;" alt=""/><br /><sub><b>optimistic9527</b></sub></a></td>
+    <td align="center"><a href="https://github.com/livepo"><img src="https://avatars.githubusercontent.com/u/17000001?s=400&u=0336f4726acdf82e13f4c19f28d6e1de39ea0b9b&v=4" width="64px;" alt=""/><br /><sub><b>soeluc</b></sub></a></td>
   </tr>
 </table>
 
