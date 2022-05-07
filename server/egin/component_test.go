@@ -12,9 +12,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestComponent_buildTLSConfig(t *testing.T) {
@@ -92,19 +93,19 @@ func TestContextClientIP(t *testing.T) {
 func TestNewComponent(t *testing.T) {
 	cfg := Config{
 		Host: "0.0.0.0",
-		Port: 9005,
+		Port: 9006,
 	}
 	cmp := newComponent("test-cmp", &cfg, elog.DefaultLogger)
 	assert.Equal(t, "test-cmp", cmp.Name())
 	assert.Equal(t, "server.egin", cmp.PackageName())
-	assert.Equal(t, "0.0.0.0:9005", cmp.config.Address())
+	assert.Equal(t, "0.0.0.0:9006", cmp.config.Address())
 
 	assert.NoError(t, cmp.Init())
 
 	info := cmp.Info()
 	assert.NotEmpty(t, info.Name)
 	assert.Equal(t, "http", info.Scheme)
-	assert.Equal(t, "[::]:9005", info.Address)
+	assert.Equal(t, "[::]:9006", info.Address)
 	assert.Equal(t, constant.ServiceProvider, info.Kind)
 
 	// err = cmp.Start()
