@@ -54,6 +54,7 @@ type opts struct {
 	afterStopClean    []func() error  // 运行停止后清理
 	stopTimeout       time.Duration   // 运行停止超时时间
 	shutdownSignals   []os.Signal
+	arguments         []string // 命令行参数
 }
 
 //go:generate protoc -I. --go_out=module=github.com/gotomicro/ego/core/eerrors,Mcore/eerrors/errors.proto=github.com/gotomicro/ego/core/eerrors:core/eerrors core/eerrors/errors.proto
@@ -83,6 +84,7 @@ func New(options ...Option) *Ego {
 			afterStopClean:  make([]func() error, 0),
 			stopTimeout:     xtime.Duration("5s"),
 			shutdownSignals: shutdownSignals,
+			arguments:       os.Args[1:],
 		},
 	}
 

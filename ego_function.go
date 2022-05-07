@@ -9,12 +9,14 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/gotomicro/ego/core/esentinel"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/automaxprocs/maxprocs"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/gotomicro/ego/core/esentinel"
+
 	sentinelMetrics "github.com/alibaba/sentinel-golang/metrics"
+
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
@@ -148,7 +150,7 @@ func (e *Ego) parseFlags() error {
 		Default: "0.0.0.0",
 		Action:  func(string, *eflag.FlagSet) {},
 	})
-	return eflag.Parse()
+	return eflag.ParseWithArgs(e.opts.arguments)
 }
 
 // loadConfig init

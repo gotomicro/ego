@@ -46,6 +46,18 @@ func TestWithHang(t *testing.T) {
 	}
 }
 
+func TestWithArguments(t *testing.T) {
+	//arguments default
+	app := New()
+	assert.Equal(t, os.Args[1:], app.opts.arguments)
+
+	//arguments set
+	app = New(
+		WithArguments([]string{"--foo", "bar"}),
+	)
+	assert.Equal(t, []string{"--foo", "bar"}, app.opts.arguments)
+}
+
 func TestWithDisableBanner(t *testing.T) {
 	type args struct {
 		disableBanner bool

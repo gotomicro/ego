@@ -234,6 +234,47 @@ func TestNewFlagSet(t *testing.T) {
 	assert.True(t, assert.ObjectsAreEqual(flag.CommandLine, obj2.FlagSet))
 }
 
+func TestParseWithArgs(t *testing.T) {
+	resetFlagSet()
+	Register(&BoolFlag{
+		Name:    "bool",
+		Usage:   "--bool",
+		Default: false,
+		Action:  func(name string, fs *FlagSet) {},
+	})
+	err := ParseWithArgs([]string{"--bool"})
+	assert.NoError(t, err)
+	boolFlag, err := BoolE("bool")
+	assert.NoError(t, err)
+	assert.Equal(t, true, boolFlag)
+
+	resetFlagSet()
+	Register(&BoolFlag{
+		Name:    "bool",
+		Usage:   "--bool",
+		Default: true,
+		Action:  func(name string, fs *FlagSet) {},
+	})
+	err = ParseWithArgs([]string{"--bool=false"})
+	assert.NoError(t, err)
+	boolFlag, err = BoolE("bool")
+	assert.NoError(t, err)
+	assert.Equal(t, false, boolFlag)
+
+	resetFlagSet()
+	Register(&StringFlag{
+		Name:    "string",
+		Usage:   "--string",
+		Default: "world",
+		Action:  func(name string, fs *FlagSet) {},
+	})
+	err = ParseWithArgs([]string{"--string", "hello"})
+	assert.NoError(t, err)
+	strFlag, err := StringE("string")
+	assert.NoError(t, err)
+	assert.Equal(t, "hello", strFlag)
+}
+
 func resetFlagSet() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	flagObj := NewFlagSet(flag.CommandLine)

@@ -71,6 +71,11 @@ func Parse() error {
 	return flagset.Parse()
 }
 
+// ParseWithArgs parses the flagset with given args.
+func ParseWithArgs(arguments []string) error {
+	return flagset.ParseWithArgs(arguments)
+}
+
 // Lookup lookup flag value by name
 // priority: flag > env > default
 func (fs *FlagSet) Lookup(name string) *flag.Flag {
@@ -79,6 +84,11 @@ func (fs *FlagSet) Lookup(name string) *flag.Flag {
 
 // Parse parses provided flagset.
 func (fs *FlagSet) Parse() error {
+	return fs.ParseWithArgs(os.Args[1:])
+}
+
+// ParseWithArgs parses provided flagset with given args.
+func (fs *FlagSet) ParseWithArgs(arguments []string) error {
 	if fs.Parsed() {
 		return nil
 	}
@@ -87,7 +97,7 @@ func (fs *FlagSet) Parse() error {
 	}
 
 	// 解析命令行参数
-	if err := fs.FlagSet.Parse(os.Args[1:]); err != nil {
+	if err := fs.FlagSet.Parse(arguments); err != nil {
 		return err
 	}
 
