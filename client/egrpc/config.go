@@ -29,7 +29,7 @@ type Config struct {
 	EnableAccessInterceptorReq   bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes   bool          // 是否开启记录响应参数，默认不开启
 	EnableCPUUsage               bool          // 是否开启CPU利用率，默认开启
-	EnableServiceConfig          bool          // 是否开启服务配置，默认关闭
+	EnableServiceConfig          bool          // 是否开启服务配置，默认开启
 	EnableFailOnNonTempDialError bool
 
 	keepAlive   *keepalive.ClientParameters
@@ -55,7 +55,7 @@ func DefaultConfig() *Config {
 		EnableAccessInterceptor:      false,
 		EnableAccessInterceptorReq:   false,
 		EnableAccessInterceptorRes:   false,
-		EnableServiceConfig:          false,
+		EnableServiceConfig:          true,
 		EnableCPUUsage:               true,
 	}
 }

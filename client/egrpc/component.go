@@ -2,14 +2,16 @@ package egrpc
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/gotomicro/ego/internal/egrpclog"
 	"go.uber.org/zap/zapgrpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/internal/egrpclog"
 )
 
 // PackageName 设置包名
@@ -43,22 +45,26 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 
 	if config.EnableWithInsecure {
-		dialOptions = append(dialOptions, grpc.WithInsecure())
+		dialOptions = append(dialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
 	if config.keepAlive != nil {
 		dialOptions = append(dialOptions, grpc.WithKeepaliveParams(*config.keepAlive))
 	}
 
-	// 因为默认是开启这个配置
-	// 并且开启后，在grpc 1.40以上会导致dns多一次解析txt内容（目测是为了做grpc的load balance策略，但我们实际上不会用到）
-	// 因为这个service config dns域名通常是没有设置dns解析，所以会跳过k8s的dns，穿透到上一级的dns，而如果dns配置有问题或者不存在，那么会查询非常长的时间（通常在20s或者更长）
-	// 那么为false的时候，禁用他，可以加快我们的启动时间或者提升我们的性能
+	// service config 默认开启，且 grpc 1.46 及以上版本废弃了 WithBalancer 方法，改用 service config 配置 lb，但是开启后，在
+	// grpc 1.40 以上会导致 dns 多一次解析 txt 内容（目测是为了做 grpc 的 load balance 策略，但我们实际上不会用到）
+	// 因为这个 service config dns域名通常是没有设置dns解析，所以会跳过k8s的dns，穿透到上一级的dns，而如果dns配置有问题或者不存在，那么会查询非常长的时间（通常在20s或者更长）
+	// 在上面场景下，配置为 false 禁用 service config，可以加快我们的启动时间或者提升我们的性能，**但请注意，禁用后，我们配置的 LB 将无法生效，默认为 pick_first 策略**
 	if !config.EnableServiceConfig {
 		dialOptions = append(dialOptions, grpc.WithDisableServiceConfig())
+		if config.BalancerName != "pick_first" {
+			elog.Warn(fmt.Sprintf("The LB policy `%s` will be ignored and use `pick_first` as default since you disabled service config", config.BalancerName))
+		}
+	} else {
+		dialOptions = append(dialOptions, grpc.WithDefaultServiceConfig(fmt.Sprintf(`{"LoadBalancingPolicy": "%s"}`, config.BalancerName)))
 	}
 
-	dialOptions = append(dialOptions, grpc.WithBalancerName(config.BalancerName)) //nolint
 	dialOptions = append(dialOptions, grpc.FailOnNonTempDialError(config.EnableFailOnNonTempDialError))
 
 	startTime := time.Now()
