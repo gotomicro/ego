@@ -44,8 +44,8 @@ var i18n = map[string]map[string]string{
 {{- end }}
 }
 
-func ReasonI18n(e *eerrors.EgoError, lan string) string {
-	return i18n[e.Reason][lan]
+func ReasonI18n(e eerrors.Error, lan string) string {
+	return i18n[eerrors.FromError(e).Reason][lan]
 }
 
 func init() {
