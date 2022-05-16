@@ -34,6 +34,20 @@ const errorsTpl = `
 var {{.LowerCamelValue}} *eerrors.EgoError
 {{- end }}
 
+var i18n = map[string]map[string]string{
+{{- range .Errors }}
+	"{{.Key}}": map[string]string{
+		{{- range $k,$v :=  .I18n }}
+			"{{$k}}": "{{$v}}",
+		{{- end }}
+	},
+{{- end }}
+}
+
+func ReasonI18n(e *eerrors.EgoError, lan string) string {
+	return i18n[e.Reason][lan]
+}
+
 func init() {
 {{- range .Errors }}
 {{.LowerCamelValue}} = eerrors.New(int(codes.{{.Code}}), "{{.Key}}", {{.Name}}_{{.Value}}.String())
@@ -57,6 +71,7 @@ type errorInfo struct {
 	Key             string
 	Comment         string
 	HasComment      bool
+	I18n            map[string]string
 }
 
 type errorWrapper struct {

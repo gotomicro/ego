@@ -77,13 +77,20 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 const (
 	fileLevelCommentAnnotation  = "plugins"
 	fieldLevelCommentAnnotation = "code"
+	fieldLevelI18nAnnotation    = "i18n"
 )
 
 func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, enum *protogen.Enum) bool {
 	var ew errorWrapper
 	for _, v := range enum.Values {
+		var i18n = map[string]string{}
 		annos := getAnnotations(string(v.Comments.Leading))
 		eCode := annos[fieldLevelCommentAnnotation]
+		for _, v := range annos {
+			if newName := strings.TrimPrefix(v.name, fieldLevelI18nAnnotation+"."); len(newName) != len(v.name) {
+				i18n[newName] = v.val
+			}
+		}
 		desc := string(v.Desc.Name())
 
 		comment := v.Comments.Leading.String()
@@ -103,6 +110,7 @@ func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *proto
 			Key:             string(v.Desc.FullName()),
 			Comment:         comment,
 			HasComment:      len(comment) > 0,
+			I18n:            i18n,
 		}
 		ew.Errors = append(ew.Errors, err)
 	}
@@ -123,7 +131,8 @@ func buildComment(upperCamelValue, comment string) string {
 	return fmt.Sprintf("// %s %s", upperCamelValue, comment)
 }
 
-var filedLevelCommentRgx, _ = regexp.Compile(`@(\w+)=([_a-zA-Z0-9-,]+)`)
+var filedLevelCommentRgx, _ = regexp.Compile(`@([\w\.]+)=([_a-zA-Z0-9-,]+)`)
+var filedLevelCommentQuotedRgx, _ = regexp.Compile(`@([\w\.]+)="(.+)"`)
 var fileLevelCommentRgx, _ = regexp.Compile(`@(\w+)=([_a-zA-Z0-9-,]+)`)
 
 type annotation struct {
@@ -133,12 +142,19 @@ type annotation struct {
 
 func getAnnotations(comment string) map[string]annotation {
 	matches := filedLevelCommentRgx.FindAllStringSubmatch(comment, -1)
-	return findMatchesFromComments(matches)
+	quotedMatches := filedLevelCommentQuotedRgx.FindAllStringSubmatch(comment, -1)
+	return findMatchesFromComments(matches, quotedMatches)
 }
 
-func findMatchesFromComments(matches [][]string) map[string]annotation {
+func findMatchesFromComments(matches [][]string, quotedMatches [][]string) map[string]annotation {
 	annotations := make(map[string]annotation)
 	for _, v := range matches {
+		annotations[v[1]] = annotation{
+			name: v[1],
+			val:  v[2],
+		}
+	}
+	for _, v := range quotedMatches {
 		annotations[v[1]] = annotation{
 			name: v[1],
 			val:  v[2],
@@ -153,7 +169,7 @@ func getFileLevelAnnotations(locs []*descriptorpb.SourceCodeInfo_Location) map[s
 		comments += loc.String()
 	}
 	matches := fileLevelCommentRgx.FindAllStringSubmatch(comments, -1)
-	return findMatchesFromComments(matches)
+	return findMatchesFromComments(matches, nil)
 }
 
 func needGenerate(locs []*descriptorpb.SourceCodeInfo_Location) bool {
