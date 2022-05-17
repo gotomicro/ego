@@ -17,7 +17,6 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
@@ -74,12 +73,16 @@ func (c *Component) PackageName() string {
 
 // Init 初始化
 func (c *Component) Init() error {
-	listener, err := net.Listen("tcp", c.config.Address())
-	if err != nil {
-		c.logger.Panic("new egin server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
+	var err error
+	if c.config.Network == "local" {
+		c.listener = newLocalListener()
+	} else {
+		c.listener, err = net.Listen(c.config.Network, c.config.Address())
+		if err != nil {
+			c.logger.Panic("new egin server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
+		}
 	}
-	c.config.Port = listener.Addr().(*net.TCPAddr).Port
-	c.listener = listener
+	c.config.Port = c.listener.Addr().(*net.TCPAddr).Port
 	return nil
 }
 
@@ -99,11 +102,16 @@ func (c *Component) Start() error {
 			c.logger.Info("add route", elog.FieldMethod(route.Method), elog.String("path", route.Path))
 		}
 	}
+
 	// 因为start和stop在多个goroutine里，需要对Server上写锁
 	c.mu.Lock()
 	c.Server = &http.Server{
-		Addr:    c.config.Address(),
-		Handler: c,
+		Addr: c.config.Address(),
+		//Handler:           http.TimeoutHandler(c, 1*time.Second, "timeout"),
+		Handler:           c,
+		ReadHeaderTimeout: c.config.ServerReadHeaderTimeout,
+		ReadTimeout:       c.config.ServerReadTimeout,
+		WriteTimeout:      c.config.ServerWriteTimeout,
 	}
 	c.mu.Unlock()
 	var err error
@@ -189,6 +197,11 @@ func (c *Component) GetEmbedWrapper() *EmbedWrapper {
 	return c.embedWrapper
 }
 
+// Listener listener信息
+func (c *Component) Listener() net.Listener {
+	return c.listener
+}
+
 // EmbedWrapper 嵌入普通的静态资源的wrapper
 type EmbedWrapper struct {
 	embedFs embed.FS // 静态资源
@@ -203,4 +216,14 @@ func (e *EmbedWrapper) Open(name string) (fs.File, error) {
 	fullName := filepath.ToSlash(path.Join(e.path, path.Clean("/"+name)))
 	file, err := e.embedFs.Open(fullName)
 	return file, err
+}
+
+func newLocalListener() net.Listener {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		if l, err = net.Listen("tcp6", "[::1]:0"); err != nil {
+			panic(fmt.Sprintf("httptest: failed to listen on a port: %v", err))
+		}
+	}
+	return l
 }

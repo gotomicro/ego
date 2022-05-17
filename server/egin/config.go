@@ -16,9 +16,15 @@ import (
 
 // Config HTTP config
 type Config struct {
-	Host                          string        // IP地址，默认0.0.0.0
-	Port                          int           // PORT端口，默认9001
-	Mode                          string        // gin的模式，默认是release模式
+	Host                    string // IP地址，默认0.0.0.0
+	Port                    int    // PORT端口，默认9001
+	Mode                    string // gin的模式，默认是release模式
+	Network                 string
+	ServerReadTimeout       time.Duration // 服务端，用于读取io报文过慢的timeout，通常用于互联网网络收包过慢，如果你的go在最外层，可以使用他，默认不启用。
+	ServerReadHeaderTimeout time.Duration // 服务端，用于读取io报文过慢的timeout，通常用于互联网网络收包过慢，如果你的go在最外层，可以使用他，默认不启用。
+	ServerWriteTimeout      time.Duration // 服务端，用于读取io报文过慢的timeout，通常用于互联网网络收包过慢，如果你的go在最外层，可以使用他，默认不启用。
+	// ServerHTTPTimout        time.Duration //  这个是HTTP包提供的，可以用于IO，或者密集型计算，做timeout处理，有一次goroutine操作，然后没走一些流程，cancel体验不好，暂时先不用
+	ContextTimeout                time.Duration // 只能用于IO操作，才能触发，默认不启用
 	EnableMetricInterceptor       bool          // 是否开启监控，默认开启
 	EnableTraceInterceptor        bool          // 是否开启链路追踪，默认开启
 	EnableLocalMainIP             bool          // 自动获取ip地址
@@ -55,6 +61,7 @@ func DefaultConfig() *Config {
 		Host:                       eflag.String("host"),
 		Port:                       9090,
 		Mode:                       gin.ReleaseMode,
+		Network:                    "tcp",
 		EnableAccessInterceptor:    true,
 		EnableTraceInterceptor:     true,
 		EnableMetricInterceptor:    true,

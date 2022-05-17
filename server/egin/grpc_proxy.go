@@ -11,7 +11,7 @@ import (
 
 	"github.com/codegangsta/inject"
 	"github.com/gin-gonic/gin"
-	"github.com/golang/protobuf/ptypes/any"
+	//"github.com/golang/protobuf/ptypes/any"
 	rpcstatus "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -169,7 +169,7 @@ func statusFromString(s string) (*statusErr, bool) {
 		&rpcstatus.Status{
 			Code:    int32(u64),
 			Message: s[i:],
-			Details: []*any.Any{},
+			//Details: []*any.Any{},
 		},
 	}, true
 }

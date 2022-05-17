@@ -3,6 +3,7 @@ package egin
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -41,6 +42,7 @@ func TestPanicInHandler(t *testing.T) {
 	// 调用触发panic的接口
 	w := performRequest(router, "GET", "/recovery")
 	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	fmt.Printf("logged--------------->"+"%+v\n", string(logged))
 	assert.Nil(t, err)
 	// TEST
 	assert.Equal(t, http.StatusInternalServerError, w.Code)

@@ -4,15 +4,19 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
+	"path"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
@@ -92,8 +96,9 @@ func TestContextClientIP(t *testing.T) {
 
 func TestNewComponent(t *testing.T) {
 	cfg := Config{
-		Host: "0.0.0.0",
-		Port: 9006,
+		Host:    "0.0.0.0",
+		Port:    9006,
+		Network: "tcp",
 	}
 	cmp := newComponent("test-cmp", &cfg, elog.DefaultLogger)
 	assert.Equal(t, "test-cmp", cmp.Name())
@@ -146,4 +151,182 @@ func loadConfig(t *testing.T, loadClientCert bool) *tls.Config {
 		cf.Certificates = []tls.Certificate{serverCert}
 	}
 	return cf
+}
+
+func TestServerReadTimeout(t *testing.T) {
+	// 使用非异步日志
+	logger := elog.DefaultContainer().Build(
+		elog.WithDebug(false),
+		elog.WithEnableAddCaller(true),
+		elog.WithEnableAsync(false),
+	)
+	timeout := 2 * time.Second
+	container := DefaultContainer()
+	cmp := container.Build(
+		WithServerReadHeaderTimeout(2*time.Second),
+		WithNetwork("local"),
+		WithLogger(logger),
+	)
+
+	// 使用recover组件
+	cmp.Use(container.defaultServerInterceptor())
+	cmp.GET("/test", func(ctx *gin.Context) {
+		time.Sleep(20 * time.Second)
+		ctx.String(200, "hello world")
+	})
+
+	_ = cmp.Init()
+	go func() {
+		_ = cmp.Start()
+	}()
+	time.Sleep(1 * time.Second)
+
+	// Slow client that should timeout.
+	t1 := time.Now()
+	conn, err := net.Dial("tcp", cmp.Listener().Addr().String())
+	assert.Nil(t, err)
+
+	buf := make([]byte, 1)
+	n, err := conn.Read(buf)
+	_ = conn.Close()
+	latency := time.Since(t1)
+	logger.Info("cost1", zap.Duration("cost", latency))
+	if n != 0 || err != io.EOF {
+		t.Error(fmt.Errorf("Read = %v, %v, wanted %v, %v", n, err, 0, io.EOF))
+		return
+	}
+	minLatency := timeout / 5 * 4
+	if latency < minLatency {
+		t.Error(fmt.Errorf("got EOF after %s, want >= %s", latency, minLatency))
+		return
+	}
+	fmt.Printf("path.Join(logger.ConfigDir(), logger.ConfigName())--------------->"+"%+v\n", path.Join(logger.ConfigDir(), logger.ConfigName()))
+	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+}
+
+func TestContextTimeout(t *testing.T) {
+	// 使用非异步日志
+	logger := elog.DefaultContainer().Build(
+		elog.WithDebug(false),
+		elog.WithEnableAddCaller(true),
+		elog.WithEnableAsync(false),
+	)
+	timeout := 2 * time.Second
+	container := DefaultContainer()
+	cmp := container.Build(
+		WithContextTimeout(timeout),
+		WithNetwork("local"),
+		WithLogger(logger),
+	)
+
+	// 使用recover组件
+	cmp.Use(container.defaultServerInterceptor())
+	cmp.GET("/test", func(ctx *gin.Context) {
+		_ = eginClient(ctx.Request.Context(), cmp, "/longTime")
+		ctx.String(200, "hello world")
+	})
+	cmp.GET("/longTime", func(ctx *gin.Context) {
+		time.Sleep(20 * time.Second)
+		ctx.String(200, "i cost long time")
+	})
+	_ = cmp.Init()
+	go func() {
+		_ = cmp.Start()
+	}()
+	time.Sleep(1 * time.Second)
+
+	// Slow client that should timeout.
+	t1 := time.Now()
+	err := eginClient(context.Background(), cmp, "/test")
+	assert.Nil(t, err)
+
+	latency := time.Since(t1)
+	logger.Info("cost2", zap.Duration("cost", latency))
+	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+}
+
+func TestServerTimeouts(t *testing.T) {
+	timeout := 2 * time.Second
+	err := testServerTimeouts(timeout)
+	if err == nil {
+		return
+	}
+	t.Logf("failed at %v: %v", timeout, err)
+}
+
+func testServerTimeouts(timeout time.Duration) error {
+	reqNum := 0
+	ts := httptest.NewUnstartedServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		reqNum++
+		fmt.Fprintf(res, "req=%d", reqNum)
+	}))
+	ts.Config.ReadTimeout = timeout
+	ts.Config.WriteTimeout = timeout
+	ts.Start()
+	defer ts.Close()
+
+	// Hit the HTTP server successfully.
+	c := ts.Client()
+	t0 := time.Now()
+	r, err := c.Get(ts.URL)
+	if err != nil {
+		return fmt.Errorf("http Get #1: %v", err)
+	}
+	got, err := io.ReadAll(r.Body)
+	latency := time.Since(t0)
+	fmt.Printf("got--------------->"+"%+v\n", got)
+	fmt.Printf("latency--------------->"+"%+v\n", latency)
+
+	expected := "req=1"
+	if string(got) != expected || err != nil {
+		return fmt.Errorf("Unexpected response for request #1; got %q ,%v; expected %q, nil",
+			string(got), err, expected)
+	}
+
+	// Slow client that should timeout.
+	t1 := time.Now()
+	conn, err := net.Dial("tcp", ts.Listener.Addr().String())
+	if err != nil {
+		return fmt.Errorf("Dial: %v", err)
+	}
+	buf := make([]byte, 1)
+	n, err := conn.Read(buf)
+	conn.Close()
+	latency = time.Since(t1)
+	fmt.Printf("latency--------------->"+"%+v\n", latency)
+	if n != 0 || err != io.EOF {
+		return fmt.Errorf("Read = %v, %v, wanted %v, %v", n, err, 0, io.EOF)
+	}
+	minLatency := timeout / 5 * 4
+	if latency < minLatency {
+		return fmt.Errorf("got EOF after %s, want >= %s", latency, minLatency)
+	}
+
+	// Hit the HTTP server successfully again, verifying that the
+	// previous slow connection didn't run our handler.  (that we
+	// get "req=2", not "req=3")
+	r, err = c.Get(ts.URL)
+	if err != nil {
+		return fmt.Errorf("http Get #2: %v", err)
+	}
+	got, err = io.ReadAll(r.Body)
+	r.Body.Close()
+	expected = "req=2"
+
+	if string(got) != expected || err != nil {
+		return fmt.Errorf("Get #2 got %q, %v, want %q, nil", string(got), err, expected)
+	}
+	return nil
+}
+
+func eginClient(ctx context.Context, gin *Component, url string) (err error) {
+	client := &http.Client{Transport: &http.Transport{}}
+	req, err := http.NewRequestWithContext(ctx, "GET", "http://"+gin.Listener().Addr().String()+url, nil)
+	if err != nil {
+		return err
+	}
+	r, err := client.Do(req)
+	_, err = io.ReadAll(r.Body)
+	r.Body.Close()
+	return nil
 }

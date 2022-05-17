@@ -1,0 +1,7 @@
+[server.http]
+    host = "0.0.0.0"
+    port = 12345
+    enableAccessInterceptorReq = true
+    enableAccessInterceptorRes = true
+    contextTimeout = "1s"
+    serverRriteTimeout = "1s"
