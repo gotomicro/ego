@@ -175,9 +175,9 @@ func TestServerReadTimeout(t *testing.T) {
 		ctx.String(200, "hello world")
 	})
 
-	cmp.Init()
+	_ = cmp.Init()
 	go func() {
-		cmp.Start()
+		_ = cmp.Start()
 	}()
 	time.Sleep(1 * time.Second)
 
@@ -188,7 +188,7 @@ func TestServerReadTimeout(t *testing.T) {
 
 	buf := make([]byte, 1)
 	n, err := conn.Read(buf)
-	conn.Close()
+	_ = conn.Close()
 	latency := time.Since(t1)
 	logger.Info("cost1", zap.Duration("cost", latency))
 	if n != 0 || err != io.EOF {
@@ -201,7 +201,7 @@ func TestServerReadTimeout(t *testing.T) {
 		return
 	}
 	fmt.Printf("path.Join(logger.ConfigDir(), logger.ConfigName())--------------->"+"%+v\n", path.Join(logger.ConfigDir(), logger.ConfigName()))
-	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
 func TestContextTimeout(t *testing.T) {
@@ -229,9 +229,9 @@ func TestContextTimeout(t *testing.T) {
 		time.Sleep(20 * time.Second)
 		ctx.String(200, "i cost long time")
 	})
-	cmp.Init()
+	_ = cmp.Init()
 	go func() {
-		cmp.Start()
+		_ = cmp.Start()
 	}()
 	time.Sleep(1 * time.Second)
 
@@ -275,6 +275,7 @@ func testServerTimeouts(timeout time.Duration) error {
 	got, err := io.ReadAll(r.Body)
 	latency := time.Since(t0)
 	fmt.Printf("got--------------->"+"%+v\n", got)
+	fmt.Printf("latency--------------->"+"%+v\n", latency)
 
 	expected := "req=1"
 	if string(got) != expected || err != nil {
