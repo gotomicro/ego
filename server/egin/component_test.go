@@ -190,7 +190,7 @@ func TestServerReadTimeout(t *testing.T) {
 	n, err := conn.Read(buf)
 	conn.Close()
 	latency := time.Since(t1)
-	elog.Info("cost", zap.Duration("cost", latency))
+	logger.Info("cost1", zap.Duration("cost", latency))
 	if n != 0 || err != io.EOF {
 		t.Error(fmt.Errorf("Read = %v, %v, wanted %v, %v", n, err, 0, io.EOF))
 		return
@@ -200,6 +200,7 @@ func TestServerReadTimeout(t *testing.T) {
 		t.Error(fmt.Errorf("got EOF after %s, want >= %s", latency, minLatency))
 		return
 	}
+	fmt.Printf("path.Join(logger.ConfigDir(), logger.ConfigName())--------------->"+"%+v\n", path.Join(logger.ConfigDir(), logger.ConfigName()))
 	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
@@ -240,7 +241,7 @@ func TestContextTimeout(t *testing.T) {
 	assert.Nil(t, err)
 
 	latency := time.Since(t1)
-	elog.Info("cost", zap.Duration("cost", latency))
+	logger.Info("cost2", zap.Duration("cost", latency))
 	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
@@ -273,7 +274,7 @@ func testServerTimeouts(timeout time.Duration) error {
 	}
 	got, err := io.ReadAll(r.Body)
 	latency := time.Since(t0)
-	elog.Info("got", zap.String("got", string(got)))
+	fmt.Printf("got--------------->"+"%+v\n", got)
 
 	expected := "req=1"
 	if string(got) != expected || err != nil {
@@ -291,7 +292,7 @@ func testServerTimeouts(timeout time.Duration) error {
 	n, err := conn.Read(buf)
 	conn.Close()
 	latency = time.Since(t1)
-	elog.Info("cost", zap.Duration("cost", latency))
+	fmt.Printf("latency--------------->"+"%+v\n", latency)
 	if n != 0 || err != io.EOF {
 		return fmt.Errorf("Read = %v, %v, wanted %v, %v", n, err, 0, io.EOF)
 	}
