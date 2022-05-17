@@ -94,8 +94,9 @@ func TestContextClientIP(t *testing.T) {
 
 func TestNewComponent(t *testing.T) {
 	cfg := Config{
-		Host: "0.0.0.0",
-		Port: 9006,
+		Host:    "0.0.0.0",
+		Port:    9006,
+		Network: "tcp",
 	}
 	cmp := newComponent("test-cmp", &cfg, elog.DefaultLogger)
 	assert.Equal(t, "test-cmp", cmp.Name())
