@@ -10,11 +10,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
@@ -188,7 +190,7 @@ func TestServerReadTimeout(t *testing.T) {
 	n, err := conn.Read(buf)
 	conn.Close()
 	latency := time.Since(t1)
-	fmt.Printf("latency--------------->"+"%+v\n", latency)
+	elog.Info("cost", zap.Duration("cost", latency))
 	if n != 0 || err != io.EOF {
 		t.Error(fmt.Errorf("Read = %v, %v, wanted %v, %v", n, err, 0, io.EOF))
 		return
@@ -198,6 +200,7 @@ func TestServerReadTimeout(t *testing.T) {
 		t.Error(fmt.Errorf("got EOF after %s, want >= %s", latency, minLatency))
 		return
 	}
+	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
 func TestContextTimeout(t *testing.T) {
@@ -237,7 +240,8 @@ func TestContextTimeout(t *testing.T) {
 	assert.Nil(t, err)
 
 	latency := time.Since(t1)
-	fmt.Printf("latency--------------->"+"%+v\n", latency)
+	elog.Info("cost", zap.Duration("cost", latency))
+	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
 func TestServerTimeouts(t *testing.T) {
@@ -269,8 +273,8 @@ func testServerTimeouts(timeout time.Duration) error {
 	}
 	got, err := io.ReadAll(r.Body)
 	latency := time.Since(t0)
-	fmt.Printf("latency--------------->"+"%+v\n", latency)
-	fmt.Printf("got--------------->"+"%+v\n", string(got))
+	elog.Info("got", zap.String("got", string(got)))
+
 	expected := "req=1"
 	if string(got) != expected || err != nil {
 		return fmt.Errorf("Unexpected response for request #1; got %q ,%v; expected %q, nil",
@@ -287,7 +291,7 @@ func testServerTimeouts(timeout time.Duration) error {
 	n, err := conn.Read(buf)
 	conn.Close()
 	latency = time.Since(t1)
-	fmt.Printf("latency--------------->"+"%+v\n", latency)
+	elog.Info("cost", zap.Duration("cost", latency))
 	if n != 0 || err != io.EOF {
 		return fmt.Errorf("Read = %v, %v, wanted %v, %v", n, err, 0, io.EOF)
 	}
@@ -306,7 +310,6 @@ func testServerTimeouts(timeout time.Duration) error {
 	got, err = io.ReadAll(r.Body)
 	r.Body.Close()
 	expected = "req=2"
-	fmt.Printf("got222--------------->"+"%+v\n", string(got))
 
 	if string(got) != expected || err != nil {
 		return fmt.Errorf("Get #2 got %q, %v, want %q, nil", string(got), err, expected)
@@ -321,8 +324,7 @@ func eginClient(ctx context.Context, gin *Component, url string) (err error) {
 		return err
 	}
 	r, err := client.Do(req)
-	got, err := io.ReadAll(r.Body)
+	_, err = io.ReadAll(r.Body)
 	r.Body.Close()
-	fmt.Printf("got222--------------->"+"%+v\n", string(got))
 	return nil
 }
