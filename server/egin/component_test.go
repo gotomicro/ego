@@ -222,7 +222,7 @@ func TestContextTimeout(t *testing.T) {
 	// 使用recover组件
 	cmp.Use(container.defaultServerInterceptor())
 	cmp.GET("/test", func(ctx *gin.Context) {
-		eginClient(ctx.Request.Context(), cmp, "/longTime")
+		_ = eginClient(ctx.Request.Context(), cmp, "/longTime")
 		ctx.String(200, "hello world")
 	})
 	cmp.GET("/longTime", func(ctx *gin.Context) {
