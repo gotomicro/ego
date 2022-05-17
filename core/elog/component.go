@@ -169,8 +169,8 @@ func (logger *Component) Debug(msg string, fields ...Field) {
 	logger.desugar.Debug(msg, fields...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Debug instead.
 // Debugw ...
+// Deprecated: Will be removed in future versions, use *Component.Debug instead.
 func (logger *Component) Debugw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -178,8 +178,8 @@ func (logger *Component) Debugw(msg string, keysAndValues ...interface{}) {
 	logger.sugar.Debugw(msg, keysAndValues...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Debug instead.
 // Debugf ...
+// Deprecated: Will be removed in future versions, use *Component.Debug instead.
 func (logger *Component) Debugf(template string, args ...interface{}) {
 	logger.sugar.Debugf(template, args...)
 }
@@ -192,8 +192,8 @@ func (logger *Component) Info(msg string, fields ...Field) {
 	logger.desugar.Info(msg, fields...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Info instead.
 // Infow ...
+// Deprecated: Will be removed in future versions, use *Component.Info instead.
 func (logger *Component) Infow(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -201,8 +201,8 @@ func (logger *Component) Infow(msg string, keysAndValues ...interface{}) {
 	logger.sugar.Infow(msg, keysAndValues...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Info instead.
 // Infof ...
+// Deprecated: Will be removed in future versions, use *Component.Info instead.
 func (logger *Component) Infof(template string, args ...interface{}) {
 	logger.sugar.Infof(template, args...)
 }
@@ -215,8 +215,8 @@ func (logger *Component) Warn(msg string, fields ...Field) {
 	logger.desugar.Warn(msg, fields...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Warn instead.
 // Warnw ...
+// Deprecated: Will be removed in future versions, use *Component.Warn instead.
 func (logger *Component) Warnw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -224,8 +224,8 @@ func (logger *Component) Warnw(msg string, keysAndValues ...interface{}) {
 	logger.sugar.Warnw(msg, keysAndValues...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Warn instead.
 // Warnf ...
+// Deprecated: Will be removed in future versions, use *Component.Warn instead.
 func (logger *Component) Warnf(template string, args ...interface{}) {
 	logger.sugar.Warnf(template, args...)
 }
@@ -238,8 +238,8 @@ func (logger *Component) Error(msg string, fields ...Field) {
 	logger.desugar.Error(msg, fields...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Error instead.
 // Errorw ...
+// Deprecated: Will be removed in future versions, use *Component.Error instead.
 func (logger *Component) Errorw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -247,8 +247,8 @@ func (logger *Component) Errorw(msg string, keysAndValues ...interface{}) {
 	logger.sugar.Errorw(msg, keysAndValues...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Error instead.
 // Errorf ...
+// Deprecated: Will be removed in future versions, use *Component.Error instead.
 func (logger *Component) Errorf(template string, args ...interface{}) {
 	logger.sugar.Errorf(template, args...)
 }
@@ -262,8 +262,8 @@ func (logger *Component) Panic(msg string, fields ...Field) {
 	logger.desugar.Panic(msg, fields...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Panic instead.
 // Panicw ...
+// Deprecated: Will be removed in future versions, use *Component.Panic instead.
 func (logger *Component) Panicw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -271,8 +271,8 @@ func (logger *Component) Panicw(msg string, keysAndValues ...interface{}) {
 	logger.sugar.Panicw(msg, keysAndValues...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Panic instead.
 // Panicf ...
+// Deprecated: Will be removed in future versions, use *Component.Panic instead.
 func (logger *Component) Panicf(template string, args ...interface{}) {
 	logger.sugar.Panicf(template, args...)
 }
@@ -286,8 +286,8 @@ func (logger *Component) DPanic(msg string, fields ...Field) {
 	logger.desugar.DPanic(msg, fields...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.DPanic instead.
 // DPanicw ...
+// Deprecated: Will be removed in future versions, use *Component.DPanic instead.
 func (logger *Component) DPanicw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -295,8 +295,8 @@ func (logger *Component) DPanicw(msg string, keysAndValues ...interface{}) {
 	logger.sugar.DPanicw(msg, keysAndValues...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.DPanic instead.
 // DPanicf ...
+// Deprecated: Will be removed in future versions, use *Component.DPanic instead.
 func (logger *Component) DPanicf(template string, args ...interface{}) {
 	logger.sugar.DPanicf(template, args...)
 }
@@ -311,8 +311,8 @@ func (logger *Component) Fatal(msg string, fields ...Field) {
 	logger.desugar.Fatal(msg, fields...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Fatal instead.
 // Fatalw ...
+// Deprecated: Will be removed in future versions, use *Component.Fatal instead.
 func (logger *Component) Fatalw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -320,8 +320,8 @@ func (logger *Component) Fatalw(msg string, keysAndValues ...interface{}) {
 	logger.sugar.Fatalw(msg, keysAndValues...)
 }
 
-// Deprecated: Will be removed in future versions, use *Component.Fatal instead.
 // Fatalf ...
+// Deprecated: Will be removed in future versions, use *Component.Fatal instead.
 func (logger *Component) Fatalf(template string, args ...interface{}) {
 	logger.sugar.Fatalf(template, args...)
 }

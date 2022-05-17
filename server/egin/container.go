@@ -100,7 +100,9 @@ func (c *Container) Build(options ...Option) *Component {
 	server := newComponent(c.name, c.config, c.logger)
 	server.Use(healthcheck.Default())
 	server.Use(c.defaultServerInterceptor())
-
+	if c.config.ContextTimeout > 0 {
+		server.Use(timeoutMiddleware(c.config.ContextTimeout))
+	}
 	if c.config.EnableMetricInterceptor {
 		server.Use(metricServerInterceptor())
 	}
