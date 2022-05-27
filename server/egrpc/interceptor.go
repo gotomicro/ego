@@ -38,7 +38,7 @@ func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info
 	emetric.ServerHandleHistogram.ObserveWithExemplar(time.Since(startTime).Seconds(), prometheus.Labels{
 		"tid": etrace.ExtractTraceID(ctx),
 	}, emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), statusInfo.Code().String(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
 	return resp, err
 }
 
