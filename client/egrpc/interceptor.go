@@ -43,7 +43,7 @@ func (c *Container) metricUnaryClientInterceptor() func(ctx context.Context, met
 		emetric.ClientHandleHistogram.ObserveWithExemplar(time.Since(beg).Seconds(), prometheus.Labels{
 			"tid": etrace.ExtractTraceID(ctx),
 		}, emetric.TypeGRPCUnary, c.name, method, cc.Target())
-		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, c.name, method, cc.Target(), statusInfo.Message())
+		emetric.ClientHandleCounter.Inc(emetric.TypeGRPCUnary, c.name, method, cc.Target(), statusInfo.Code().String())
 		return err
 	}
 }
