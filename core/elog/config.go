@@ -51,7 +51,7 @@ func defaultConfig() *Config {
 		EnableAddCaller: false,
 		EnableAsync:     true,
 		asyncStopFunc:   func() error { return nil },
-		encoderConfig:   defaultZapConfig(),
+		encoderConfig:   nil,
 		Writer:          eapp.EgoLogWriter(),
 		al:              zap.NewAtomicLevelAt(zapcore.InfoLevel),
 	}
