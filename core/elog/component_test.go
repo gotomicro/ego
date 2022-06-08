@@ -706,3 +706,18 @@ func TestDPanicf(t *testing.T) {
 	assert.Contains(t, string(logged), `"msg":"hello,dpanic"`)
 	os.Remove(filePath)
 }
+
+func TestWithZapConfig(t *testing.T) {
+	testConfig := zap.NewDevelopmentEncoderConfig()
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithEncoderConfig(&testConfig),
+		WithEnableAsync(false),
+	)
+	logger.Info("hello")
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"L":"INFO"`)
+	os.Remove(filePath)
+}

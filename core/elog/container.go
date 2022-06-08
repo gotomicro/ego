@@ -44,10 +44,6 @@ func (c *Container) Build(options ...Option) *Component {
 		c.config.encoderConfig = defaultDebugConfig()
 	}
 
-	if c.config.encoderConfig == nil {
-		c.config.encoderConfig = defaultZapConfig()
-	}
-
 	if eapp.EnableLoggerAddApp() {
 		c.config.fields = append(c.config.fields, FieldApp(eapp.Name()))
 	}
