@@ -15,14 +15,15 @@ func TestConfig_AtomicLevel(t *testing.T) {
 }
 
 func TestConfig_EncoderConfig(t *testing.T) {
-	cfg := defaultConfig()
-	assert.Equal(t, "ts", cfg.encoderConfig.TimeKey)
-	assert.Equal(t, "lv", cfg.encoderConfig.LevelKey)
-	assert.Equal(t, "logger", cfg.encoderConfig.NameKey)
-	assert.Equal(t, "caller", cfg.encoderConfig.CallerKey)
-	assert.Equal(t, "msg", cfg.encoderConfig.MessageKey)
-	assert.Equal(t, "stack", cfg.encoderConfig.StacktraceKey)
-	assert.Equal(t, zapcore.DefaultLineEnding, cfg.encoderConfig.LineEnding)
+	// test default zap config
+	encoderConfig := defaultZapConfig()
+	assert.Equal(t, "ts", encoderConfig.TimeKey)
+	assert.Equal(t, "lv", encoderConfig.LevelKey)
+	assert.Equal(t, "logger", encoderConfig.NameKey)
+	assert.Equal(t, "caller", encoderConfig.CallerKey)
+	assert.Equal(t, "msg", encoderConfig.MessageKey)
+	assert.Equal(t, "stack", encoderConfig.StacktraceKey)
+	assert.Equal(t, zapcore.DefaultLineEnding, encoderConfig.LineEnding)
 }
 
 func TestConfig_Filename(t *testing.T) {
