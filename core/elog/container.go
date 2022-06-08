@@ -40,8 +40,14 @@ func (c *Container) Build(options ...Option) *Component {
 		c.config.EnableAddCaller = true // 调试模式，增加行号输出
 	}
 
-	if c.config.Debug {
-		c.config.encoderConfig = defaultDebugConfig()
+	// 如果用户设置了该配置，那么该配置被用户接管
+	// 如果用户没有设置，那么使用默认配置
+	if c.config.encoderConfig == nil {
+		if c.config.Debug {
+			c.config.encoderConfig = defaultDebugConfig()
+		} else {
+			c.config.encoderConfig = defaultZapConfig()
+		}
 	}
 
 	if eapp.EnableLoggerAddApp() {
