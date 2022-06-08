@@ -48,3 +48,10 @@ func WithZapCore(core zapcore.Core) Option {
 		c.config.core = core
 	}
 }
+
+// WithEncoderConfig 加入encode config
+func WithEncoderConfig(encoderConfig *zapcore.EncoderConfig) Option {
+	return func(c *Container) {
+		c.config.encoderConfig = encoderConfig
+	}
+}

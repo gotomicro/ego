@@ -76,7 +76,7 @@ func init() {
 
 func (c *Container) setAiReqResCelPrg() error {
 	if c.config.AccessInterceptorReqResFilter != "" {
-		elog.Info("load new AccessInterceptorReqResFilter", elog.String("filter", c.config.AccessInterceptorReqResFilter))
+		c.logger.Info("load new AccessInterceptorReqResFilter", elog.String("filter", c.config.AccessInterceptorReqResFilter))
 		ast, iss := aiReqResCelEnv.Compile(c.config.AccessInterceptorReqResFilter)
 		if iss.Err() != nil {
 			return fmt.Errorf("invalid AccessInterceptorReqResFilter, %w", iss.Err())
