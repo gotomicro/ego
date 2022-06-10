@@ -68,7 +68,7 @@ func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 			semconv.RPCMethodKey.String(info.FullMethod),
 			semconv.NetPeerNameKey.String(getPeerName(ctx)),
 			semconv.NetPeerIPKey.String(getPeerIP(ctx)),
-			etrace.CustomTag("span.kind", "server.unary"),
+			etrace.CustomTag("rpc.grpc.kind", "unary"),
 		)
 		defer func() {
 			if err != nil {
@@ -113,7 +113,7 @@ func traceStreamServerInterceptor() grpc.StreamServerInterceptor {
 			semconv.RPCMethodKey.String(info.FullMethod),
 			semconv.NetPeerNameKey.String(getPeerName(ctx)),
 			semconv.NetPeerIPKey.String(getPeerIP(ctx)),
-			etrace.CustomTag("span.kind", "server.stream"),
+			etrace.CustomTag("rpc.grpc.kind", "stream"),
 		)
 		defer span.End()
 		return handler(srv, contextedServerStream{
