@@ -56,7 +56,7 @@ func Load(key string) *Config {
 // DefaultConfig ...
 func DefaultConfig() *Config {
 	return &Config{
-		ServiceName: eapp.Name(),
+		ServiceName: ienv.EnvOrStr("OTEL_SERVICE_NAME", eapp.Name()),
 		Jaeger: jaegerConfig{
 			AgentHost:         ienv.EnvOrStr("OTEL_EXPORTER_JAEGER_AGENT_HOST", "localhost"),
 			AgentPort:         ienv.EnvOrStr("OTEL_EXPORTER_JAEGER_AGENT_PORT", "6831"),
