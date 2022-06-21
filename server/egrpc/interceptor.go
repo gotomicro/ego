@@ -10,15 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gotomicro/ego/core/eerrors"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/emetric"
-	"github.com/gotomicro/ego/core/etrace"
-	"github.com/gotomicro/ego/core/transport"
-	"github.com/gotomicro/ego/core/util/xstring"
-	"github.com/gotomicro/ego/internal/ecode"
-	"github.com/gotomicro/ego/internal/tools"
-	"github.com/gotomicro/ego/internal/xcpu"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -26,6 +17,17 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/gotomicro/ego/core/eerrors"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/transport"
+	"github.com/gotomicro/ego/core/util/xstring"
+	"github.com/gotomicro/ego/internal/ecode"
+	"github.com/gotomicro/ego/internal/egrpcinteceptor"
+	"github.com/gotomicro/ego/internal/tools"
+	"github.com/gotomicro/ego/internal/xcpu"
 
 	"google.golang.org/grpc/peer"
 )
@@ -54,7 +56,8 @@ func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, in
 func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	tracer := etrace.NewTracer(trace.SpanKindServer)
 	attrs := []attribute.KeyValue{
-		semconv.RPCSystemKey.String("grpc"),
+		egrpcinteceptor.RPCSystemGRPC,
+		egrpcinteceptor.GRPCKindUnary,
 	}
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (reply interface{}, err error) {
 		md, ok := metadata.FromIncomingContext(ctx)
@@ -68,7 +71,6 @@ func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 			semconv.RPCMethodKey.String(info.FullMethod),
 			semconv.NetPeerNameKey.String(getPeerName(ctx)),
 			semconv.NetPeerIPKey.String(getPeerIP(ctx)),
-			etrace.CustomTag("rpc.grpc.kind", "unary"),
 		)
 		defer func() {
 			if err != nil {
@@ -89,10 +91,33 @@ func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 type contextedServerStream struct {
 	grpc.ServerStream
 	ctx context.Context
+
+	receivedMessageID int
+	sentMessageID     int
+}
+
+func (css *contextedServerStream) RecvMsg(m interface{}) error {
+	err := css.ServerStream.RecvMsg(m)
+
+	if err == nil {
+		css.receivedMessageID++
+		egrpcinteceptor.MessageReceived.Event(css.Context(), css.receivedMessageID, m)
+	}
+
+	return err
+}
+
+func (css *contextedServerStream) SendMsg(m interface{}) error {
+	err := css.ServerStream.SendMsg(m)
+
+	css.sentMessageID++
+	egrpcinteceptor.MessageSent.Event(css.Context(), css.sentMessageID, m)
+
+	return err
 }
 
 // Context ...
-func (css contextedServerStream) Context() context.Context {
+func (css *contextedServerStream) Context() context.Context {
 	return css.ctx
 }
 
@@ -100,6 +125,7 @@ func traceStreamServerInterceptor() grpc.StreamServerInterceptor {
 	tracer := etrace.NewTracer(trace.SpanKindServer)
 	attrs := []attribute.KeyValue{
 		semconv.RPCSystemKey.String("grpc"),
+		egrpcinteceptor.GRPCKindStream,
 	}
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		md, ok := metadata.FromIncomingContext(ss.Context())
@@ -116,10 +142,20 @@ func traceStreamServerInterceptor() grpc.StreamServerInterceptor {
 			etrace.CustomTag("rpc.grpc.kind", "stream"),
 		)
 		defer span.End()
-		return handler(srv, contextedServerStream{
+		err := handler(srv, &contextedServerStream{
 			ServerStream: ss,
 			ctx:          ctx,
 		})
+		if err != nil {
+			span.RecordError(err)
+			if e := eerrors.FromError(err); e != nil {
+				span.SetAttributes(semconv.RPCGRPCStatusCodeKey.Int64(int64(e.Code)))
+			}
+			span.SetStatus(codes.Error, err.Error())
+		} else {
+			span.SetStatus(codes.Ok, "OK")
+		}
+		return err
 	}
 }
 
