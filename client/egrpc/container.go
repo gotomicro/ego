@@ -46,6 +46,7 @@ func (c *Container) Build(options ...Option) *Component {
 	if c.config.EnableTraceInterceptor {
 		options = append(options,
 			WithDialOption(grpc.WithChainUnaryInterceptor(c.traceUnaryClientInterceptor())),
+			WithDialOption(grpc.WithChainStreamInterceptor(c.traceStreamClientInterceptor())),
 		)
 	}
 
