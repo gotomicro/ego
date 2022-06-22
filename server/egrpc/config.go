@@ -20,7 +20,7 @@ type Config struct {
 	EnableMetricInterceptor    bool          // 是否开启监控，默认开启
 	EnableTraceInterceptor     bool          // 是否开启链路追踪，默认开启
 	EnableOfficialGrpcLog      bool          // 是否开启官方grpc日志，默认关闭
-	EnableSkipHealthLog        bool          // 是否屏蔽探活日志，默认关闭
+	EnableSkipHealthLog        bool          // 是否屏蔽探活日志，默认开启
 	SlowLogThreshold           time.Duration // 服务慢日志，默认500ms
 	EnableAccessInterceptor    bool          // 是否开启，记录请求数据
 	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
@@ -40,7 +40,7 @@ func DefaultConfig() *Config {
 		Port:                       9002,
 		Deployment:                 "",
 		EnableMetricInterceptor:    true,
-		EnableSkipHealthLog:        false,
+		EnableSkipHealthLog:        true,
 		EnableTraceInterceptor:     true,
 		SlowLogThreshold:           xtime.Duration("500ms"),
 		EnableAccessInterceptor:    true,
