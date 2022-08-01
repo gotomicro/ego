@@ -16,9 +16,10 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gotomicro/ego/core/transport"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/gotomicro/ego/core/transport"
 
 	"github.com/gotomicro/ego/core/elog"
 )
@@ -121,7 +122,8 @@ func TestPrometheus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Contains(t, string(text), `ego_server_handle_seconds_count{method="GET./hello",peer="",type="http"}`)
+	assert.Contains(t, string(text), `ego_server_handle_seconds_count{method="GET./hello",peer="",rpc_service="example.com",type="http"}`)
+	assert.Contains(t, string(text), `ego_server_started_total{method="GET./hello",peer="",rpc_service="example.com",type="http"}`)
 }
 
 type header struct {

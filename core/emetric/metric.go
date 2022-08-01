@@ -30,14 +30,21 @@ var (
 	ServerHandleCounter = CounterVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "server_handle_total",
-		Labels:    []string{"type", "method", "peer", "code", "uniform_code"},
+		Labels:    []string{"type", "method", "peer", "code", "uniform_code", "rpc_service"},
+	}.Build()
+
+	// ServerStartedCounter ...
+	ServerStartedCounter = CounterVecOpts{
+		Namespace: DefaultNamespace,
+		Name:      "server_started_total",
+		Labels:    []string{"type", "method", "peer", "rpc_service"},
 	}.Build()
 
 	// ServerHandleHistogram ...
 	ServerHandleHistogram = HistogramVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "server_handle_seconds",
-		Labels:    []string{"type", "method", "peer"},
+		Labels:    []string{"type", "method", "peer", "rpc_service"},
 	}.Build()
 
 	// ClientHandleCounter ...
@@ -45,6 +52,13 @@ var (
 		Namespace: DefaultNamespace,
 		Name:      "client_handle_total",
 		Labels:    []string{"type", "name", "method", "peer", "code"},
+	}.Build()
+
+	// ClientStartedCounter ...
+	ClientStartedCounter = CounterVecOpts{
+		Namespace: DefaultNamespace,
+		Name:      "client_started_total",
+		Labels:    []string{"type", "name", "method", "peer"},
 	}.Build()
 
 	// ClientHandleHistogram ...

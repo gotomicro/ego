@@ -17,6 +17,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 
 	"github.com/gotomicro/ego/core/eerrors"
 	"github.com/gotomicro/ego/core/elog"
@@ -28,28 +29,30 @@ import (
 	"github.com/gotomicro/ego/internal/egrpcinteceptor"
 	"github.com/gotomicro/ego/internal/tools"
 	"github.com/gotomicro/ego/internal/xcpu"
-
-	"google.golang.org/grpc/peer"
 )
 
 func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	startTime := time.Now()
+	serviceName, _ := egrpcinteceptor.SplitMethodName(info.FullMethod)
+	emetric.ServerStartedCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), serviceName)
 	resp, err := handler(ctx, req)
 	statusInfo := ecode.Convert(err)
 
 	emetric.ServerHandleHistogram.ObserveWithExemplar(time.Since(startTime).Seconds(), prometheus.Labels{
 		"tid": etrace.ExtractTraceID(ctx),
-	}, emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), statusInfo.Code().String(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
+	}, emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), serviceName)
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), statusInfo.Code().String(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())), serviceName)
 	return resp, err
 }
 
 func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	startTime := time.Now()
+	serviceName, _ := egrpcinteceptor.SplitMethodName(info.FullMethod)
+	emetric.ServerStartedCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), serviceName)
 	err := handler(srv, ss)
 	statusInfo := ecode.Convert(err)
-	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()))
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ss.Context()), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())))
+	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), serviceName)
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())), serviceName)
 	return err
 }
 
