@@ -9,13 +9,14 @@ import (
 	"path"
 	"testing"
 
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/internal/test/helloworld"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/test/bufconn"
+
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/internal/test/helloworld"
 )
 
 func Test_getPeerName(t *testing.T) {
@@ -175,8 +176,9 @@ func TestPrometheus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Contains(t, string(text), `ego_server_handle_seconds_count{method="/helloworld.Greeter/SayHello",peer="ego",type="unary"}`)
-	assert.Contains(t, string(text), `ego_server_handle_total{code="OK",method="/helloworld.Greeter/SayHello",peer="ego",type="unary",uniform_code="OK"}`)
+	assert.Contains(t, string(text), `ego_server_handle_seconds_count{method="/helloworld.Greeter/SayHello",peer="ego",rpc_service="helloworld.Greeter",type="unary"}`)
+	assert.Contains(t, string(text), `ego_server_handle_total{code="OK",method="/helloworld.Greeter/SayHello",peer="ego",rpc_service="helloworld.Greeter",type="unary",uniform_code="OK"}`)
+	assert.Contains(t, string(text), `ego_server_started_total{method="/helloworld.Greeter/SayHello",peer="ego",rpc_service="helloworld.Greeter",type="unary"}`)
 }
 
 // Greeter ...

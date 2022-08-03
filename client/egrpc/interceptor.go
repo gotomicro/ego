@@ -39,6 +39,7 @@ import (
 func (c *Container) metricUnaryClientInterceptor() func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		beg := time.Now()
+		emetric.ClientStartedCounter.Inc(emetric.TypeGRPCUnary, c.name, method, cc.Target())
 		err := invoker(ctx, method, req, reply, cc, opts...)
 		statusInfo := ecode.Convert(err)
 

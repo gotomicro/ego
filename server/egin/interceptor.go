@@ -17,12 +17,6 @@ import (
 	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"github.com/google/cel-go/common/types"
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/emetric"
-	"github.com/gotomicro/ego/core/etrace"
-	"github.com/gotomicro/ego/core/transport"
-	"github.com/gotomicro/ego/internal/tools"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -31,6 +25,13 @@ import (
 	"go.uber.org/zap"
 	rpcpb "google.golang.org/genproto/googleapis/rpc/context/attribute_context"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/transport"
+	"github.com/gotomicro/ego/internal/tools"
 )
 
 var (
@@ -295,11 +296,15 @@ func function(pc uintptr) []byte {
 func metricServerInterceptor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		beg := time.Now()
+		host := c.Request.Host
+		method := c.Request.Method + "." + c.FullPath()
+		app := extractAPP(c)
+		emetric.ServerStartedCounter.Inc(emetric.TypeHTTP, method, app, host)
 		c.Next()
 		emetric.ServerHandleHistogram.ObserveWithExemplar(time.Since(beg).Seconds(), prometheus.Labels{
 			"tid": etrace.ExtractTraceID(c.Request.Context()),
-		}, emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c))
-		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c), http.StatusText(c.Writer.Status()), http.StatusText(c.Writer.Status()))
+		}, emetric.TypeHTTP, method, app, host)
+		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, method, app, http.StatusText(c.Writer.Status()), http.StatusText(c.Writer.Status()), host)
 	}
 }
 
