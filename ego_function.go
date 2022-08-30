@@ -9,23 +9,20 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/automaxprocs/maxprocs"
-	"golang.org/x/sync/errgroup"
-
-	"github.com/gotomicro/ego/core/esentinel"
-
-	sentinelMetrics "github.com/alibaba/sentinel-golang/metrics"
-
+	sentinelmetrics "github.com/alibaba/sentinel-golang/metrics"
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/econf/manager"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/esentinel"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/etrace/otel"
 	"github.com/gotomicro/ego/core/util/xcolor"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/automaxprocs/maxprocs"
+	"golang.org/x/sync/errgroup"
 )
 
 // waitSignals wait signal
@@ -224,7 +221,7 @@ func (e *Ego) initTracer() error {
 func (e *Ego) initSentinel() error {
 	if econf.Get(e.opts.configPrefix+"sentinel") != nil {
 		esentinel.Load(e.opts.configPrefix + "sentinel").Build()
-		sentinelMetrics.RegisterSentinelMetrics(prometheus.DefaultRegisterer.(*prometheus.Registry))
+		sentinelmetrics.RegisterSentinelMetrics(prometheus.DefaultRegisterer.(*prometheus.Registry))
 	}
 	return nil
 }

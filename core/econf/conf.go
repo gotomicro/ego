@@ -355,6 +355,7 @@ func (c *Configuration) UnmarshalKey(key string, rawVal interface{}, opts ...Opt
 		Result:           rawVal,
 		TagName:          options.TagName,
 		WeaklyTypedInput: options.WeaklyTypedInput,
+		Squash:           options.Squash,
 	}
 	decoder, err := mapstructure.NewDecoder(&config)
 	if err != nil {

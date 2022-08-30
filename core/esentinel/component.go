@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	sentinelAPI "github.com/alibaba/sentinel-golang/api"
-	sentinelConfig "github.com/alibaba/sentinel-golang/core/config"
+	sentinelapi "github.com/alibaba/sentinel-golang/api"
+	sentinelconfig "github.com/alibaba/sentinel-golang/core/config"
 	"github.com/alibaba/sentinel-golang/core/flow"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gotomicro/ego/core/elog"
@@ -17,10 +17,10 @@ const PackageName = "core.sentinel"
 
 // Component 组件
 type Component struct {
-	//name   string
-	//config *Config
-	//logger *elog.Component
-	//err    error
+	// name   string
+	// config *Config
+	// logger *elog.Component
+	// err    error
 }
 
 func newComponent(config *Config, logger *elog.Component) error {
@@ -28,10 +28,10 @@ func newComponent(config *Config, logger *elog.Component) error {
 		_ = syncFlowRules(config.FlowRulesFile, logger)
 		go watch(config.FlowRulesFile, logger)
 	}
-	configEntity := sentinelConfig.NewDefaultConfig()
+	configEntity := sentinelconfig.NewDefaultConfig()
 	configEntity.Sentinel.App.Name = config.AppName
 	configEntity.Sentinel.Log.Dir = config.LogPath
-	return sentinelAPI.InitWithConfig(configEntity)
+	return sentinelapi.InitWithConfig(configEntity)
 }
 
 func syncFlowRules(filePath string, logger *elog.Component) (err error) {
@@ -57,7 +57,7 @@ func watch(filePath string, logger *elog.Component) {
 	if err != nil {
 		elog.Panic("new datasource", elog.FieldErr(err))
 	}
-	//dir := xfile.CheckAndGetParentDir(absolutePath)
+	// dir := xfile.CheckAndGetParentDir(absolutePath)
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		logger.Panic("new sentinel file watcher", elog.FieldErr(err))
