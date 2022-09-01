@@ -1,8 +1,10 @@
 package eerrors
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"io"
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
@@ -16,7 +18,10 @@ import (
 type Error interface {
 	error
 	WithMetadata(map[string]string) Error
+	WithMd(map[string]string) Error
 	WithMessage(string) Error
+	WithMsg(string) Error
+	WithErr(err error) Error
 }
 
 const (
@@ -68,17 +73,60 @@ func (x *EgoError) GRPCStatus() *status.Status {
 }
 
 // WithMetadata with an MD formed by the mapping of key, value.
+// Deprecated: Will be removed in future versions, use WithMd instead.
 func (x *EgoError) WithMetadata(md map[string]string) Error {
 	err := proto.Clone(x).(*EgoError)
 	err.Metadata = md
 	return err
 }
 
+// WithMd with an MD formed by the mapping of key, value.
+func (x *EgoError) WithMd(md map[string]string) Error {
+	err := proto.Clone(x).(*EgoError)
+	err.Metadata = md
+	return err
+}
+
 // WithMessage set message to current EgoError
+// Deprecated: Will be removed in future versions, use WithMsg instead.
 func (x *EgoError) WithMessage(msg string) Error {
 	err := proto.Clone(x).(*EgoError)
 	err.Message = msg
 	return err
+}
+
+// WithMsg set message to current EgoError
+func (x *EgoError) WithMsg(msg string) Error {
+	err := proto.Clone(x).(*EgoError)
+	err.Message = msg
+	return err
+}
+
+func (x *EgoError) WithErr(err error) Error {
+	if err == nil {
+		return x
+	}
+
+	eErr := proto.Clone(x).(*EgoError)
+	switch err {
+	case io.EOF:
+		eErr.Code = int32(codes.Unknown)
+		eErr.Reason = io.EOF.Error()
+	case context.DeadlineExceeded:
+		eErr.Code = int32(codes.DeadlineExceeded)
+		eErr.Reason = context.DeadlineExceeded.Error()
+	case context.Canceled:
+		eErr.Code = int32(codes.Canceled)
+		eErr.Reason = context.Canceled.Error()
+	case io.ErrUnexpectedEOF:
+		eErr.Code = int32(codes.Internal)
+		eErr.Reason = io.ErrUnexpectedEOF.Error()
+	default:
+		return x
+	}
+
+	eErr.Message = err.Error()
+	return eErr
 }
 
 // New returns an error object for the code, message.
@@ -104,6 +152,7 @@ func FromError(err error) *EgoError {
 	if se := new(EgoError); errors.As(err, &se) {
 		return se
 	}
+
 	gs, ok := status.FromError(err)
 	if ok {
 		for _, detail := range gs.Details() {
@@ -111,15 +160,17 @@ func FromError(err error) *EgoError {
 			case *errdetails.ErrorInfo:
 				e, ok := errs[errKey(d.Reason)]
 				if ok {
-					return e.WithMessage(gs.Message()).WithMetadata(d.Metadata).(*EgoError)
+					return e.WithMsg(gs.Message()).WithMetadata(d.Metadata).(*EgoError)
 				}
 				return New(
 					int(gs.Code()),
 					d.Reason,
 					gs.Message(),
-				).WithMetadata(d.Metadata).(*EgoError)
+				).WithMd(d.Metadata).(*EgoError)
 			}
 		}
+
+		return New(int(gs.Code()), gs.Message(), "")
 	}
 	return New(int(codes.Unknown), UnknownReason, err.Error())
 }
