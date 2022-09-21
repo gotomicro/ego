@@ -1,10 +1,8 @@
 package eerrors
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"io"
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
@@ -21,7 +19,6 @@ type Error interface {
 	WithMd(map[string]string) Error
 	WithMessage(string) Error
 	WithMsg(string) Error
-	WithErr(err error) Error
 }
 
 const (
@@ -102,33 +99,6 @@ func (x *EgoError) WithMsg(msg string) Error {
 	return err
 }
 
-func (x *EgoError) WithErr(err error) Error {
-	if err == nil {
-		return x
-	}
-
-	eErr := proto.Clone(x).(*EgoError)
-	switch err {
-	case io.EOF:
-		eErr.Code = int32(codes.Unknown)
-		eErr.Reason = io.EOF.Error()
-	case context.DeadlineExceeded:
-		eErr.Code = int32(codes.DeadlineExceeded)
-		eErr.Reason = context.DeadlineExceeded.Error()
-	case context.Canceled:
-		eErr.Code = int32(codes.Canceled)
-		eErr.Reason = context.Canceled.Error()
-	case io.ErrUnexpectedEOF:
-		eErr.Code = int32(codes.Internal)
-		eErr.Reason = io.ErrUnexpectedEOF.Error()
-	default:
-		return x
-	}
-
-	eErr.Message = err.Error()
-	return eErr
-}
-
 // New returns an error object for the code, message.
 func New(code int, reason, message string) *EgoError {
 	return &EgoError{
@@ -154,23 +124,23 @@ func FromError(err error) *EgoError {
 	}
 
 	gs, ok := status.FromError(err)
-	if ok {
-		for _, detail := range gs.Details() {
-			switch d := detail.(type) {
-			case *errdetails.ErrorInfo:
-				e, ok := errs[errKey(d.Reason)]
-				if ok {
-					return e.WithMsg(gs.Message()).WithMetadata(d.Metadata).(*EgoError)
-				}
-				return New(
-					int(gs.Code()),
-					d.Reason,
-					gs.Message(),
-				).WithMd(d.Metadata).(*EgoError)
-			}
-		}
-
-		return New(int(gs.Code()), gs.Message(), "")
+	if !ok {
+		return New(int(codes.Unknown), UnknownReason, err.Error())
 	}
-	return New(int(codes.Unknown), UnknownReason, err.Error())
+
+	ret := New(int(gs.Code()), UnknownReason, gs.Message())
+	for _, detail := range gs.Details() {
+		switch d := detail.(type) {
+		case *errdetails.ErrorInfo:
+			e, ok := errs[errKey(d.Reason)]
+			if ok {
+				return e.WithMsg(gs.Message()).WithMetadata(d.Metadata).(*EgoError)
+			}
+
+			ret.Reason = d.Reason
+			return ret.WithMd(d.Metadata).(*EgoError)
+		}
+	}
+
+	return ret
 }
