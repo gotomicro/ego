@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/gotomicro/ego/core/elog"
 )
 
@@ -50,7 +51,7 @@ func WithSentinelBlockFallback(fn func(*gin.Context)) Option {
 	}
 }
 
-// WithTLSSessionCache 限流后的返回数据
+// WithTLSSessionCache TLS Session 缓存
 func WithTLSSessionCache(tsc tls.ClientSessionCache) Option {
 	return func(c *Container) {
 		c.config.TLSSessionCache = tsc
@@ -64,7 +65,7 @@ func WithTrustedPlatform(trustedPlatform string) Option {
 	}
 }
 
-// WithLogger 信任的Header头，获取客户端IP地址
+// WithLogger 设置 logger
 func WithLogger(logger *elog.Component) Option {
 	return func(c *Container) {
 		c.logger = logger
@@ -99,9 +100,16 @@ func WithServerWriteTimeout(timeout time.Duration) Option {
 	}
 }
 
-// WithContextTimeout 设置port
+// WithContextTimeout 设置 context 超时时间
 func WithContextTimeout(timeout time.Duration) Option {
 	return func(c *Container) {
 		c.config.ContextTimeout = timeout
+	}
+}
+
+// WithRecoveryFunc 设置 recovery func
+func WithRecoveryFunc(f gin.RecoveryFunc) Option {
+	return func(c *Container) {
+		c.config.recoveryFunc = f
 	}
 }

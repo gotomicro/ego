@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"embed"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
@@ -52,7 +53,8 @@ type Config struct {
 	blockFallback                 func(*gin.Context)
 	resourceExtract               func(*gin.Context) string
 	aiReqResCelPrg                cel.Program
-	mu                            sync.RWMutex // mutex for EnableAccessInterceptorReq、EnableAccessInterceptorRes、AccessInterceptorReqResFilter、aiReqResCelPrg
+	mu                            sync.RWMutex     // mutex for EnableAccessInterceptorReq、EnableAccessInterceptorRes、AccessInterceptorReqResFilter、aiReqResCelPrg
+	recoveryFunc                  gin.RecoveryFunc // recoveryFunc 处理接口没有被 recover 的 panic，默认返回 500 并且没有任何 response body
 }
 
 // DefaultConfig ...
@@ -68,6 +70,7 @@ func DefaultConfig() *Config {
 		SlowLogThreshold:           xtime.Duration("500ms"),
 		EnableWebsocketCheckOrigin: false,
 		TrustedPlatform:            "",
+		recoveryFunc:               defaultRecoveryFunc,
 	}
 }
 
@@ -92,4 +95,8 @@ func (config *Config) ClientAuthType() tls.ClientAuthType {
 	default:
 		return tls.NoClientCert
 	}
+}
+
+func defaultRecoveryFunc(ctx *gin.Context, _ interface{}) {
+	ctx.AbortWithStatus(http.StatusInternalServerError)
 }
