@@ -98,12 +98,14 @@ func (c *Container) Build(options ...Option) *Component {
 	for _, option := range options {
 		option(c)
 	}
+
 	server := newComponent(c.name, c.config, c.logger)
 	server.Use(healthcheck.Default())
 	server.Use(c.defaultServerInterceptor())
 	if c.config.ContextTimeout > 0 {
 		server.Use(timeoutMiddleware(c.config.ContextTimeout))
 	}
+
 	if c.config.EnableMetricInterceptor {
 		server.Use(metricServerInterceptor())
 	}
@@ -115,6 +117,7 @@ func (c *Container) Build(options ...Option) *Component {
 	if c.config.EnableSentinel {
 		server.Use(c.sentinelMiddleware())
 	}
+
 	econf.OnChange(func(newConf *econf.Configuration) {
 		c.config.mu.Lock()
 		cf := newConf.Sub(c.name)

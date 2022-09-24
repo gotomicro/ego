@@ -58,6 +58,49 @@ func TestPanicInHandler(t *testing.T) {
 	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
+func TestPanicInCustomHandler(t *testing.T) {
+	router := gin.New()
+	// 使用非异步日志
+	logger := elog.DefaultContainer().Build(
+		elog.WithDebug(false),
+		elog.WithEnableAddCaller(true),
+		elog.WithEnableAsync(false),
+	)
+
+	// 自定义 recover
+	var recoverFunc gin.RecoveryFunc = func(ctx *gin.Context, err interface{}) {
+		ctx.String(http.StatusInternalServerError, "%v", err)
+		ctx.Abort()
+	}
+
+	container := DefaultContainer()
+	container.Build(WithLogger(logger), WithRecoveryFunc(recoverFunc))
+
+	// 使用recover组件
+	panicMessage := "we have a panic"
+	router.Use(container.defaultServerInterceptor())
+	router.GET("/recovery", func(_ *gin.Context) {
+		panic(panicMessage)
+	})
+	// 调用触发panic的接口
+	w := performRequest(router, "GET", "/recovery")
+	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	fmt.Printf("logged--------------->%+v\n", string(logged))
+	assert.Nil(t, err)
+	// TEST
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, panicMessage, w.Body.String())
+	var m map[string]interface{}
+	n := strings.Index(string(logged), "{")
+	err = json.Unmarshal(logged[n:], &m)
+	assert.NoError(t, err)
+	assert.Equal(t, m["event"], `recover`)
+	assert.Equal(t, m["error"], panicMessage)
+	assert.Equal(t, m["method"], `GET./recovery`)
+	assert.Contains(t, m["stack"], t.Name())
+	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+}
+
 func TestPanicWithBrokenPipe(t *testing.T) {
 	const expectCode = 204
 

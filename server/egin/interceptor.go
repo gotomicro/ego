@@ -199,7 +199,11 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					ctx.Error(rec.(error)) // nolint: errcheck
 					ctx.Abort()
 				} else {
-					ctx.AbortWithStatus(http.StatusInternalServerError)
+					if c.config.recoveryFunc == nil {
+						c.config.recoveryFunc = defaultRecoveryFunc
+					}
+
+					c.config.recoveryFunc(ctx, rec)
 				}
 
 				event = "recover"
