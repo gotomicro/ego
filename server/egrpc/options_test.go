@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
+	"github.com/gotomicro/ego/core/elog"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
@@ -28,7 +29,6 @@ func TestWithServerOption(t *testing.T) {
 	opt := WithServerOption(grpc.WriteBufferSize(128 * 1024))
 	cmp := newCmp(t, opt)
 	assert.Equal(t, 3, len(cmp.config.serverOptions))
-	t.Log("done")
 }
 
 func TestWithStreamInterceptor(t *testing.T) {
@@ -49,4 +49,20 @@ func TestWithUnaryInterceptor(t *testing.T) {
 	cmp := newCmp(t, opt)
 	assert.Equal(t, 2, len(cmp.config.unaryInterceptors))
 	t.Log("done")
+}
+
+func TestWithNetwork(t *testing.T) {
+	cmp := newCmp(t, WithNetwork("bufnet"))
+	assert.Equal(t, "bufnet", cmp.config.Network)
+}
+
+func TestWithLogger(t *testing.T) {
+	logger := elog.DefaultContainer().Build(
+		elog.WithDebug(false),
+		elog.WithEnableAddCaller(true),
+		elog.WithEnableAsync(false),
+	)
+
+	comp := DefaultContainer().Build(WithLogger(logger))
+	assert.Equal(t, logger, comp.logger)
 }

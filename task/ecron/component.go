@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gotomicro/ego/core/etrace"
 	"github.com/robfig/cron/v3"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/gotomicro/ego/core/elog"
@@ -127,6 +129,7 @@ func (c *Component) schedule(schedule Schedule, job NamedJob) EntryID {
 	innerJob := &wrappedJob{
 		NamedJob: job,
 		logger:   c.logger,
+		tracer:   etrace.NewTracer(trace.SpanKindServer),
 	}
 	c.logger.Info("add job", elog.String("name", job.Name()))
 	return c.cron.Schedule(schedule, innerJob)

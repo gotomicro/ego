@@ -9,21 +9,20 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/gotomicro/ego/core/esentinel"
-	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/automaxprocs/maxprocs"
-	"golang.org/x/sync/errgroup"
-
-	sentinelMetrics "github.com/alibaba/sentinel-golang/metrics"
+	sentinelmetrics "github.com/alibaba/sentinel-golang/metrics"
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/econf/manager"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/esentinel"
 	"github.com/gotomicro/ego/core/etrace"
-	"github.com/gotomicro/ego/core/etrace/ejaeger"
+	"github.com/gotomicro/ego/core/etrace/otel"
 	"github.com/gotomicro/ego/core/util/xcolor"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/automaxprocs/maxprocs"
+	"golang.org/x/sync/errgroup"
 )
 
 // waitSignals wait signal
@@ -97,7 +96,7 @@ func (e *Ego) startJobs() error {
 		return nil
 	}
 	var jobs = make([]func() error, 0)
-	// warp jobs
+	// wrap jobs
 	for _, runner := range e.jobs {
 		runner := runner
 		jobs = append(jobs, func() error {
@@ -148,7 +147,7 @@ func (e *Ego) parseFlags() error {
 		Default: "0.0.0.0",
 		Action:  func(string, *eflag.FlagSet) {},
 	})
-	return eflag.Parse()
+	return eflag.ParseWithArgs(e.opts.arguments)
 }
 
 // loadConfig init
@@ -181,11 +180,13 @@ func (e *Ego) initLogger() error {
 	if econf.Get(e.opts.configPrefix+"logger.default") != nil {
 		elog.DefaultLogger = elog.Load(e.opts.configPrefix + "logger.default").Build()
 		elog.EgoLogger.Info("reinit default logger", elog.FieldComponent(elog.PackageName))
+		e.opts.afterStopClean = append(e.opts.afterStopClean, elog.DefaultLogger.Flush)
 	}
 
 	if econf.Get(e.opts.configPrefix+"logger.ego") != nil {
 		elog.EgoLogger = elog.Load(e.opts.configPrefix + "logger.ego").Build(elog.WithFileName(elog.EgoLoggerName))
 		elog.EgoLogger.Info("reinit ego logger", elog.FieldComponent(elog.PackageName))
+		e.opts.afterStopClean = append(e.opts.afterStopClean, elog.EgoLogger.Flush)
 	}
 	return nil
 }
@@ -193,18 +194,18 @@ func (e *Ego) initLogger() error {
 // initTracer init global tracer
 func (e *Ego) initTracer() error {
 	var (
-		container *ejaeger.Config
+		container *otel.Config
 	)
 
-	if econf.Get(e.opts.configPrefix+"trace.jaeger") != nil {
-		container = ejaeger.Load(e.opts.configPrefix + "trace.jaeger")
+	if econf.Get(e.opts.configPrefix+"trace") != nil {
+		container = otel.Load(e.opts.configPrefix + "trace")
 	} else {
 		// 设置默认trace
-		container = ejaeger.DefaultConfig()
+		container = otel.DefaultConfig()
 	}
 
 	// 禁用trace
-	if econf.GetBool(e.opts.configPrefix + "trace.jaeger.disable") {
+	if econf.GetBool(e.opts.configPrefix + "trace.disable") {
 		elog.EgoLogger.Info("disable trace", elog.FieldComponent("app"))
 		return nil
 	}
@@ -220,7 +221,7 @@ func (e *Ego) initTracer() error {
 func (e *Ego) initSentinel() error {
 	if econf.Get(e.opts.configPrefix+"sentinel") != nil {
 		esentinel.Load(e.opts.configPrefix + "sentinel").Build()
-		sentinelMetrics.RegisterSentinelMetrics(prometheus.DefaultRegisterer.(*prometheus.Registry))
+		sentinelmetrics.RegisterSentinelMetrics(prometheus.DefaultRegisterer.(*prometheus.Registry))
 	}
 	return nil
 }
@@ -231,16 +232,10 @@ func initMaxProcs() error {
 		runtime.GOMAXPROCS(maxProcs)
 	} else {
 		if _, err := maxprocs.Set(); err != nil {
-			elog.EgoLogger.Panic("init max procs", elog.FieldComponent("app"), elog.FieldErr(err))
+			elog.EgoLogger.Error("init max procs", elog.FieldComponent("app"), elog.FieldErr(err))
 		}
 	}
-	elog.EgoLogger.Info("init max procs", elog.FieldComponent("app"), elog.FieldValueAny(runtime.GOMAXPROCS(-1)))
-	return nil
-}
-
-func printLogger() error {
-	elog.EgoLogger.Info("init default logger", elog.FieldComponent(elog.PackageName))
-	elog.EgoLogger.Info("init ego logger", elog.FieldComponent(elog.PackageName))
+	elog.EgoLogger.Info("init app", elog.FieldComponent("app"), elog.Int("pid", os.Getpid()), elog.Int("coreNum", runtime.GOMAXPROCS(-1)))
 	return nil
 }
 

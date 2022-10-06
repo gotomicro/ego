@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/server/egin"
 )
 
@@ -27,11 +26,11 @@ func main() {
 		})
 
 		server.GET("/hello", func(ctx *gin.Context) {
-			// Get traceId from Request's context
-			span, _ := etrace.StartSpanFromContext(ctx.Request.Context(), "Handle: /Hello")
-			defer span.Finish()
-
 			ctx.JSON(200, "Hello client: "+ctx.GetHeader("app"))
+		})
+
+		server.GET("/500", func(ctx *gin.Context) {
+			ctx.JSON(500, "Hello client: "+ctx.GetHeader("app"))
 		})
 
 		return server

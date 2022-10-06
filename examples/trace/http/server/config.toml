@@ -1,0 +1,8 @@
+[server.http]
+port = 9007
+EnableAccessInterceptor = true
+EnableAccessInterceptorReq = true
+EnableAccessInterceptorRes = true
+[trace]
+ServiceName = "server"
+

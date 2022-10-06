@@ -26,8 +26,12 @@ const (
 	// 比如 export EGO_LOG_EXTRA_KEYS=X-Ego-Uid,X-Ego-Order-Id
 	// 这些扩展的追踪字段会根据配置的 key1、key2、key3 等键名，从 Headers(HTTP) 或 Metadata(gRPC) 查找对应值并打印到请求日志中
 	EgoLogExtraKeys = "EGO_LOG_EXTRA_KEYS"
+	// EgoLogWriter writer方式： file | stderr
+	EgoLogWriter = "EGO_LOG_WRITER"
+	// EgoLogTimeType 记录的时间类型，默认 second，millisecond，%Y-%m-%d %H:%M:%S
+	EgoLogTimeType = "EGO_LOG_TIME_TYPE"
 	// EgoTraceIDName 应用链路ID环境变量，不配置，默认x-trace-id
 	EgoTraceIDName = "EGO_TRACE_ID_NAME"
-	// DefaultDeployment ...
-	DefaultDeployment = ""
+	// EgoGovernorEnableConfig 是否开启查看config
+	EgoGovernorEnableConfig = "EGO_GOVERNOR_ENABLE_CONFIG"
 )

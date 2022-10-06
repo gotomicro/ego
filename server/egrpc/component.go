@@ -6,8 +6,11 @@ import (
 
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/internal/egrpclog"
 	"github.com/gotomicro/ego/server"
+	"go.uber.org/zap/zapgrpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
@@ -29,6 +32,10 @@ type Component struct {
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
+	if config.EnableOfficialGrpcLog {
+		// grpc框架日志，因为官方grpc日志是单例，所以这里要处理下
+		grpclog.SetLoggerV2(zapgrpc.NewLogger(egrpclog.Build().ZapLogger()))
+	}
 	newServer := grpc.NewServer(config.serverOptions...)
 	reflection.Register(newServer)
 	healthpb.RegisterHealthServer(newServer, health.NewServer())

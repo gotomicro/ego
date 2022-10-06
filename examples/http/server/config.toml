@@ -1,5 +1,9 @@
 [server.http]
-    port = 9007
-[trace.jaeger]
-    ServiceName = "server"
+port = 9007
+EnableAccessInterceptor = true
+EnableAccessInterceptorReq = true
+EnableAccessInterceptorRes = true
+AccessInterceptorReqResFilter = ''
 
+[trace]
+ServiceName = "server"

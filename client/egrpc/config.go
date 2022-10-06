@@ -19,6 +19,7 @@ type Config struct {
 	ReadTimeout                  time.Duration // 读超时，默认1s
 	SlowLogThreshold             time.Duration // 慢日志记录的阈值，默认600ms
 	EnableBlock                  bool          // 是否开启阻塞，默认开启
+	EnableOfficialGrpcLog        bool          // 是否开启官方grpc日志，默认关闭
 	EnableWithInsecure           bool          // 是否开启非安全传输，默认开启
 	EnableMetricInterceptor      bool          // 是否开启监控，默认开启
 	EnableTraceInterceptor       bool          // 是否开启链路追踪，默认开启
@@ -28,6 +29,7 @@ type Config struct {
 	EnableAccessInterceptorReq   bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes   bool          // 是否开启记录响应参数，默认不开启
 	EnableCPUUsage               bool          // 是否开启CPU利用率，默认开启
+	EnableServiceConfig          bool          // 是否开启服务配置，默认开启
 	EnableFailOnNonTempDialError bool
 
 	keepAlive   *keepalive.ClientParameters
@@ -53,6 +55,7 @@ func DefaultConfig() *Config {
 		EnableAccessInterceptor:      false,
 		EnableAccessInterceptorReq:   false,
 		EnableAccessInterceptorRes:   false,
+		EnableServiceConfig:          true,
 		EnableCPUUsage:               true,
 	}
 }

@@ -35,8 +35,8 @@ git checkout -b feature/my-feature origin/master
 
 ## 5 Golint
 ```bash
-golint ./...
-golangci-lint run ./...
+golint $(go list ./... | grep -v /examples/)
+golangci-lint run $(go list ./... | grep -v /examples/)
 ```
 
 ## 6 Go Test

@@ -2,6 +2,7 @@ package egin
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,15 +16,22 @@ import (
 	sentinel "github.com/alibaba/sentinel-golang/api"
 	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
+	"github.com/google/cel-go/common/types"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
+	rpcpb "google.golang.org/genproto/googleapis/rpc/context/attribute_context"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/internal/tools"
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
-	"go.uber.org/zap"
 )
 
 var (
@@ -67,22 +75,57 @@ func copyHeaders(headers http.Header) http.Header {
 	return nh
 }
 
-// defaultServerInterceptor 默认拦截器，包含日志记录、Recover等功能
-func defaultServerInterceptor(logger *elog.Component, config *Config) gin.HandlerFunc {
+// timeout middleware wraps the request context with a timeout
+func timeoutMiddleware(timeout time.Duration) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		// 若无自定义超时设置，默认设置超时
+		_, ok := c.Request.Context().Deadline()
+		if ok {
+			c.Next()
+			return
+		}
+
+		// wrap the request context with a timeout
+		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
+		defer func() {
+			// check if context timeout was reached
+			if ctx.Err() == context.DeadlineExceeded {
+
+				// write response and abort the request
+				c.Writer.WriteHeader(http.StatusGatewayTimeout)
+				c.Abort()
+			}
+
+			//cancel to clear resources after finished
+			cancel()
+		}()
+
+		// replace request with context wrapped request
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
+	}
+}
+
+// defaultServerInterceptor 默认拦截器，包含日志记录、Recover等功能
+func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
+
+	return func(ctx *gin.Context) {
 		var beg = time.Now()
 		var rw *resWriter
 		var rb bytes.Buffer
 
 		// 只有开启了EnableAccessInterceptorRes时拷贝request body
-		if config.EnableAccessInterceptorReq {
-			c.Request.Body = ioutil.NopCloser(io.TeeReader(c.Request.Body, &rb))
+		// 也可以直接使用econf.Sub(c.name).GetBool("EnableAccessInterceptorReq")，不过从econf动态查找配置性能可能会比较差，暂时先用锁代替
+		c.config.mu.RLock()
+		if c.config.EnableAccessInterceptorReq || c.config.AccessInterceptorReqResFilter != "" {
+			ctx.Request.Body = ioutil.NopCloser(io.TeeReader(ctx.Request.Body, &rb))
 		}
 		// 只有开启了EnableAccessInterceptorRes时才替换response writer
-		if config.EnableAccessInterceptorRes {
-			rw = &resWriter{c.Writer, &bytes.Buffer{}}
-			c.Writer = rw
+		if c.config.EnableAccessInterceptorRes || c.config.AccessInterceptorReqResFilter != "" {
+			rw = &resWriter{ctx.Writer, &bytes.Buffer{}}
+			ctx.Writer = rw
 		}
+		c.config.mu.RUnlock()
 
 		// 为了性能考虑，如果要加日志字段，需要改变slice大小
 		loggerKeys := transport.CustomContextKeys()
@@ -93,7 +136,7 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 		// 必须在defer外层，因为要赋值，替换ctx
 		for _, key := range loggerKeys {
 			// 赋值context
-			getHeaderValue(c, key, config.EnableTrustedCustomHeader)
+			getHeaderValue(ctx, key, c.config.EnableTrustedCustomHeader)
 		}
 
 		defer func() {
@@ -101,40 +144,45 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 			fields = append(fields,
 				elog.FieldType("http"), // GET, POST
 				elog.FieldCost(cost),
-				elog.FieldMethod(c.Request.Method+"."+c.FullPath()),
-				elog.FieldAddr(c.Request.URL.RequestURI()),
-				elog.FieldIP(c.ClientIP()),
-				elog.FieldSize(int32(c.Writer.Size())),
-				elog.FieldPeerIP(getPeerIP(c.Request.RemoteAddr)),
+				elog.FieldMethod(ctx.Request.Method+"."+ctx.FullPath()),
+				elog.FieldAddr(ctx.Request.URL.RequestURI()),
+				elog.FieldIP(ctx.ClientIP()),
+				elog.FieldSize(int32(ctx.Writer.Size())),
+				elog.FieldPeerIP(getPeerIP(ctx.Request.RemoteAddr)),
 			)
 
 			for _, key := range loggerKeys {
-				if value := tools.ContextValue(c.Request.Context(), key); value != "" {
+				if value := tools.ContextValue(ctx.Request.Context(), key); value != "" {
 					fields = append(fields, elog.FieldCustomKeyValue(key, value))
 				}
 			}
 
-			if config.EnableTraceInterceptor && opentracing.IsGlobalTracerRegistered() {
-				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(c.Request.Context())))
+			if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
+				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx.Request.Context())))
 			}
 
-			if config.EnableAccessInterceptorReq {
-				fields = append(fields, elog.Any("req", map[string]interface{}{
-					"metadata": copyHeaders(c.Request.Header),
-					"payload":  rb.String(),
-				}))
-			}
+			c.config.mu.RLock()
+			if c.config.EnableAccessInterceptorReq || c.config.EnableAccessInterceptorRes {
+				out := c.checkFilter(ctx.Request, rw)
+				if c.config.EnableAccessInterceptorReq && out {
+					fields = append(fields, elog.Any("req", map[string]interface{}{
+						"metadata": copyHeaders(ctx.Request.Header),
+						"payload":  rb.String(),
+					}))
+				}
 
-			if config.EnableAccessInterceptorRes {
-				fields = append(fields, elog.Any("res", map[string]interface{}{
-					"metadata": copyHeaders(c.Writer.Header()),
-					"payload":  rw.body.String(),
-				}))
+				if c.config.EnableAccessInterceptorRes && out {
+					fields = append(fields, elog.Any("res", map[string]interface{}{
+						"metadata": copyHeaders(ctx.Writer.Header()),
+						"payload":  rw.body.String(),
+					}))
+				}
 			}
+			c.config.mu.RUnlock()
 
 			// slow log
-			if config.SlowLogThreshold > time.Duration(0) && config.SlowLogThreshold < cost {
-				logger.Warn("slow", fields...)
+			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
+				c.logger.Warn("slow", fields...)
 			}
 
 			if rec := recover(); rec != nil {
@@ -148,41 +196,45 @@ func defaultServerInterceptor(logger *elog.Component, config *Config) gin.Handle
 
 				if brokenPipe {
 					// If the connection is dead, we can't write a status to it.
-					c.Error(rec.(error)) // nolint: errcheck
-					c.Abort()
+					ctx.Error(rec.(error)) // nolint: errcheck
+					ctx.Abort()
 				} else {
-					c.AbortWithStatus(http.StatusInternalServerError)
+					if c.config.recoveryFunc == nil {
+						c.config.recoveryFunc = defaultRecoveryFunc
+					}
+
+					c.config.recoveryFunc(ctx, rec)
 				}
 
 				event = "recover"
 				stackInfo := stack(3)
-
 				fields = append(fields,
 					elog.FieldEvent(event),
 					zap.ByteString("stack", stackInfo),
 					elog.FieldErrAny(rec),
-					elog.FieldCode(int32(c.Writer.Status())),
+					elog.FieldCode(int32(ctx.Writer.Status())),
+					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
-				logger.Error("access", fields...)
+				c.logger.Error("access", fields...)
 				return
 			}
 			// todo 如果不记录日志的时候，应该早点return
-			if config.EnableAccessInterceptor {
+			if c.config.EnableAccessInterceptor {
 				fields = append(fields,
 					elog.FieldEvent(event),
-					elog.FieldErrAny(c.Errors.ByType(gin.ErrorTypePrivate).String()),
-					elog.FieldCode(int32(c.Writer.Status())),
+					elog.FieldErrAny(ctx.Errors.ByType(gin.ErrorTypePrivate).String()),
+					elog.FieldCode(int32(ctx.Writer.Status())),
 				)
-				logger.Info("access", fields...)
+				c.logger.Info("access", fields...)
 			}
 		}()
-		c.Next()
+		ctx.Next()
 	}
 }
 
-//func copyBody(r io.Reader, w io.Writer) io.ReadCloser {
+// func copyBody(r io.Reader, w io.Writer) io.ReadCloser {
 //	return ioutil.NopCloser(io.TeeReader(r, w))
-//}
+// }
 
 // stack returns a nicely formatted stack frame, skipping skip frames.
 func stack(skip int) []byte {
@@ -248,29 +300,43 @@ func function(pc uintptr) []byte {
 func metricServerInterceptor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		beg := time.Now()
+		host := c.Request.Host
+		method := c.Request.Method + "." + c.FullPath()
+		app := extractAPP(c)
+		emetric.ServerStartedCounter.Inc(emetric.TypeHTTP, method, app, host)
 		c.Next()
-		emetric.ServerHandleHistogram.Observe(time.Since(beg).Seconds(), emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c))
-		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, c.Request.Method+"."+c.FullPath(), extractAPP(c), http.StatusText(c.Writer.Status()))
+		emetric.ServerHandleHistogram.ObserveWithExemplar(time.Since(beg).Seconds(), prometheus.Labels{
+			"tid": etrace.ExtractTraceID(c.Request.Context()),
+		}, emetric.TypeHTTP, method, app, host)
+		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, method, app, http.StatusText(c.Writer.Status()), http.StatusText(c.Writer.Status()), host)
 	}
 }
 
+// todo 如果业务崩了，logger recover
 func traceServerInterceptor() gin.HandlerFunc {
+	tracer := etrace.NewTracer(trace.SpanKindServer)
+	attrs := []attribute.KeyValue{
+		semconv.RPCSystemKey.String("http"),
+	}
 	return func(c *gin.Context) {
-		span, ctx := etrace.StartSpanFromContext(
-			c.Request.Context(),
-			c.Request.Method+"."+c.FullPath(),
-			etrace.TagComponent("http"),
-			etrace.TagSpanKind("server"),
-			etrace.HeaderExtractor(c.Request.Header),
-			etrace.CustomTag("http.url", c.Request.URL.Path),
-			etrace.CustomTag("http.method", c.Request.Method),
-			etrace.CustomTag("peer.ipv4", c.ClientIP()),
+		// 该方法会在v0.9.0移除
+		etrace.CompatibleExtractHTTPTraceID(c.Request.Header)
+		ctx, span := tracer.Start(c.Request.Context(), c.Request.Method+"."+c.FullPath(), propagation.HeaderCarrier(c.Request.Header), trace.WithAttributes(attrs...))
+		span.SetAttributes(
+			semconv.HTTPURLKey.String(c.Request.URL.String()),
+			semconv.HTTPTargetKey.String(c.Request.URL.Path),
+			semconv.HTTPMethodKey.String(c.Request.Method),
+			semconv.HTTPUserAgentKey.String(c.Request.UserAgent()),
+			semconv.HTTPClientIPKey.String(c.ClientIP()),
+			etrace.CustomTag("http.full_path", c.FullPath()),
 		)
 		c.Request = c.Request.WithContext(ctx)
-		defer span.Finish()
-		// 判断了全局jaeger的设置，所以这里一定能够断言为jaeger
-		c.Header(eapp.EgoTraceIDName(), span.(*jaeger.Span).Context().(jaeger.SpanContext).TraceID().String())
+		c.Header(eapp.EgoTraceIDName(), span.SpanContext().TraceID().String())
 		c.Next()
+		span.SetAttributes(
+			semconv.HTTPStatusCodeKey.Int64(int64(c.Writer.Status())),
+		)
+		span.End()
 	}
 }
 
@@ -278,12 +344,12 @@ func traceServerInterceptor() gin.HandlerFunc {
 // Default resource name is {method}:{path}, such as "GET:/api/users/:id"
 // Default block fallback is returning 429 code
 // Define your own behavior by setting options
-func sentinelMiddleware(config *Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		resourceName := c.Request.Method + "." + c.FullPath()
+func (c *Container) sentinelMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		resourceName := ctx.Request.Method + "." + ctx.FullPath()
 
-		if config.resourceExtract != nil {
-			resourceName = config.resourceExtract(c)
+		if c.config.resourceExtract != nil {
+			resourceName = c.config.resourceExtract(ctx)
 		}
 
 		entry, err := sentinel.Entry(
@@ -293,20 +359,19 @@ func sentinelMiddleware(config *Config) gin.HandlerFunc {
 		)
 
 		if err != nil {
-			if config.blockFallback != nil {
-				config.blockFallback(c)
+			if c.config.blockFallback != nil {
+				c.config.blockFallback(ctx)
 			} else {
-				c.AbortWithStatus(http.StatusTooManyRequests)
+				ctx.AbortWithStatus(http.StatusTooManyRequests)
 			}
 			return
 		}
 
 		defer entry.Exit()
-		c.Next()
+		ctx.Next()
 	}
 }
 
-// 获取对端ip
 func getPeerIP(addr string) string {
 	addSlice := strings.Split(addr, ":")
 	if len(addSlice) > 1 {
@@ -329,4 +394,46 @@ func getHeaderValue(c *gin.Context, key string, enableTrustedCustomHeader bool) 
 		c.Request = c.Request.WithContext(transport.WithValue(c.Request.Context(), key, value))
 	}
 	return value
+}
+
+func convert2googleResponse(rw *resWriter) *rpcpb.AttributeContext_Response {
+	return &rpcpb.AttributeContext_Response{
+		Code:    int64(rw.Status()),
+		Headers: convertHeader(rw.Header()),
+		Time:    timestamppb.New(time.Now()),
+	}
+}
+
+func convert2googleRequest(r *http.Request) *rpcpb.AttributeContext_Request {
+	return &rpcpb.AttributeContext_Request{
+		Method:  r.Method,
+		Headers: convertHeader(r.Header),
+		Path:    r.URL.Path,
+		Host:    r.Host,
+		Scheme:  r.URL.Scheme,
+		Query:   r.URL.RawQuery,
+		Time:    timestamppb.New(time.Now()),
+	}
+}
+
+func convertHeader(headers http.Header) map[string]string {
+	h := make(map[string]string)
+	for name, val := range headers {
+		h[strings.ToLower(name)] = strings.Join(val, ";")
+	}
+	return h
+}
+
+func (c *Container) checkFilter(req *http.Request, rw *resWriter) bool {
+	if c.config.aiReqResCelPrg == nil {
+		return true
+	}
+	out, _, err := c.config.aiReqResCelPrg.Eval(map[string]interface{}{
+		"request":  convert2googleRequest(req),
+		"response": convert2googleResponse(rw),
+	})
+	if err != nil {
+		c.logger.Warn("cel eval fail", elog.FieldErr(err))
+	}
+	return out == types.True
 }

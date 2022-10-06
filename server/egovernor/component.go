@@ -10,11 +10,13 @@ import (
 	"runtime/debug"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/task/ejob"
 
+	"github.com/felixge/fgprof"
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
@@ -35,6 +37,7 @@ func init() {
 	HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
 		_ = json.NewEncoder(resp).Encode(routes)
 	})
+	HandleFunc("/debug/fgprof", fgprof.Handler().(http.HandlerFunc))
 	HandleFunc("/debug/pprof/", pprof.Index)
 	HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	HandleFunc("/debug/pprof/profile", pprof.Profile)
@@ -50,8 +53,8 @@ func init() {
 		})
 	}
 
-	// 调试模式开启配置输出
-	if eapp.IsDevelopmentMode() {
+	// 调试模式开启配置输出，或者手动打开探测配置信息
+	if eapp.IsDevelopmentMode() || eapp.EgoGovernorEnableConfig() {
 		HandleFunc("/config/json", func(w http.ResponseWriter, r *http.Request) {
 			encoder := json.NewEncoder(w)
 			if r.URL.Query().Get("pretty") == "true" {
@@ -59,7 +62,6 @@ func init() {
 			}
 			_ = encoder.Encode(econf.Traverse("."))
 		})
-
 		HandleFunc("/config/raw", func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write(econf.RawConfig())
 		})
@@ -133,7 +135,14 @@ func (c *Component) Init() error {
 // Start 开始
 func (c *Component) Start() error {
 	HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		promhttp.Handler().ServeHTTP(w, r)
+		promhttp.HandlerFor(
+			prometheus.DefaultGatherer,
+			promhttp.HandlerOpts{
+				// Opt into OpenMetrics to support exemplars.
+				EnableOpenMetrics: true,
+			},
+		).ServeHTTP(w, r)
+		//promhttp.Handler().ServeHTTP(w, r)
 	})
 	err := c.Server.Serve(c.listener)
 	if err == http.ErrServerClosed {

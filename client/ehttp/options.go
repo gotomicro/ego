@@ -37,17 +37,10 @@ func WithSlowLogThreshold(slowLogThreshold time.Duration) Option {
 	}
 }
 
-// WithEnableAccessInterceptor 设置开启请求日志
-func WithEnableAccessInterceptor(enableAccessInterceptor bool) Option {
+// WithIdleConnTimeout 设置空闲连接时间
+func WithIdleConnTimeout(idleConnTimeout time.Duration) Option {
 	return func(c *Container) {
-		c.config.EnableAccessInterceptor = enableAccessInterceptor
-	}
-}
-
-// WithEnableAccessInterceptorRes 设置开启请求日志响应参数
-func WithEnableAccessInterceptorRes(enableAccessInterceptorRes bool) Option {
-	return func(c *Container) {
-		c.config.EnableAccessInterceptorRes = enableAccessInterceptorRes
+		c.config.IdleConnTimeout = idleConnTimeout
 	}
 }
 
@@ -65,9 +58,30 @@ func WithMaxIdleConnsPerHost(maxIdleConnsPerHost int) Option {
 	}
 }
 
+// WithEnableTraceInterceptor 设置开启Trace拦截器
+func WithEnableTraceInterceptor(enableTraceInterceptor bool) Option {
+	return func(c *Container) {
+		c.config.EnableTraceInterceptor = enableTraceInterceptor
+	}
+}
+
 // WithEnableKeepAlives 设置是否开启长连接，默认打开
 func WithEnableKeepAlives(enableKeepAlives bool) Option {
 	return func(c *Container) {
 		c.config.EnableKeepAlives = enableKeepAlives
+	}
+}
+
+// WithEnableAccessInterceptor 设置开启请求日志
+func WithEnableAccessInterceptor(enableAccessInterceptor bool) Option {
+	return func(c *Container) {
+		c.config.EnableAccessInterceptor = enableAccessInterceptor
+	}
+}
+
+// WithEnableAccessInterceptorRes 设置开启请求日志响应参数
+func WithEnableAccessInterceptorRes(enableAccessInterceptorRes bool) Option {
+	return func(c *Container) {
+		c.config.EnableAccessInterceptorRes = enableAccessInterceptorRes
 	}
 }

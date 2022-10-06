@@ -1,6 +1,8 @@
 package emetric
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 // HistogramVecOpts ...
 type HistogramVecOpts struct {
@@ -36,4 +38,9 @@ func (opts HistogramVecOpts) Build() *HistogramVec {
 // Observe ...
 func (histogram *HistogramVec) Observe(v float64, labels ...string) {
 	histogram.WithLabelValues(labels...).Observe(v)
+}
+
+// ObserveWithExemplar ...
+func (histogram *HistogramVec) ObserveWithExemplar(v float64, exemplar prometheus.Labels, labels ...string) {
+	histogram.WithLabelValues(labels...).(prometheus.ExemplarObserver).ObserveWithExemplar(v, exemplar)
 }

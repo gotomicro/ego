@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
@@ -46,6 +48,22 @@ type Service struct {
 // Label ...
 func (si ServiceInfo) Label() string {
 	return fmt.Sprintf("%s://%s", si.Scheme, si.Address)
+}
+
+// Equal 一定要实现这个方法，在gRPC的attributes里会使用该方法断言，判断是否相等
+func (si ServiceInfo) Equal(o interface{}) bool {
+	return reflect.DeepEqual(si, o)
+}
+
+// GetServiceValue ETCD注册需要使用的服务信息
+func (si *ServiceInfo) GetServiceValue() string {
+	val, _ := json.Marshal(si)
+	return string(val)
+}
+
+// GetServiceKey ETCD注册需要使用
+func (si *ServiceInfo) GetServiceKey(prefix string) string {
+	return fmt.Sprintf("/%s/%s/%s/%s://%s", prefix, si.Name, si.Kind.String(), si.Scheme, si.Address)
 }
 
 // Server ...

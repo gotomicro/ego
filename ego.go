@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	// 引入file的config协议
 	_ "github.com/gotomicro/ego/core/econf/file"
 	"github.com/gotomicro/ego/core/eflag"
@@ -53,8 +54,10 @@ type opts struct {
 	afterStopClean    []func() error  // 运行停止后清理
 	stopTimeout       time.Duration   // 运行停止超时时间
 	shutdownSignals   []os.Signal
+	arguments         []string // 命令行参数
 }
 
+//go:generate protoc -I. --go_out=module=github.com/gotomicro/ego/core/eerrors,Mcore/eerrors/errors.proto=github.com/gotomicro/ego/core/eerrors:core/eerrors core/eerrors/errors.proto
 // New new Ego
 func New(options ...Option) *Ego {
 	e := &Ego{
@@ -81,6 +84,7 @@ func New(options ...Option) *Ego {
 			afterStopClean:  make([]func() error, 0),
 			stopTimeout:     xtime.Duration("5s"),
 			shutdownSignals: shutdownSignals,
+			arguments:       os.Args[1:],
 		},
 	}
 
@@ -107,7 +111,7 @@ func New(options ...Option) *Ego {
 	e.inits = []func() error{
 		e.parseFlags,
 		e.printBanner,
-		printLogger,
+		//printLogger,
 		loadConfig,
 		initMaxProcs,
 		e.initLogger,
@@ -162,14 +166,8 @@ func (e *Ego) Job(runners ...ejob.Ejob) *Ego {
 	}
 
 	jobMap := make(map[string]struct{})
-	// 逗号分割可以执行多个job
-	if strings.Contains(jobFlag, ",") {
-		jobArr := strings.Split(jobFlag, ",")
-		for _, value := range jobArr {
-			jobMap[value] = struct{}{}
-		}
-	} else {
-		jobMap[jobFlag] = struct{}{}
+	for _, jobName := range strings.Split(jobFlag, ",") {
+		jobMap[jobName] = struct{}{}
 	}
 
 	for _, runner := range runners {

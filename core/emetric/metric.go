@@ -19,22 +19,8 @@ var (
 	TypeGorm = "gorm"
 	// TypeWebsocket ...
 	TypeWebsocket = "ws"
-
 	// TypeMySQL ...
 	TypeMySQL = "mysql"
-
-	// CodeJobSuccess ...
-	CodeJobSuccess = "ok"
-	// CodeJobFail ...
-	CodeJobFail = "fail"
-	// CodeJobReentry ...
-	CodeJobReentry = "reentry"
-
-	// CodeCacheMiss ...
-	CodeCacheMiss = "miss"
-	// CodeCacheHit ...
-	CodeCacheHit = "hit"
-
 	// DefaultNamespace ...
 	DefaultNamespace = "ego"
 )
@@ -44,14 +30,21 @@ var (
 	ServerHandleCounter = CounterVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "server_handle_total",
-		Labels:    []string{"type", "method", "peer", "code"},
+		Labels:    []string{"type", "method", "peer", "code", "uniform_code", "rpc_service"},
+	}.Build()
+
+	// ServerStartedCounter ...
+	ServerStartedCounter = CounterVecOpts{
+		Namespace: DefaultNamespace,
+		Name:      "server_started_total",
+		Labels:    []string{"type", "method", "peer", "rpc_service"},
 	}.Build()
 
 	// ServerHandleHistogram ...
 	ServerHandleHistogram = HistogramVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "server_handle_seconds",
-		Labels:    []string{"type", "method", "peer"},
+		Labels:    []string{"type", "method", "peer", "rpc_service"},
 	}.Build()
 
 	// ClientHandleCounter ...
@@ -61,11 +54,25 @@ var (
 		Labels:    []string{"type", "name", "method", "peer", "code"},
 	}.Build()
 
+	// ClientStartedCounter ...
+	ClientStartedCounter = CounterVecOpts{
+		Namespace: DefaultNamespace,
+		Name:      "client_started_total",
+		Labels:    []string{"type", "name", "method", "peer"},
+	}.Build()
+
 	// ClientHandleHistogram ...
 	ClientHandleHistogram = HistogramVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "client_handle_seconds",
 		Labels:    []string{"type", "name", "method", "peer"},
+	}.Build()
+
+	// ClientStatsGauge ...
+	ClientStatsGauge = GaugeVecOpts{
+		Namespace: DefaultNamespace,
+		Name:      "client_stats_gauge",
+		Labels:    []string{"type", "name", "index"},
 	}.Build()
 
 	// JobHandleCounter ...
@@ -81,19 +88,25 @@ var (
 		Name:      "job_handle_seconds",
 		Labels:    []string{"type", "name"},
 	}.Build()
+
 	// LibHandleHistogram ...
+	// Deprecated LibHandleHistogram
 	LibHandleHistogram = HistogramVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "lib_handle_seconds",
 		Labels:    []string{"type", "method", "address"},
 	}.Build()
+
 	// LibHandleCounter ...
+	// Deprecated LibHandleCounter
 	LibHandleCounter = CounterVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "lib_handle_total",
 		Labels:    []string{"type", "method", "address", "code"},
 	}.Build()
+
 	// LibHandleSummary ...
+	// Deprecated LibHandleSummary
 	LibHandleSummary = SummaryVecOpts{
 		Namespace: DefaultNamespace,
 		Name:      "lib_handle_stats",

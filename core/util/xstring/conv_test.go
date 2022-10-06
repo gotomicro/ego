@@ -54,3 +54,14 @@ func TestToCamelCase(t *testing.T) {
 		})
 	}
 }
+
+func TestToCamelCaseLess2(t *testing.T) {
+	str := "a"
+
+	want := "a"
+
+	if got := ToCamelCase(str); got != want {
+		t.Errorf("ToCamelCase() = %v, want %v", got, want)
+	}
+
+}

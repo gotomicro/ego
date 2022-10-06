@@ -49,9 +49,9 @@ func FieldCode(value int32) Field {
 	return Int32("code", value)
 }
 
-// FieldOriginCode 原始code
-func FieldOriginCode(value int32) Field {
-	return Int32("ocode", value)
+// FieldUniformCode uniform code
+func FieldUniformCode(value int32) Field {
+	return Int32("ucode", value)
 }
 
 // FieldTid 设置链路id
@@ -147,4 +147,9 @@ func FieldPeerName(value string) Field {
 // FieldCustomKeyValue 设置自定义日志
 func FieldCustomKeyValue(key string, value string) Field {
 	return String(strings.ToLower(key), value)
+}
+
+// FieldLogName 设置ego日志的log name，用于stderr区分系统日志和业务日志
+func FieldLogName(value string) Field {
+	return String("lname", value)
 }

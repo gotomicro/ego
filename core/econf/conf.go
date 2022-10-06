@@ -57,6 +57,7 @@ func (c *Configuration) Sub(key string) *Configuration {
 	return &Configuration{
 		keyDelim: c.keyDelim,
 		override: c.GetStringMap(key),
+		keyMap:   &sync.Map{},
 	}
 }
 
@@ -354,6 +355,7 @@ func (c *Configuration) UnmarshalKey(key string, rawVal interface{}, opts ...Opt
 		Result:           rawVal,
 		TagName:          options.TagName,
 		WeaklyTypedInput: options.WeaklyTypedInput,
+		Squash:           options.Squash,
 	}
 	decoder, err := mapstructure.NewDecoder(&config)
 	if err != nil {

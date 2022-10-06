@@ -14,7 +14,7 @@ type Container struct {
 // DefaultContainer 默认容器
 func DefaultContainer() *Container {
 	return &Container{
-		config: DefaultConfig(),
+		config: defaultConfig(),
 	}
 }
 
@@ -40,16 +40,24 @@ func (c *Container) Build(options ...Option) *Component {
 		c.config.EnableAddCaller = true // 调试模式，增加行号输出
 	}
 
-	if c.config.Debug {
-		c.config.encoderConfig = defaultDebugConfig()
-	}
-
+	// 如果用户设置了该配置，那么该配置被用户接管
+	// 如果用户没有设置，那么使用默认配置
 	if c.config.encoderConfig == nil {
-		c.config.encoderConfig = defaultZapConfig()
+		if c.config.Debug {
+			c.config.encoderConfig = defaultDebugConfig()
+		} else {
+			c.config.encoderConfig = defaultZapConfig()
+		}
 	}
 
 	if eapp.EnableLoggerAddApp() {
 		c.config.fields = append(c.config.fields, FieldApp(eapp.Name()))
+	}
+
+	// 设置ego日志的log name，用于stderr区分系统日志和业务日志
+	// config writer setting > env writer setting
+	if c.config.Writer == "stderr" || (c.config.Writer == "" && eapp.EgoLogWriter() == "stderr") {
+		c.config.fields = append(c.config.fields, FieldLogName(c.config.Name))
 	}
 
 	return newLogger(c.name, c.name, c.config)

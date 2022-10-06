@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 
-	"google.golang.org/grpc"
+	"github.com/gotomicro/ego/server/egovernor"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"github.com/gotomicro/ego"
@@ -19,10 +17,10 @@ import (
 //  export EGO_DEBUG=true && go run main.go --config=config.toml
 func main() {
 	if err := ego.New().Serve(func() server.Server {
-		server := egrpc.Load("server.grpc").Build()
-		helloworld.RegisterGreeterServer(server.Server, &Greeter{server: server})
-		return server
-	}()).Run(); err != nil {
+		component := egrpc.Load("server.grpc").Build()
+		helloworld.RegisterGreeterServer(component.Server, &Greeter{server: component})
+		return component
+	}(), egovernor.Load("server.governor").Build()).Run(); err != nil {
 		elog.Panic("startup", elog.FieldErr(err))
 	}
 }
@@ -34,15 +32,29 @@ type Greeter struct {
 }
 
 // SayHello ...
-func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+func (g Greeter) SayHello(ctx context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
 	if request.Name == "error" {
 		return nil, status.Error(codes.Unavailable, "error")
 	}
-	header := metadata.Pairs("x-header-key", "val")
-	err := grpc.SendHeader(context, header)
-	if err != nil {
-		return nil, fmt.Errorf("set header fail, %w", err)
-	}
+	//header := metadata.Pairs("x-header-key", "val")
+	//err := grpc.SendHeader(context, header)
+	//if err != nil {
+	//	return nil, fmt.Errorf("set header fail, %w", err)
+	//}
+	//go func() {
+	//	for {
+	//		select {
+	//		case <-ctx.Done():
+	//			fmt.Println(ctx.Err())
+	//			return
+	//		}
+	//	}
+	//}()
+
+	<-ctx.Done()
+	return nil, ctx.Err()
+
+	//time.Sleep(xtime.Duration("2s"))
 	return &helloworld.HelloResponse{
 		Message: "Hello EGO, I'm " + g.server.Address(),
 	}, nil

@@ -5,36 +5,40 @@ import (
 	"strings"
 
 	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/internal/ienv"
 )
 
 var (
-	appMode         string
-	appRegion       string
-	appZone         string
-	appInstance     string // 通常是实例的机器名
-	egoDebug        string
-	egoLogPath      string
-	egoLogAddApp    string
-	egoTraceIDName  string
-	egoLogExtraKeys []string
+	appMode                 string
+	appRegion               string
+	appZone                 string
+	appInstance             string // 通常是实例的机器名
+	egoDebug                string
+	egoLogPath              string
+	egoLogAddApp            string
+	egoTraceIDName          string
+	egoLogExtraKeys         []string
+	egoLogWriter            string
+	egoGovernorEnableConfig string
+	egoLogTimeType          string
 )
 
 func initEnv() {
 	appMode = os.Getenv(constant.EnvAppMode)
 	appRegion = os.Getenv(constant.EnvAppRegion)
 	appZone = os.Getenv(constant.EnvAppZone)
-	appInstance = os.Getenv(constant.EnvAppInstance)
-	if appInstance == "" {
-		appInstance = HostName()
-	}
+	appInstance = ienv.EnvOrStr(constant.EnvAppInstance, HostName())
 	egoDebug = os.Getenv(constant.EgoDebug)
 	egoLogPath = os.Getenv(constant.EgoLogPath)
 	egoLogAddApp = os.Getenv(constant.EgoLogAddApp)
-	egoTraceIDName = os.Getenv(constant.EgoTraceIDName)
-	if egoTraceIDName == "" {
-		egoTraceIDName = "x-trace-id"
-	}
+	egoTraceIDName = ienv.EnvOrStr(constant.EgoTraceIDName, "x-trace-id")
+	egoGovernorEnableConfig = os.Getenv(constant.EgoGovernorEnableConfig)
 	egoLogExtraKeys = strings.Split(os.Getenv(constant.EgoLogExtraKeys), ",")
+	egoLogWriter = ienv.EnvOrStr(constant.EgoLogWriter, "file")
+	egoLogTimeType = ienv.EnvOrStr(constant.EgoLogTimeType, "second")
+	if IsDevelopmentMode() {
+		egoLogTimeType = "%Y-%m-%d %H:%M:%S"
+	}
 }
 
 // AppMode 获取应用运行的环境
@@ -57,7 +61,7 @@ func AppInstance() string {
 	return appInstance
 }
 
-// IsDevelopmentMode 判断是否是生产模式
+// IsDevelopmentMode 判断是否是测试模式
 func IsDevelopmentMode() bool {
 	return egoDebug == "true"
 }
@@ -80,4 +84,24 @@ func EgoTraceIDName() string {
 // EgoLogExtraKeys 获取自定义loggerKeys
 func EgoLogExtraKeys() []string {
 	return egoLogExtraKeys
+}
+
+// EgoLogWriter ...
+func EgoLogWriter() string {
+	return egoLogWriter
+}
+
+// EgoGovernorEnableConfig ...
+func EgoGovernorEnableConfig() bool {
+	return egoGovernorEnableConfig == "true"
+}
+
+// EgoLogTimeType ...
+func EgoLogTimeType() string {
+	return egoLogTimeType
+}
+
+// SetEgoDebug 设置调试模式，"true" or "false"
+func SetEgoDebug(flag string) {
+	egoDebug = flag
 }

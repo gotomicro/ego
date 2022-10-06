@@ -6,7 +6,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/gotomicro/ego/core/elog"
@@ -17,6 +18,7 @@ import (
 type wrappedJob struct {
 	NamedJob
 	logger *elog.Component
+	tracer *etrace.Tracer
 }
 
 // Run ...
@@ -25,16 +27,16 @@ func (wj wrappedJob) Run() {
 }
 
 func (wj wrappedJob) run() {
-	span, ctx := etrace.StartSpanFromContext(
-		context.Background(),
-		"ego-cron",
-	)
-	defer span.Finish()
+	ctx, span := wj.tracer.Start(context.Background(), "ego-cron", nil, trace.WithAttributes(
+		attribute.String("ecron.name", wj.Name()),
+	))
+	defer span.End()
+
 	traceID := etrace.ExtractTraceID(ctx)
 	emetric.JobHandleCounter.Inc("cron", wj.Name(), "begin")
 	var fields = []elog.Field{zap.String("name", wj.Name())}
 	// 如果设置了链路，增加链路信息
-	if opentracing.IsGlobalTracerRegistered() {
+	if etrace.IsGlobalTracerRegistered() {
 		fields = append(fields, elog.FieldTid(traceID))
 	}
 

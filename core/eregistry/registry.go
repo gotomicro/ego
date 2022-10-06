@@ -2,8 +2,6 @@ package eregistry
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"io"
 
 	"google.golang.org/grpc/resolver"
@@ -42,48 +40,23 @@ type SyncServicesOptions struct {
 	GrpcResolverNowOptions resolver.ResolveNowOptions
 }
 
-// GetServiceKey ..
+// GetServiceKey ETCD注册需要使用
+// Deprecated: Use *server.ServiceInfo.GetServiceKey()
 func GetServiceKey(prefix string, s *server.ServiceInfo) string {
-	return fmt.Sprintf("/%s/%s/%s/%s://%s", prefix, s.Name, s.Kind.String(), s.Scheme, s.Address)
+	return s.GetServiceKey(prefix)
 }
 
-// GetServiceValue ..
+// GetServiceValue ETCD注册需要使用
+// Deprecated: Use *server.ServiceInfo.GetServiceValue()
 func GetServiceValue(s *server.ServiceInfo) string {
-	val, _ := json.Marshal(s)
-	return string(val)
+	return s.GetServiceValue()
 }
 
-// GetService ..
-func GetService(s string) *server.ServiceInfo {
-	var si server.ServiceInfo
-	_ = json.Unmarshal([]byte(s), &si)
-	return &si
-}
-
-// Nop registry, used for local development/debugging
-type Nop struct{}
-
-// ListServices ...
-func (n Nop) ListServices(ctx context.Context, target Target) ([]*server.ServiceInfo, error) {
-	panic("implement me")
-}
-
-// WatchServices ...
-func (n Nop) WatchServices(ctx context.Context, target Target) (chan Endpoints, error) {
-	panic("implement me")
-}
-
-// RegisterService ...
-func (n Nop) RegisterService(context.Context, *server.ServiceInfo) error { return nil }
-
-// UnregisterService ...
-func (n Nop) UnregisterService(context.Context, *server.ServiceInfo) error { return nil }
-
-// SyncServices 同步所有服务
-func (n Nop) SyncServices(context.Context, SyncServicesOptions) error { return nil }
-
-// Close ...
-func (n Nop) Close() error { return nil }
+//func GetService(s string) *server.ServiceInfo {
+//	var si server.ServiceInfo
+//	_ = json.Unmarshal([]byte(s), &si)
+//	return &si
+//}
 
 // Configuration ...
 type Configuration struct {

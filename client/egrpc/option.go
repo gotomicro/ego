@@ -1,9 +1,12 @@
 package egrpc
 
 import (
+	"context"
+	"net"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/test/bufconn"
 )
 
 // WithAddr setting grpc server address
@@ -76,5 +79,19 @@ func WithEnableAccessInterceptorReq(enableAccessInterceptorReq bool) Option {
 func WithEnableAccessInterceptorRes(enableAccessInterceptorRes bool) Option {
 	return func(c *Container) {
 		c.config.EnableAccessInterceptorRes = enableAccessInterceptorRes
+	}
+}
+
+// WithBufnetServerListener 写入bufnet listener
+func WithBufnetServerListener(svc net.Listener) Option {
+	return WithDialOption(grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
+		return svc.(*bufconn.Listener).Dial()
+	}))
+}
+
+// WithName name
+func WithName(name string) Option {
+	return func(c *Container) {
+		c.name = name
 	}
 }

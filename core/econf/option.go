@@ -16,3 +16,10 @@ func WithWeaklyTypedInput(weaklyTypedInput bool) Option {
 		o.WeaklyTypedInput = weaklyTypedInput
 	}
 }
+
+// WithSquash 设置Squash
+func WithSquash(squash bool) Option {
+	return func(o *Container) {
+		o.Squash = squash
+	}
+}

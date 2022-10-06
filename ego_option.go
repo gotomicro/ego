@@ -22,6 +22,13 @@ func WithDisableBanner(disableBanner bool) Option {
 	}
 }
 
+// WithArguments 传入arguments
+func WithArguments(arguments []string) Option {
+	return func(a *Ego) {
+		a.opts.arguments = arguments
+	}
+}
+
 // WithDisableFlagConfig 禁止config
 func WithDisableFlagConfig(disableFlagConfig bool) Option {
 	return func(a *Ego) {

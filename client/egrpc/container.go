@@ -45,7 +45,8 @@ func (c *Container) Build(options ...Option) *Component {
 	// 最先执行trace
 	if c.config.EnableTraceInterceptor {
 		options = append(options,
-			WithDialOption(grpc.WithChainUnaryInterceptor(traceUnaryClientInterceptor())),
+			WithDialOption(grpc.WithChainUnaryInterceptor(c.traceUnaryClientInterceptor())),
+			WithDialOption(grpc.WithChainStreamInterceptor(c.traceStreamClientInterceptor())),
 		)
 	}
 
@@ -53,24 +54,24 @@ func (c *Container) Build(options ...Option) *Component {
 	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(customHeader(transport.CustomContextKeys()))))
 
 	// 默认日志
-	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(loggerUnaryClientInterceptor(c.logger, c.config))))
+	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(c.loggerUnaryClientInterceptor())))
 
 	if eapp.IsDevelopmentMode() {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(debugUnaryClientInterceptor(c.name, c.config.Addr))))
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(c.debugUnaryClientInterceptor())))
 	}
 
 	if c.config.EnableAppNameInterceptor {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(defaultUnaryClientInterceptor(c.config))))
-		options = append(options, WithDialOption(grpc.WithChainStreamInterceptor(defaultStreamClientInterceptor(c.config))))
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(c.defaultUnaryClientInterceptor())))
+		options = append(options, WithDialOption(grpc.WithChainStreamInterceptor(c.defaultStreamClientInterceptor())))
 	}
 
 	if c.config.EnableTimeoutInterceptor {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(timeoutUnaryClientInterceptor(c.logger, c.config.ReadTimeout, c.config.SlowLogThreshold))))
+		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(c.timeoutUnaryClientInterceptor())))
 	}
 
 	if c.config.EnableMetricInterceptor {
 		options = append(options,
-			WithDialOption(grpc.WithChainUnaryInterceptor(metricUnaryClientInterceptor(c.name))),
+			WithDialOption(grpc.WithChainUnaryInterceptor(c.metricUnaryClientInterceptor())),
 		)
 	}
 

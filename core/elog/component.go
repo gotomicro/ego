@@ -1,17 +1,12 @@
 package elog
 
 import (
-	"fmt"
-	"log"
-	"runtime"
 	"strings"
-	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/util/xcolor"
 )
 
 const (
@@ -88,7 +83,6 @@ func newLogger(name string, key string, config *Config) *Component {
 	}
 
 	// 默认日志级别
-	config.al = zap.NewAtomicLevelAt(zapcore.InfoLevel)
 	if err := config.al.UnmarshalText([]byte(config.Level)); err != nil {
 		panic(err)
 	}
@@ -116,6 +110,16 @@ func newLogger(name string, key string, config *Config) *Component {
 	}
 	return l
 
+}
+
+// ZapLogger returns *zap.Logger
+func (logger *Component) ZapLogger() *zap.Logger {
+	return logger.desugar
+}
+
+// ZapSugaredLogger returns *zap.SugaredLogger
+func (logger *Component) ZapSugaredLogger() *zap.SugaredLogger {
+	return logger.sugar
 }
 
 // AutoLevel ...
@@ -152,70 +156,9 @@ func (logger *Component) Flush() error {
 	return nil
 }
 
-func defaultZapConfig() *zapcore.EncoderConfig {
-	return &zapcore.EncoderConfig{
-		TimeKey:        "ts",
-		LevelKey:       "lv",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "msg",
-		StacktraceKey:  "stack",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     timeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
-}
-
-func defaultDebugConfig() *zapcore.EncoderConfig {
-	return &zapcore.EncoderConfig{
-		TimeKey:        "ts",
-		LevelKey:       "lv",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "msg",
-		StacktraceKey:  "stack",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    debugEncodeLevel,
-		EncodeTime:     timeDebugEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
-}
-
-// debugEncodeLevel ...
-func debugEncodeLevel(lv zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
-	var colorize = xcolor.Red
-	switch lv {
-	case zapcore.DebugLevel:
-		colorize = xcolor.Blue
-	case zapcore.InfoLevel:
-		colorize = xcolor.Green
-	case zapcore.WarnLevel:
-		colorize = xcolor.Yellow
-	case zapcore.ErrorLevel, zap.PanicLevel, zap.DPanicLevel, zap.FatalLevel:
-		colorize = xcolor.Red
-	default:
-	}
-	enc.AppendString(colorize(lv.CapitalString()))
-}
-
-func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendInt64(t.Unix())
-}
-
-func timeDebugEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(t.Format("2006-01-02 15:04:05"))
-}
-
 // IsDebugMode ...
 func (logger *Component) IsDebugMode() bool {
 	return logger.config.Debug
-}
-
-func normalizeMessage(msg string) string {
-	return fmt.Sprintf("%-32s", msg)
 }
 
 // Debug ...
@@ -227,6 +170,7 @@ func (logger *Component) Debug(msg string, fields ...Field) {
 }
 
 // Debugw ...
+// Deprecated: Will be removed in future versions, use *Component.Debug instead.
 func (logger *Component) Debugw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -234,24 +178,10 @@ func (logger *Component) Debugw(msg string, keysAndValues ...interface{}) {
 	logger.sugar.Debugw(msg, keysAndValues...)
 }
 
-func sprintf(template string, args ...interface{}) string {
-	msg := template
-	if msg == "" && len(args) > 0 {
-		msg = fmt.Sprint(args...)
-	} else if msg != "" && len(args) > 0 {
-		msg = fmt.Sprintf(template, args...)
-	}
-	return msg
-}
-
-// StdLog ...
-func (logger *Component) StdLog() *log.Logger {
-	return zap.NewStdLog(logger.desugar)
-}
-
 // Debugf ...
+// Deprecated: Will be removed in future versions, use *Component.Debug instead.
 func (logger *Component) Debugf(template string, args ...interface{}) {
-	logger.sugar.Debugw(sprintf(template, args...))
+	logger.sugar.Debugf(template, args...)
 }
 
 // Info ...
@@ -263,6 +193,7 @@ func (logger *Component) Info(msg string, fields ...Field) {
 }
 
 // Infow ...
+// Deprecated: Will be removed in future versions, use *Component.Info instead.
 func (logger *Component) Infow(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -271,8 +202,9 @@ func (logger *Component) Infow(msg string, keysAndValues ...interface{}) {
 }
 
 // Infof ...
+// Deprecated: Will be removed in future versions, use *Component.Info instead.
 func (logger *Component) Infof(template string, args ...interface{}) {
-	logger.sugar.Infof(sprintf(template, args...))
+	logger.sugar.Infof(template, args...)
 }
 
 // Warn ...
@@ -284,6 +216,7 @@ func (logger *Component) Warn(msg string, fields ...Field) {
 }
 
 // Warnw ...
+// Deprecated: Will be removed in future versions, use *Component.Warn instead.
 func (logger *Component) Warnw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -292,8 +225,9 @@ func (logger *Component) Warnw(msg string, keysAndValues ...interface{}) {
 }
 
 // Warnf ...
+// Deprecated: Will be removed in future versions, use *Component.Warn instead.
 func (logger *Component) Warnf(template string, args ...interface{}) {
-	logger.sugar.Warnf(sprintf(template, args...))
+	logger.sugar.Warnf(template, args...)
 }
 
 // Error ...
@@ -305,6 +239,7 @@ func (logger *Component) Error(msg string, fields ...Field) {
 }
 
 // Errorw ...
+// Deprecated: Will be removed in future versions, use *Component.Error instead.
 func (logger *Component) Errorw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -313,8 +248,9 @@ func (logger *Component) Errorw(msg string, keysAndValues ...interface{}) {
 }
 
 // Errorf ...
+// Deprecated: Will be removed in future versions, use *Component.Error instead.
 func (logger *Component) Errorf(template string, args ...interface{}) {
-	logger.sugar.Errorf(sprintf(template, args...))
+	logger.sugar.Errorf(template, args...)
 }
 
 // Panic ...
@@ -327,6 +263,7 @@ func (logger *Component) Panic(msg string, fields ...Field) {
 }
 
 // Panicw ...
+// Deprecated: Will be removed in future versions, use *Component.Panic instead.
 func (logger *Component) Panicw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -335,8 +272,9 @@ func (logger *Component) Panicw(msg string, keysAndValues ...interface{}) {
 }
 
 // Panicf ...
+// Deprecated: Will be removed in future versions, use *Component.Panic instead.
 func (logger *Component) Panicf(template string, args ...interface{}) {
-	logger.sugar.Panicf(sprintf(template, args...))
+	logger.sugar.Panicf(template, args...)
 }
 
 // DPanic ...
@@ -349,6 +287,7 @@ func (logger *Component) DPanic(msg string, fields ...Field) {
 }
 
 // DPanicw ...
+// Deprecated: Will be removed in future versions, use *Component.DPanic instead.
 func (logger *Component) DPanicw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -357,21 +296,23 @@ func (logger *Component) DPanicw(msg string, keysAndValues ...interface{}) {
 }
 
 // DPanicf ...
+// Deprecated: Will be removed in future versions, use *Component.DPanic instead.
 func (logger *Component) DPanicf(template string, args ...interface{}) {
-	logger.sugar.DPanicf(sprintf(template, args...))
+	logger.sugar.DPanicf(template, args...)
 }
 
 // Fatal ...
 func (logger *Component) Fatal(msg string, fields ...Field) {
 	if logger.IsDebugMode() {
 		panicDetail(msg, fields...)
-		//msg = normalizeMessage(msg)
+		// msg = normalizeMessage(msg)
 		return
 	}
 	logger.desugar.Fatal(msg, fields...)
 }
 
 // Fatalw ...
+// Deprecated: Will be removed in future versions, use *Component.Fatal instead.
 func (logger *Component) Fatalw(msg string, keysAndValues ...interface{}) {
 	if logger.IsDebugMode() {
 		msg = normalizeMessage(msg)
@@ -380,27 +321,12 @@ func (logger *Component) Fatalw(msg string, keysAndValues ...interface{}) {
 }
 
 // Fatalf ...
+// Deprecated: Will be removed in future versions, use *Component.Fatal instead.
 func (logger *Component) Fatalf(template string, args ...interface{}) {
-	logger.sugar.Fatalf(sprintf(template, args...))
+	logger.sugar.Fatalf(template, args...)
 }
 
-func panicDetail(msg string, fields ...Field) {
-	enc := zapcore.NewMapObjectEncoder()
-	for _, field := range fields {
-		field.AddTo(enc)
-	}
-
-	// 控制台输出
-	fmt.Printf("%s: \n    %s: %s\n", xcolor.Red("panic"), xcolor.Red("msg"), msg)
-	if _, file, line, ok := runtime.Caller(3); ok {
-		fmt.Printf("    %s: %s:%d\n", xcolor.Red("loc"), file, line)
-	}
-	for key, val := range enc.Fields {
-		fmt.Printf("    %s: %s\n", xcolor.Red(key), fmt.Sprintf("%+v", val))
-	}
-}
-
-// With ...
+// With creates a child logger
 func (logger *Component) With(fields ...Field) *Component {
 	desugarLogger := logger.desugar.With(fields...)
 	return &Component{

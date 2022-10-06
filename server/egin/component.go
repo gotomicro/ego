@@ -4,15 +4,19 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
-
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
@@ -23,19 +27,20 @@ const PackageName = "server.egin"
 
 // Component ...
 type Component struct {
-	mu     sync.Mutex
-	name   string
-	config *Config
-	logger *elog.Component
 	*gin.Engine
+	mu               sync.Mutex
+	name             string
+	config           *Config
+	logger           *elog.Component
 	Server           *http.Server
 	listener         net.Listener
 	routerCommentMap map[string]string // router的中文注释，非并发安全
+	embedWrapper     *EmbedWrapper
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
 	gin.SetMode(config.Mode)
-	return &Component{
+	comp := &Component{
 		name:             name,
 		config:           config,
 		logger:           logger,
@@ -43,6 +48,17 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		listener:         nil,
 		routerCommentMap: make(map[string]string),
 	}
+
+	if config.EmbedPath != "" {
+		comp.embedWrapper = &EmbedWrapper{
+			embedFs: config.embedFs,
+			path:    config.EmbedPath,
+		}
+	}
+
+	// 设置信任的header头
+	comp.Engine.TrustedPlatform = config.TrustedPlatform
+	return comp
 }
 
 // Name 配置名称
@@ -57,12 +73,16 @@ func (c *Component) PackageName() string {
 
 // Init 初始化
 func (c *Component) Init() error {
-	listener, err := net.Listen("tcp", c.config.Address())
-	if err != nil {
-		c.logger.Panic("new egin server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
+	var err error
+	if c.config.Network == "local" {
+		c.listener = newLocalListener()
+	} else {
+		c.listener, err = net.Listen(c.config.Network, c.config.Address())
+		if err != nil {
+			c.logger.Panic("new egin server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
+		}
 	}
-	c.config.Port = listener.Addr().(*net.TCPAddr).Port
-	c.listener = listener
+	c.config.Port = c.listener.Addr().(*net.TCPAddr).Port
 	return nil
 }
 
@@ -82,11 +102,16 @@ func (c *Component) Start() error {
 			c.logger.Info("add route", elog.FieldMethod(route.Method), elog.String("path", route.Path))
 		}
 	}
+
 	// 因为start和stop在多个goroutine里，需要对Server上写锁
 	c.mu.Lock()
 	c.Server = &http.Server{
-		Addr:    c.config.Address(),
-		Handler: c,
+		Addr: c.config.Address(),
+		//Handler:           http.TimeoutHandler(c, 1*time.Second, "timeout"),
+		Handler:           c,
+		ReadHeaderTimeout: c.config.ServerReadHeaderTimeout,
+		ReadTimeout:       c.config.ServerReadTimeout,
+		WriteTimeout:      c.config.ServerWriteTimeout,
 	}
 	c.mu.Unlock()
 	var err error
@@ -147,6 +172,7 @@ func (c *Component) buildTLSConfig() (*tls.Config, error) {
 	tlsConfig.Certificates = []tls.Certificate{serverCert}
 	tlsConfig.ClientCAs = x509.NewCertPool()
 	tlsConfig.ClientAuth = c.config.ClientAuthType()
+	tlsConfig.ClientSessionCache = c.config.TLSSessionCache
 	clientCAs := c.config.TLSClientCAs
 	for i := range clientCAs {
 		clientCA := clientCAs[i]
@@ -159,4 +185,45 @@ func (c *Component) buildTLSConfig() (*tls.Config, error) {
 		}
 	}
 	return tlsConfig, nil
+}
+
+// HTTPEmbedFs http的文件系统
+func (c *Component) HTTPEmbedFs() http.FileSystem {
+	return http.FS(c.embedWrapper)
+}
+
+// GetEmbedWrapper http的文件系统
+func (c *Component) GetEmbedWrapper() *EmbedWrapper {
+	return c.embedWrapper
+}
+
+// Listener listener信息
+func (c *Component) Listener() net.Listener {
+	return c.listener
+}
+
+// EmbedWrapper 嵌入普通的静态资源的wrapper
+type EmbedWrapper struct {
+	embedFs embed.FS // 静态资源
+	path    string   // 设置embed文件到静态资源的相对路径，也就是embed注释里的路径
+}
+
+// Open 静态资源被访问的核心逻辑
+func (e *EmbedWrapper) Open(name string) (fs.File, error) {
+	if filepath.Separator != '/' && strings.ContainsRune(name, filepath.Separator) {
+		return nil, errors.New("http: invalid character in file path")
+	}
+	fullName := filepath.ToSlash(path.Join(e.path, path.Clean("/"+name)))
+	file, err := e.embedFs.Open(fullName)
+	return file, err
+}
+
+func newLocalListener() net.Listener {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		if l, err = net.Listen("tcp6", "[::1]:0"); err != nil {
+			panic(fmt.Sprintf("httptest: failed to listen on a port: %v", err))
+		}
+	}
+	return l
 }

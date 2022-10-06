@@ -1,6 +1,5 @@
 [people]
     name = "ego"
 [logger.default]
-    debug = true
 [server.governor]
     enable = false

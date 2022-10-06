@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
-	"testing"
 )
 
 var (
@@ -19,7 +17,6 @@ func init() {
 		flags:   defaultFlags,
 		actions: make(map[string]func(string, *FlagSet)),
 	}
-	testing.Init()
 }
 
 // Flag ...
@@ -37,9 +34,18 @@ type (
 	}
 )
 
-// setFlagSet 设置flagSet
-func setFlagSet(fs *FlagSet) {
+// SetFlagSet 设置flagSet
+func SetFlagSet(fs *FlagSet) {
 	flagset = fs
+}
+
+// NewFlagSet new flagSet
+func NewFlagSet(flagCommand *flag.FlagSet, flags ...Flag) *FlagSet {
+	return &FlagSet{
+		FlagSet: flagCommand,
+		flags:   flags,
+		actions: make(map[string]func(string, *FlagSet)),
+	}
 }
 
 // Register ...
@@ -65,6 +71,11 @@ func Parse() error {
 	return flagset.Parse()
 }
 
+// ParseWithArgs parses the flagset with given args.
+func ParseWithArgs(arguments []string) error {
+	return flagset.ParseWithArgs(arguments)
+}
+
 // Lookup lookup flag value by name
 // priority: flag > env > default
 func (fs *FlagSet) Lookup(name string) *flag.Flag {
@@ -73,6 +84,11 @@ func (fs *FlagSet) Lookup(name string) *flag.Flag {
 
 // Parse parses provided flagset.
 func (fs *FlagSet) Parse() error {
+	return fs.ParseWithArgs(os.Args[1:])
+}
+
+// ParseWithArgs parses provided flagset with given args.
+func (fs *FlagSet) ParseWithArgs(arguments []string) error {
 	if fs.Parsed() {
 		return nil
 	}
@@ -81,7 +97,7 @@ func (fs *FlagSet) Parse() error {
 	}
 
 	// 解析命令行参数
-	if err := fs.FlagSet.Parse(os.Args[1:]); err != nil {
+	if err := fs.FlagSet.Parse(arguments); err != nil {
 		return err
 	}
 
@@ -202,46 +218,4 @@ func Float64(name string) float64 { return flagset.Float64(name) }
 func (fs *FlagSet) Float64(name string) float64 {
 	ret, _ := fs.Float64E(name)
 	return ret
-}
-
-// UintFlag is an uint flag implements of Flag interface.
-type UintFlag struct {
-	Name     string
-	Usage    string
-	Default  uint
-	Variable *uint
-	Action   func(string, *FlagSet)
-}
-
-// Apply implements of Flag Apply function.
-func (f *UintFlag) Apply(set *FlagSet) {
-	for _, field := range strings.Split(f.Name, ",") {
-		field = strings.TrimSpace(field)
-		if f.Variable != nil {
-			set.FlagSet.UintVar(f.Variable, field, f.Default, f.Usage)
-		}
-		set.FlagSet.Uint(field, f.Default, f.Usage)
-		set.actions[field] = f.Action
-	}
-}
-
-// Float64Flag is a float flag implements of Flag interface.
-type Float64Flag struct {
-	Name     string
-	Usage    string
-	Default  float64
-	Variable *float64
-	Action   func(string, *FlagSet)
-}
-
-// Apply implements of Flag Apply function.
-func (f *Float64Flag) Apply(set *FlagSet) {
-	for _, field := range strings.Split(f.Name, ",") {
-		field = strings.TrimSpace(field)
-		if f.Variable != nil {
-			set.FlagSet.Float64Var(f.Variable, field, f.Default, f.Usage)
-		}
-		set.FlagSet.Float64(field, f.Default, f.Usage)
-		set.actions[field] = f.Action
-	}
 }

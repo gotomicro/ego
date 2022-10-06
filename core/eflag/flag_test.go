@@ -29,6 +29,35 @@ func TestFlagSet_Register_Length(t *testing.T) {
 	assert.Equal(t, 1, len(flagset.flags))
 }
 
+func TestFlagSetInt_Register_Length(t *testing.T) {
+	resetFlagSet()
+	Register(&IntFlag{
+		Name:   "int",
+		Usage:  "--int",
+		Action: func(name string, fs *FlagSet) {},
+	})
+	assert.Equal(t, 1, len(flagset.flags))
+}
+
+func TestFlagSetUint_Register_Length(t *testing.T) {
+	resetFlagSet()
+	Register(&UintFlag{
+		Name:   "uint",
+		Usage:  "--uint",
+		Action: func(name string, fs *FlagSet) {},
+	})
+	assert.Equal(t, 1, len(flagset.flags))
+}
+
+func TestFlagSetFloat64_Register_Length(t *testing.T) {
+	resetFlagSet()
+	Register(&UintFlag{
+		Name:   "float64",
+		Usage:  "--float64",
+		Action: func(name string, fs *FlagSet) {},
+	})
+	assert.Equal(t, 1, len(flagset.flags))
+}
 func TestFlagSet_Register_Default(t *testing.T) {
 	resetFlagSet()
 	Register(&StringFlag{
@@ -197,12 +226,58 @@ func TestFlagSet_Register_Bool(t *testing.T) {
 	assert.Equal(t, false, boolFlag)
 }
 
+func TestNewFlagSet(t *testing.T) {
+	obj := NewFlagSet(nil)
+	assert.Nil(t, obj.FlagSet)
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	obj2 := NewFlagSet(flag.CommandLine)
+	assert.True(t, assert.ObjectsAreEqual(flag.CommandLine, obj2.FlagSet))
+}
+
+func TestParseWithArgs(t *testing.T) {
+	resetFlagSet()
+	Register(&BoolFlag{
+		Name:    "bool",
+		Usage:   "--bool",
+		Default: false,
+		Action:  func(name string, fs *FlagSet) {},
+	})
+	err := ParseWithArgs([]string{"--bool"})
+	assert.NoError(t, err)
+	boolFlag, err := BoolE("bool")
+	assert.NoError(t, err)
+	assert.Equal(t, true, boolFlag)
+
+	resetFlagSet()
+	Register(&BoolFlag{
+		Name:    "bool",
+		Usage:   "--bool",
+		Default: true,
+		Action:  func(name string, fs *FlagSet) {},
+	})
+	err = ParseWithArgs([]string{"--bool=false"})
+	assert.NoError(t, err)
+	boolFlag, err = BoolE("bool")
+	assert.NoError(t, err)
+	assert.Equal(t, false, boolFlag)
+
+	resetFlagSet()
+	Register(&StringFlag{
+		Name:    "string",
+		Usage:   "--string",
+		Default: "world",
+		Action:  func(name string, fs *FlagSet) {},
+	})
+	err = ParseWithArgs([]string{"--string", "hello"})
+	assert.NoError(t, err)
+	strFlag, err := StringE("string")
+	assert.NoError(t, err)
+	assert.Equal(t, "hello", strFlag)
+}
+
 func resetFlagSet() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagObj := &FlagSet{
-		FlagSet: flag.CommandLine,
-		actions: make(map[string]func(string, *FlagSet)),
-	}
+	flagObj := NewFlagSet(flag.CommandLine)
 	flag.Bool("test.v", false, "verbose: print additional output")
 	flag.Bool("test.paniconexit0", false, "panic on call to os.Exit(0)")
 	flag.String("test.run", "", "run only tests and examples matching `regexp`")
@@ -222,5 +297,5 @@ func resetFlagSet() {
 	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
 	flag.String("test.cpu", "", "comma-separated `list` of cpu counts to run each test with")
 	flag.Int("test.parallel", runtime.GOMAXPROCS(0), "run at most `n` tests in parallel")
-	setFlagSet(flagObj)
+	SetFlagSet(flagObj)
 }

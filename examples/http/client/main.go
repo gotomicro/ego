@@ -8,6 +8,8 @@ import (
 	"github.com/gotomicro/ego/client/ehttp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/etrace"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func main() {
@@ -27,14 +29,17 @@ func invokerHTTP() error {
 }
 
 func callHTTP() error {
-	span, ctx := etrace.StartSpanFromContext(context.Background(), "callHTTP()")
-	defer span.Finish()
+	tracer := etrace.NewTracer(trace.SpanKindClient)
 
 	req := httpComp.R()
-	// Inject traceId Into Header
-	c1 := etrace.HeaderInjector(ctx, req.Header)
 
-	info, err := req.SetContext(c1).Get("/hello")
+	ctx, span := tracer.Start(context.Background(), "callHTTP()", propagation.HeaderCarrier(req.Header))
+	defer span.End()
+
+	// Inject traceId Into Header
+	// c1 := etrace.HeaderInjector(ctx, req.Header)
+	fmt.Println(span.SpanContext().TraceID())
+	info, err := req.SetContext(ctx).SetHeader("x-uid", "101").Get("/hello?aa=bb")
 	if err != nil {
 		return err
 	}

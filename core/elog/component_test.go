@@ -2,15 +2,18 @@ package elog
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"strings"
 	"testing"
 
 	"github.com/BurntSushi/toml"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/gotomicro/ego/core/econf"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func TestRotateLogger(t *testing.T) {
@@ -108,6 +111,11 @@ aliApiMaxIdleConns = 25
 	return Load("ali").Build()
 }
 
+func newZapLogger() *zap.Logger {
+	logger, _ := zap.NewProduction()
+	return logger
+}
+
 func fakeMessages(n int) []string {
 	messages := make([]string, n)
 	for i := range messages {
@@ -120,14 +128,40 @@ func getMessage(iter int) string {
 	return messages[iter%1000]
 }
 
-func BenchmarkStderrWriter(b *testing.B) {
+func BenchmarkFileWriter(b *testing.B) {
 	b.Logf("Logging at a disabled level with some accumulated context.")
-	logger1 := newStderrLogger()
-	b.Run("stderr", func(b *testing.B) {
+	logger := newFileLogger("./benchmark-file-writer.log")
+	b.Run("file", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				logger1.Info(getMessage(0))
+				logger.Info(getMessage(0))
+			}
+		})
+	})
+}
+
+func BenchmarkStderrWriter(b *testing.B) {
+	b.Logf("Logging at a disabled level with some accumulated context.")
+	logger := newStderrLogger()
+	b.Run("stderr\n", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0))
+			}
+		})
+	})
+}
+
+func BenchmarkZapWriter(b *testing.B) {
+	b.Logf("Logging at a disabled level with some accumulated context.")
+	logger := newZapLogger()
+	b.Run("file", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0))
 			}
 		})
 	})
@@ -135,12 +169,12 @@ func BenchmarkStderrWriter(b *testing.B) {
 
 func BenchmarkAliWriter(b *testing.B) {
 	b.Logf("Logging at a disabled level with some accumulated context.")
-	aliLogger := newAliLogger()
+	logger := newAliLogger()
 	b.Run("ali", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				aliLogger.Info(getMessage(0))
+				logger.Info(getMessage(0))
 			}
 		})
 	})
@@ -199,4 +233,491 @@ func BenchmarkMultiLogger(b *testing.B) {
 		})
 	})
 
+}
+
+func Test_IsDebugMode(t *testing.T) {
+	cmp := &Component{
+		config: defaultConfig(),
+	}
+	cmp.config.Debug = true
+	assert.True(t, cmp.IsDebugMode())
+}
+
+func TestSetLevel(t *testing.T) {
+	logger := &Component{
+		config: defaultConfig(),
+	}
+	logger.lv = &logger.config.al
+	logger.SetLevel(zapcore.ErrorLevel)
+	assert.Equal(t, "error", logger.lv.String())
+}
+
+func TestConfigDir(t *testing.T) {
+	logger := &Component{
+		config: defaultConfig(),
+	}
+	assert.Equal(t, "./logs", logger.ConfigDir())
+}
+
+func TestConfigName(t *testing.T) {
+	logger := &Component{
+		config: defaultConfig(),
+	}
+	assert.Equal(t, "default.log", logger.ConfigName())
+}
+
+func TestDebug(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("debug"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Debug("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"debug"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("debug"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.Debug("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[34mDEBUG\x1b")
+	os.Remove(filePath)
+}
+
+func TestDebugW(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("debug"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Debugw("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"debug"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("debug"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.Debugw("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[34mDEBUG\x1b")
+	os.Remove(filePath)
+}
+
+func TestDebugf(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("debug"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Debugf("hello,%s", "debug")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"debug"`)
+	assert.Contains(t, string(logged), `"msg":"hello,debug"`)
+	os.Remove(filePath)
+}
+
+func TestInfo(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("info"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Info("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"info"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("info"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.Info("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[32mINFO\x1b")
+	os.Remove(filePath)
+}
+
+func TestInfow(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("info"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Infow("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"info"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("info"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.Infow("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[32mINFO\x1b")
+	os.Remove(filePath)
+}
+
+func TestInfof(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("info"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Infof("hello,%s", "info")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"info"`)
+	assert.Contains(t, string(logged), `"msg":"hello,info"`)
+	os.Remove(filePath)
+}
+
+func TestWarn(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("warn"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Warn("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"warn"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("warn"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.Warn("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[33mWARN\x1b")
+	os.Remove(filePath)
+}
+
+func TestWarnw(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("warn"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Warnw("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"warn"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("warn"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.Warnw("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[33mWARN\x1b")
+	os.Remove(filePath)
+}
+
+func TestWarnf(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("warn"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Warnf("hello,%s", "warn")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"warn"`)
+	assert.Contains(t, string(logged), `"msg":"hello,warn"`)
+	os.Remove(filePath)
+}
+
+func TestError(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("error"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Error("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"error"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("error"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.Error("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[31mERROR\x1b")
+	os.Remove(filePath)
+}
+
+func TestErrorw(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("error"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Errorw("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"error"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("error"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.Errorw("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[31mERROR\x1b")
+	os.Remove(filePath)
+}
+
+func TestErrorf(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("error"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.Errorf("hello,%s", "error")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"error"`)
+	assert.Contains(t, string(logged), `"msg":"hello,error"`)
+	os.Remove(filePath)
+}
+
+func TestPanic(t *testing.T) {
+	var logger *Component
+	assert.Panics(t, func() {
+		logger = DefaultContainer().Build(
+			WithDebug(false),
+			WithLevel("error"),
+			WithEnableAddCaller(true),
+			WithEnableAsync(false),
+		)
+		logger.Panic("some")
+
+	})
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"panic"`)
+	os.Remove(filePath)
+
+	var logger2 *Component
+	assert.Panics(t, func() {
+		logger2 = DefaultContainer().Build(
+			WithDebug(true),
+			WithLevel("error"),
+			WithEnableAddCaller(true),
+			WithEnableAsync(false),
+		)
+		logger2.Panic("some")
+
+	})
+	filePath2 := path.Join(logger2.ConfigDir(), logger2.ConfigName())
+	logged2, err2 := ioutil.ReadFile(filePath2)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[31mPANIC\x1b")
+	os.Remove(filePath)
+}
+
+func TestPanicw(t *testing.T) {
+	var logger *Component
+	assert.Panics(t, func() {
+		logger = DefaultContainer().Build(
+			WithDebug(false),
+			WithLevel("error"),
+			WithEnableAddCaller(true),
+			WithEnableAsync(false),
+		)
+		logger.Panicw("some")
+
+	})
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"panic"`)
+	os.Remove(filePath)
+
+	var logger2 *Component
+	assert.Panics(t, func() {
+		logger2 = DefaultContainer().Build(
+			WithDebug(true),
+			WithLevel("error"),
+			WithEnableAddCaller(true),
+			WithEnableAsync(false),
+		)
+		logger2.Panicw("some")
+
+	})
+	filePath2 := path.Join(logger2.ConfigDir(), logger2.ConfigName())
+	logged2, err2 := ioutil.ReadFile(filePath2)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[31mPANIC\x1b")
+	os.Remove(filePath)
+}
+
+func TestPanicf(t *testing.T) {
+	var logger *Component
+	assert.Panics(t, func() {
+		logger = DefaultContainer().Build(
+			WithDebug(false),
+			WithLevel("panic"),
+			WithEnableAddCaller(true),
+			WithEnableAsync(false),
+		)
+		logger.Panicf("hello,%s", "panic")
+	})
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"panic"`)
+	assert.Contains(t, string(logged), `"msg":"hello,panic"`)
+	os.Remove(filePath)
+}
+
+func TestDPanic(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("dpanic"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.DPanic("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"dpanic"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("error"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.DPanic("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[31mDPANIC\x1b")
+	os.Remove(filePath)
+}
+
+func TestDPanicw(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("dpanic"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logger.DPanicw("some")
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"dpanic"`)
+	os.Remove(filePath)
+
+	logger2 := DefaultContainer().Build(
+		WithDebug(true),
+		WithLevel("error"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger2.DPanicw("some2")
+	logged2, err2 := ioutil.ReadFile(filePath)
+	assert.Nil(t, err2)
+	assert.Contains(t, string(logged2), "\x1b[31mDPANIC\x1b")
+	os.Remove(filePath)
+}
+
+func TestDPanicf(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithLevel("dpanic"),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger.DPanicf("hello,%s", "dpanic")
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"lv":"dpanic"`)
+	assert.Contains(t, string(logged), `"msg":"hello,dpanic"`)
+	os.Remove(filePath)
+}
+
+func TestWithZapConfig(t *testing.T) {
+	testConfig := zap.NewDevelopmentEncoderConfig()
+	logger := DefaultContainer().Build(
+		WithDebug(false),
+		WithEncoderConfig(&testConfig),
+		WithEnableAsync(false),
+	)
+	logger.Info("hello")
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `"L":"INFO"`)
+	os.Remove(filePath)
 }

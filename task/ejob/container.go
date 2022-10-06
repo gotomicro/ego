@@ -79,13 +79,17 @@ func Job(name string, startFunc func(Context) error) *Component {
 func Handle(w http.ResponseWriter, r *http.Request) {
 	jobName := r.Header.Get("X-Ego-Job-Name")
 	if jobName == "" {
+		w.Header().Set("X-Ego-Job-Err", "jobName not exist")
+		w.WriteHeader(400)
 		return
 	}
 	w.Header().Set("X-Ego-Job-Name", jobName)
 
 	//
 	jobRunID := r.Header.Get("X-Ego-Job-RunID")
-	if jobName == "" {
+	if jobRunID == "" {
+		w.Header().Set("X-Ego-Job-Err", fmt.Sprintf("jobName: %s, jobRunID not exist", jobName))
+		w.WriteHeader(400)
 		return
 	}
 	w.Header().Set("X-Ego-Job-RunID", jobRunID)
@@ -105,7 +109,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	w.WriteHeader(200)
+	//w.WriteHeader(200)
 }
 
 // HandleJobList job列表

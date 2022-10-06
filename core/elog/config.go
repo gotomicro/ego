@@ -23,7 +23,7 @@ type Config struct {
 	Name            string // [fileWriter]日志文件名称，默认框架日志ego.sys，业务日志default.log
 	EnableAddCaller bool   // 是否添加调用者信息，默认不加调用者信息
 	EnableAsync     bool   // 是否异步，默认异步
-	Writer          string // 使用哪种Writer，可选[file|ali|stderr]，默认file
+	Writer          string // 使用哪种Writer，可选[file|stderr]，默认file
 	core            zapcore.Core
 	asyncStopFunc   func() error
 	fields          []zap.Field // 日志初始化字段
@@ -37,8 +37,8 @@ func (c *Config) Filename() string {
 	return fmt.Sprintf("%s/%s", c.Dir, c.Name)
 }
 
-// DefaultConfig ...
-func DefaultConfig() *Config {
+// defaultConfig ...
+func defaultConfig() *Config {
 	dir := "./logs"
 	if eapp.EgoLogPath() != "" {
 		dir = eapp.EgoLogPath()
@@ -51,8 +51,9 @@ func DefaultConfig() *Config {
 		EnableAddCaller: false,
 		EnableAsync:     true,
 		asyncStopFunc:   func() error { return nil },
-		encoderConfig:   defaultZapConfig(),
-		Writer:          "file",
+		encoderConfig:   nil,
+		Writer:          eapp.EgoLogWriter(),
+		al:              zap.NewAtomicLevelAt(zapcore.InfoLevel),
 	}
 }
 

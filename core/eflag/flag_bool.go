@@ -1,9 +1,9 @@
 package eflag
 
 import (
-	"os"
-	"strconv"
 	"strings"
+
+	"github.com/gotomicro/ego/internal/ienv"
 )
 
 // BoolFlag is a bool flag implements of Flag interface.
@@ -21,19 +21,10 @@ func (f *BoolFlag) Apply(set *FlagSet) {
 	for _, field := range strings.Split(f.Name, ",") {
 		field = strings.TrimSpace(field)
 		if f.Variable != nil {
-			set.FlagSet.BoolVar(f.Variable, field, getValueByEnvAndDefaultBoolValue(f.EnvVar, f.Default), f.Usage)
+			set.FlagSet.BoolVar(f.Variable, field, ienv.EnvOrBool(f.EnvVar, f.Default), f.Usage)
+		} else {
+			set.FlagSet.Bool(field, ienv.EnvOrBool(f.EnvVar, f.Default), f.Usage)
 		}
-
-		set.FlagSet.Bool(field, getValueByEnvAndDefaultBoolValue(f.EnvVar, f.Default), f.Usage)
 		set.actions[field] = f.Action
 	}
-}
-
-func getValueByEnvAndDefaultBoolValue(envVar string, defaultValue bool) bool {
-	env := os.Getenv(envVar)
-	if env != "" {
-		flag, _ := strconv.ParseBool(env)
-		return flag
-	}
-	return defaultValue
 }
