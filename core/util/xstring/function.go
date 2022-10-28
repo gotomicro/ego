@@ -5,12 +5,13 @@ import (
 	"runtime"
 )
 
-// FunctionName ...
+// FunctionName returns the Function's name of given pointer.
 func FunctionName(i interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
 
-// ObjectName ...
+// ObjectName returns the object's path and name of given pointer.
+// Deprecated: this function will be moved to internal package, user should not use it any more.
 func ObjectName(i interface{}) string {
 	typ := reflect.TypeOf(i)
 	if typ.Kind() == reflect.Ptr {

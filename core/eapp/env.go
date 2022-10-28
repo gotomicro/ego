@@ -12,7 +12,7 @@ var (
 	appMode                 string
 	appRegion               string
 	appZone                 string
-	appInstance             string // 通常是实例的机器名
+	appInstance             string
 	egoDebug                string
 	egoLogPath              string
 	egoLogAddApp            string
@@ -41,47 +41,47 @@ func initEnv() {
 	}
 }
 
-// AppMode 获取应用运行的环境
+// AppMode returns application running mode.
 func AppMode() string {
 	return appMode
 }
 
-// AppRegion 获取APP运行的地区
+// AppRegion returns application running region.
 func AppRegion() string {
 	return appRegion
 }
 
-// AppZone 获取应用运行的可用区
+// AppZone returns application running zone.
 func AppZone() string {
 	return appZone
 }
 
-// AppInstance 获取应用实例，通常是实例的机器名
+// AppInstance returns application instance ID.
 func AppInstance() string {
 	return appInstance
 }
 
-// IsDevelopmentMode 判断是否是测试模式
+// IsDevelopmentMode returns flag if application is in debug mode.
 func IsDevelopmentMode() bool {
 	return egoDebug == "true"
 }
 
-// EgoLogPath 获取应用日志路径
+// EgoLogPath returns application log file directory path when user choose to write log fo file.
 func EgoLogPath() string {
 	return egoLogPath
 }
 
-// EnableLoggerAddApp 日志是否记录应用名信息
+// EnableLoggerAddApp returns flag if logger has append app Field to log entry.
 func EnableLoggerAddApp() bool {
 	return egoLogAddApp == "true"
 }
 
-// EgoTraceIDName 获取链路名称
+// EgoTraceIDName returns the key in Metadata for storing traceID
 func EgoTraceIDName() string {
 	return egoTraceIDName
 }
 
-// EgoLogExtraKeys 获取自定义loggerKeys
+// EgoLogExtraKeys returns custom extra log keys.
 func EgoLogExtraKeys() []string {
 	return egoLogExtraKeys
 }
@@ -101,7 +101,7 @@ func EgoLogTimeType() string {
 	return egoLogTimeType
 }
 
-// SetEgoDebug 设置调试模式，"true" or "false"
+// SetEgoDebug returns the flag if debug mode has been triggered
 func SetEgoDebug(flag string) {
 	egoDebug = flag
 }

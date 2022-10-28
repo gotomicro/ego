@@ -12,7 +12,7 @@ import (
 	"github.com/gotomicro/ego/internal/ecode"
 )
 
-// Error 错误接口
+// Error defines an grpc error that can be transformed between micro-service caller and micro-service callee.
 type Error interface {
 	error
 	WithMetadata(map[string]string) Error
@@ -34,17 +34,17 @@ type errKey string
 
 var errs = map[errKey]*EgoError{}
 
-// Register 注册错误信息
+// Register registers error instance.
 func Register(egoError *EgoError) {
 	errs[errKey(egoError.Reason)] = egoError
 }
 
-// Error Error信息
+// Error returns error detail message.
 func (x *EgoError) Error() string {
 	return fmt.Sprintf("error: code = %d reason = %s message = %s metadata = %v", x.Code, x.Reason, x.Message, x.Metadata)
 }
 
-// Is 判断是否为根因错误
+// Is will be called in errors.Is method to check error type.
 func (x *EgoError) Is(err error) bool {
 	egoErr, flag := err.(*EgoError)
 	if !flag {

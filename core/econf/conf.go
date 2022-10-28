@@ -17,10 +17,10 @@ import (
 	"github.com/gotomicro/ego/internal/tools"
 )
 
-// PackageName 包名
+// PackageName defines package name.
 const PackageName = "core.econf"
 
-// Configuration 配置
+// Configuration ...
 type Configuration struct {
 	mu        sync.RWMutex
 	override  map[string]interface{}
@@ -67,7 +67,7 @@ func (c *Configuration) WriteConfig() error {
 	return nil
 }
 
-// OnChange 注册change回调函数
+// OnChange register a callback when configuration change emit.
 func (c *Configuration) OnChange(fn func(*Configuration)) {
 	c.onChanges = append(c.onChanges, fn)
 }

@@ -4,7 +4,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// Option 可选项
+// Option overrides a Container's default configuration.
 type Option func(c *Container)
 
 // WithFileName 设置文件名

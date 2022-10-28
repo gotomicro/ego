@@ -1,6 +1,6 @@
 package constant
 
 const (
-	// DefaultConfig 默认配置文件
+	// DefaultConfig defines default configuration file path.
 	DefaultConfig = "config/local.toml"
 )

@@ -4,7 +4,7 @@ import (
 	"github.com/gotomicro/ego/core/eapp"
 )
 
-// Config 配置
+// Config defines component configuration schema
 type Config struct {
 	AppName       string `json:"appName"`       // 应用名，默认从ego框架内部获取
 	LogPath       string `json:"logPath"`       // 日志路径，默认./logs

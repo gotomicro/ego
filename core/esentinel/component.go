@@ -12,10 +12,10 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 )
 
-// PackageName 设置包名
+// PackageName component name
 const PackageName = "core.sentinel"
 
-// Component 组件
+// Component defines component's configuration schema, name, logger, etc.
 type Component struct {
 	// name   string
 	// config *Config

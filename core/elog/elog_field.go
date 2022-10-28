@@ -9,22 +9,22 @@ import (
 	"go.uber.org/zap"
 )
 
-// FieldComponent 设置组件
+// FieldComponent constructs an elog Field with component type name
 func FieldComponent(value string) Field {
 	return String("comp", value)
 }
 
-// FieldComponentName 设置组件配置名
+// FieldComponentName constructs an elog Field with component name
 func FieldComponentName(value string) Field {
 	return String("compName", value)
 }
 
-// FieldApp 设置应用名
+// FieldApp constructs an elog Field with ego application name
 func FieldApp(value string) Field {
 	return String("app", value)
 }
 
-// FieldAddr 设置地址
+// FieldAddr constructs an elog Field with some address
 func FieldAddr(value string) Field {
 	return String("addr", value)
 }
@@ -54,12 +54,12 @@ func FieldUniformCode(value int32) Field {
 	return Int32("ucode", value)
 }
 
-// FieldTid 设置链路id
+// FieldTid constructs an elog Field with traceID
 func FieldTid(value string) Field {
 	return String("tid", value)
 }
 
-// FieldCtxTid 设置链路id
+// FieldCtxTid constructs an elog Field with traceID which extracted from context
 func FieldCtxTid(ctx context.Context) Field {
 	return String("tid", etrace.ExtractTraceID(ctx))
 }
@@ -69,7 +69,7 @@ func FieldSize(value int32) Field {
 	return Int32("size", value)
 }
 
-// FieldCost 耗时时间
+// FieldCost construct an elog Field with time cost
 func FieldCost(value time.Duration) Field {
 	return zap.Float64("cost", float64(value.Microseconds())/1000)
 }
@@ -144,12 +144,12 @@ func FieldPeerName(value string) Field {
 	return String("peerName", value)
 }
 
-// FieldCustomKeyValue 设置自定义日志
+// FieldCustomKeyValue constructs a custom Key and value
 func FieldCustomKeyValue(key string, value string) Field {
 	return String(strings.ToLower(key), value)
 }
 
-// FieldLogName 设置ego日志的log name，用于stderr区分系统日志和业务日志
+// FieldLogName constructs a field log name
 func FieldLogName(value string) Field {
 	return String("lname", value)
 }

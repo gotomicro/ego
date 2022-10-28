@@ -1,4 +1,4 @@
 package otel
 
-// Option 可选项
+// Option overrides a Container's default configuration.
 type Option func(c *Config)
