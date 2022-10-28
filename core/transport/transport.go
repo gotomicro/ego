@@ -34,22 +34,22 @@ func Set(arr []string) {
 	customKeyStore.length = len(customKeyStore.keyArr)
 }
 
-// CustomContextKeys 自定义context
+// CustomContextKeys returns custom content key list
 func CustomContextKeys() []string {
 	return customKeyStore.keyArr
 }
 
-// CustomContextKeysLength 自定义context keys长度
+// CustomContextKeysLength returns custom content key list length
 func CustomContextKeysLength() int {
 	return customKeyStore.length
 }
 
-// WithValue 设置数据
+// WithValue returns a new context with your key and value
 func WithValue(ctx context.Context, key string, value interface{}) context.Context {
 	return context.WithValue(ctx, getContextKey(key), value)
 }
 
-// Value 获取数据
+// Value returns value of your key
 func Value(ctx context.Context, key string) interface{} {
 	return ctx.Value(getContextKey(key))
 }

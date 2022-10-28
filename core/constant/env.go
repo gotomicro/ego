@@ -1,24 +1,25 @@
 package constant
 
 const (
-	// EnvAppName 应用名环境变量
+	// EnvAppName is ego application name.
 	EnvAppName = "EGO_NAME"
-	// EnvAppMode 应用模式环境变量
+	// EnvAppMode is ego application running mode.
 	EnvAppMode = "EGO_MODE"
-	// EnvAppRegion ...
+	// EnvAppRegion is ego application instance running region
 	EnvAppRegion = "EGO_REGION"
-	// EnvAppZone ...
+	// EnvAppZone is ego application instance running zone
 	EnvAppZone = "EGO_ZONE"
-	// EnvAppHost ...
+	// EnvAppHost is ego application instance host name
 	EnvAppHost = "EGO_HOST"
-	// EnvAppInstance 应用实例ID环境变量
+	// EnvAppInstance is ego application unique instance ID
 	EnvAppInstance = "EGO_INSTANCE"
-	// EgoDebug 调试环境变量，export EGO_DEBUG=true，开启应用的调试模式
+	// EgoDebug means if turn on debug mode or not, when set true, verbose log will be print in terminal.
 	EgoDebug = "EGO_DEBUG"
-	// EgoConfigPath 应用配置环境变量
+	// EgoConfigPath chooses what configuration path will be used to start application.
 	EgoConfigPath = "EGO_CONFIG_PATH"
-	// EgoLogPath 应用日志环境变量
+	// EgoLogPath if user config log writer as fileWriter, EGO_LOG_PATH means directory path of log file.
 	EgoLogPath = "EGO_LOG_PATH"
+	// EgoLogAddApp if set true, all log entries will append application name filed.
 	// EgoLogAddApp 应用日志增加应用名环境变量，如果增加该环境变量，日志里会将应用名写入到app字段里
 	EgoLogAddApp = "EGO_LOG_ADD_APP"
 	// EgoLogExtraKeys 扩展追踪字段，通常用于打印自定义Headers/Metadata。如用户ID(X-Ego-Uid)、订单ID(X-Ego-Order-Id)等。

@@ -4,59 +4,48 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
-	"os"
 
 	"github.com/BurntSushi/toml"
-	"gopkg.in/yaml.v3"
-
 	"github.com/gotomicro/ego/core/econf"
+	"gopkg.in/yaml.v3"
 )
 
+var defaultScheme = "file"
+
 var (
-	// ErrInvalidDataSource defines an error that the scheme has been registered
+	// ErrInvalidDataSource defines an error that the scheme has been registered.
 	ErrInvalidDataSource = errors.New("invalid data source, please make sure the scheme has been registered")
-	// ErrInvalidUnmarshaller ...
+	// ErrInvalidUnmarshaller defines an error that unmarshaller is not exists.
 	ErrInvalidUnmarshaller = errors.New("invalid unmarshaller, please make sure the config type is right")
-	// ErrDefaultConfigNotExist 默认配置不存在
+	// ErrDefaultConfigNotExist defines an error than config not exists.
 	ErrDefaultConfigNotExist = errors.New("default config not exist")
 	registry                 map[string]econf.DataSource
-	// DefaultScheme 默认协议
-	DefaultScheme = "file"
 
-	//
-	unmarshallerMap = map[econf.ConfigType]econf.Unmarshaller{
+	unmarshallers = map[econf.ConfigType]econf.Unmarshaller{
 		econf.ConfigTypeJSON: json.Unmarshal,
 		econf.ConfigTypeToml: toml.Unmarshal,
 		econf.ConfigTypeYaml: yaml.Unmarshal,
 	}
 )
 
-// DataSourceCreatorFunc represents a dataSource creator function
+// DataSourceCreatorFunc represents a dataSource creator function.
 type DataSourceCreatorFunc func() econf.DataSource
 
 func init() {
 	registry = make(map[string]econf.DataSource)
 }
 
-// Register registers a dataSource creator function to the registry
+// Register registers a dataSource creator function to the registry.
 func Register(scheme string, creator econf.DataSource) {
 	registry[scheme] = creator
 }
 
-// NewDataSource 根据配置地址，创建数据源
+// NewDataSource constructs a new configuration provider by supplied config address.
 func NewDataSource(configAddr string, watch bool) (econf.DataSource, econf.Unmarshaller, econf.ConfigType, error) {
-	scheme := DefaultScheme
+	var scheme = defaultScheme
 	urlObj, err := url.Parse(configAddr)
 	if err == nil && len(urlObj.Scheme) > 1 {
 		scheme = urlObj.Scheme
-	}
-
-	// 如果是默认file协议，判断下文件是否存在
-	if scheme == DefaultScheme {
-		_, err := os.Stat(configAddr)
-		if err != nil {
-			return nil, nil, "", ErrDefaultConfigNotExist
-		}
 	}
 
 	creatorFunc, exist := registry[scheme]
@@ -65,7 +54,7 @@ func NewDataSource(configAddr string, watch bool) (econf.DataSource, econf.Unmar
 	}
 	tag := creatorFunc.Parse(configAddr, watch)
 
-	parser, flag := unmarshallerMap[tag]
+	parser, flag := unmarshallers[tag]
 	if !flag {
 		return nil, nil, "", ErrInvalidUnmarshaller
 	}

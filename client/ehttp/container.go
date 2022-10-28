@@ -8,14 +8,14 @@ import (
 // Option 选项
 type Option func(c *Container)
 
-// Container 容器
+// Container defines a component instance.
 type Container struct {
 	config *Config
 	name   string
 	logger *elog.Component
 }
 
-// DefaultContainer 默认容器
+// DefaultContainer returns an default container.
 func DefaultContainer() *Container {
 	return &Container{
 		config: DefaultConfig(),
@@ -35,7 +35,7 @@ func Load(key string) *Container {
 	return c
 }
 
-// Build 构建组件
+// Build constructs a specific component from container.
 func (c *Container) Build(options ...Option) *Component {
 	for _, option := range options {
 		option(c)

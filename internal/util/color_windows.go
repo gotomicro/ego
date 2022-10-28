@@ -1,13 +1,14 @@
+//go:build windows
 // +build windows
 
-package xcolor
+package util
 
 import (
 	"fmt"
 )
 
 //
-//var _ = Random()
+// var _ = Random()
 
 // Yellow ...
 func Yellow(msg string) string {

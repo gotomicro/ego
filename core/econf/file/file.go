@@ -3,6 +3,7 @@ package file
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
@@ -11,28 +12,31 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 )
 
-// fileDataSource file provider.
+// fileDataSource defines a file configuration provider.
 type fileDataSource struct {
-	path string
-	//dir         string
+	path        string
 	enableWatch bool
 	changed     chan struct{}
 	logger      *elog.Component
 }
 
+// scheme defines fileDatasourceName
+const scheme = "file"
+
 func init() {
-	manager.Register(manager.DefaultScheme, &fileDataSource{})
+	manager.Register(scheme, &fileDataSource{})
 }
 
-// Parse ...
+// Parse implements DataSource method
 func (fp *fileDataSource) Parse(path string, watch bool) econf.ConfigType {
+	if _, err := os.Stat(path); err != nil {
+		elog.Panic("invalid path", elog.FieldErr(err))
+	}
 	absolutePath, err := filepath.Abs(path)
 	if err != nil {
-		elog.Panic("new datasource", elog.FieldErr(err))
+		elog.Panic("can't get absolutePath", elog.FieldErr(err))
 	}
-	//dir := xfile.CheckAndGetParentDir(absolutePath)
 	fp.path = absolutePath
-	//fp.dir = dir
 	fp.enableWatch = watch
 	fp.logger = elog.EgoLogger.With(elog.FieldComponent(econf.PackageName))
 
@@ -59,18 +63,18 @@ func extParser(configAddr string) econf.ConfigType {
 	return ""
 }
 
-// ReadConfig ...
+// ReadConfig implements DataSource method
 func (fp *fileDataSource) ReadConfig() (content []byte, err error) {
 	return ioutil.ReadFile(fp.path)
 }
 
-// Close ...
+// Close implements DataSource method
 func (fp *fileDataSource) Close() error {
 	close(fp.changed)
 	return nil
 }
 
-// IsConfigChanged ...
+// IsConfigChanged implements DataSource method
 func (fp *fileDataSource) IsConfigChanged() <-chan struct{} {
 	return fp.changed
 }
@@ -90,7 +94,6 @@ func (fp *fileDataSource) watch() {
 		elog.FieldComponent("file datasource"),
 		elog.String("configFile", configFile),
 		elog.String("realConfigFile", realConfigFile),
-		//elog.String("dir", fp.fdir),
 		elog.String("fppath", fp.path),
 	)
 	done := make(chan bool)

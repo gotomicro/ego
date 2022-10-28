@@ -11,7 +11,7 @@ var (
 	logger *elog.Component
 )
 
-// Build 构建日志
+// Build builds grpclog instance.
 func Build() *elog.Component {
 	once.Do(func() {
 		logger = elog.EgoLogger.With(elog.FieldComponentName("component.grpc"))

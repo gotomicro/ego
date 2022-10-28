@@ -2,6 +2,7 @@ package otel
 
 import (
 	"context"
+
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
@@ -19,22 +20,22 @@ import (
 type Config struct {
 	ServiceName  string
 	OtelType     string  // type: otlp ,jaeger
-	Fraction     float64 //采样率： 默认0不会采集
+	Fraction     float64 // 采样率： 默认0不会采集
 	PanicOnError bool
 	options      []tracesdk.TracerProviderOption
-	Jaeger       jaegerConfig //otel jaeger 配置
-	Otlp         otlpConfig   //otel otlp 配置
+	Jaeger       jaegerConfig // otel jaeger 配置
+	Otlp         otlpConfig   // otel otlp 配置
 }
 
-//otlpConfig otlp上报协议配置
+// otlpConfig otlp上报协议配置
 type otlpConfig struct {
-	Endpoint   string                 //oltp endpoint
-	Headers    map[string]string      //默认提供一个 请求头的参数配置
-	options    []otlptracegrpc.Option //预留自定义配置：   例如 grpc WithGRPCConn
-	resOptions []resource.Option      //res 预留自定以配置
+	Endpoint   string                 // oltp endpoint
+	Headers    map[string]string      // 默认提供一个 请求头的参数配置
+	options    []otlptracegrpc.Option // 预留自定义配置：   例如 grpc WithGRPCConn
+	resOptions []resource.Option      // res 预留自定以配置
 }
 
-//jaegerConfig jaeger上报协议配置
+// jaegerConfig jaeger上报协议配置
 type jaegerConfig struct {
 	EndpointType      string // type: agent,collector
 	AgentHost         string // agent host
@@ -44,7 +45,8 @@ type jaegerConfig struct {
 	CollectorPassword string // collector password
 }
 
-// Load 加载配置key
+// Load parses container configuration from configuration provider, such as a toml file,
+// then use the configuration to construct a component container.
 func Load(key string) *Config {
 	var config = DefaultConfig()
 	if err := econf.UnmarshalKey(key, config); err != nil {
@@ -79,13 +81,13 @@ func (config *Config) WithTracerProviderOption(options ...tracesdk.TracerProvide
 	return config
 }
 
-//WithOtlpTraceGrpcOption 自定义otlp Option
+// WithOtlpTraceGrpcOption 自定义otlp Option
 func (config *Config) WithOtlpTraceGrpcOption(options ...otlptracegrpc.Option) *Config {
 	config.Otlp.options = append(config.Otlp.options, options...)
 	return config
 }
 
-//WithOtlpResourceOption 自定义otlp resource Option
+// WithOtlpResourceOption 自定义otlp resource Option
 func (config *Config) WithOtlpResourceOption(options ...resource.Option) *Config {
 	config.Otlp.resOptions = append(config.Otlp.resOptions, options...)
 	return config
@@ -146,12 +148,12 @@ func (config *Config) buildJaegerTP() trace.TracerProvider {
 }
 
 func (config *Config) buildOtlpTP() trace.TracerProvider {
-	//otlp exporter
+	// otlp exporter
 	options := []otlptracegrpc.Option{
 		otlptracegrpc.WithInsecure(),                     // WithInsecure disables client transport security for the exporter's gRPC
-		otlptracegrpc.WithHeaders(config.Otlp.Headers),   //WithHeaders will send the provided headers with each gRPC requests.
-		otlptracegrpc.WithEndpoint(config.Otlp.Endpoint), //WithEndpoint sets the target endpoint the exporter will connect to. If unset, localhost:4317 will be used as a default.
-		//otlptracegrpc.WithDialOption(grpc.WithBlock()), //默认不设置 同步状态，会产生阻塞等待 Ready
+		otlptracegrpc.WithHeaders(config.Otlp.Headers),   // WithHeaders will send the provided headers with each gRPC requests.
+		otlptracegrpc.WithEndpoint(config.Otlp.Endpoint), // WithEndpoint sets the target endpoint the exporter will connect to. If unset, localhost:4317 will be used as a default.
+		// otlptracegrpc.WithDialOption(grpc.WithBlock()), //默认不设置 同步状态，会产生阻塞等待 Ready
 	}
 	options = append(options, config.Otlp.options...)
 	traceClient := otlptracegrpc.NewClient(options...)
@@ -162,7 +164,7 @@ func (config *Config) buildOtlpTP() trace.TracerProvider {
 		return nil
 	}
 
-	//res
+	// res
 	resOptions := []resource.Option{
 		resource.WithTelemetrySDK(), // WithTelemetrySDK adds TelemetrySDK version info to the configured resource.
 		resource.WithHost(),         // WithHost adds attributes from the host to the configured resource.
@@ -178,7 +180,7 @@ func (config *Config) buildOtlpTP() trace.TracerProvider {
 		return nil
 	}
 
-	//tp
+	// tp
 	tpOptions := []tracesdk.TracerProviderOption{
 		// Set the sampling rate based on the parent span to 100%
 		tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(config.Fraction))),

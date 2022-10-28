@@ -5,13 +5,13 @@ import (
 	"unicode/utf8"
 )
 
-// ToSnakeCase 转为snake格式
+// ToSnakeCase convert a string to snake_case.
 func ToSnakeCase(str string) string {
 	str = strings.TrimSpace(strings.ToLower(str))
 	return strings.Replace(str, " ", "_", -1)
 }
 
-// ToCamelCase 转为驼峰格式
+// ToCamelCase convert a string to UpperCamelCase.
 func ToCamelCase(str string) string {
 	str = strings.TrimSpace(str)
 	if utf8.RuneCountInString(str) < 2 {
