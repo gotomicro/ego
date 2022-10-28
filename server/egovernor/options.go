@@ -1,6 +1,6 @@
 package egovernor
 
-// Option 可选项
+// Option overrides a Container's default configuration.
 type Option func(c *Container)
 
 // WithHost 设置监控IP

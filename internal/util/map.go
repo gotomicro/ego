@@ -1,4 +1,4 @@
-package xmap
+package util
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 )
 
 // MergeStringMap merge two map
+// Deprecated: this function will be moved to internal package, user should not use it any more.
 func MergeStringMap(dest, src map[string]interface{}) {
 	for sk, sv := range src {
 		tv, ok := dest[sk]
@@ -41,6 +42,7 @@ func MergeStringMap(dest, src map[string]interface{}) {
 }
 
 // ToMapStringInterface cast map[interface{}]interface{} to map[string]interface{}
+// Deprecated: this function will be moved to internal package, user should not use it any more.
 func ToMapStringInterface(src map[interface{}]interface{}) map[string]interface{} {
 	tgt := map[string]interface{}{}
 	for k, v := range src {
@@ -50,8 +52,8 @@ func ToMapStringInterface(src map[interface{}]interface{}) map[string]interface{
 }
 
 // DeepSearchInMap deep search in map
+// Deprecated: this function will be moved to internal package, user should not use it any more.
 func DeepSearchInMap(m map[string]interface{}, paths ...string) map[string]interface{} {
-	//深度拷贝
 	mtmp := make(map[string]interface{})
 	for k, v := range m {
 		mtmp[k] = v

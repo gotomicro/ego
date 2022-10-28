@@ -32,7 +32,7 @@ type (
 	Field = zap.Field
 	// Level ...
 	Level = zapcore.Level
-	// Component 组件
+	// Component defines ego logger component wraps zap.Logger and zap.SugaredLogger
 	Component struct {
 		name          string
 		desugar       *zap.Logger
@@ -82,12 +82,12 @@ func newLogger(name string, key string, config *Config) *Component {
 		zapOptions = append(zapOptions, zap.Fields(config.fields...))
 	}
 
-	// 默认日志级别
+	// unmarshals the text to an AtomicLevel.
 	if err := config.al.UnmarshalText([]byte(config.Level)); err != nil {
 		panic(err)
 	}
 
-	// 如果用户没有设置core。那么就选择官方默认的core。
+	// sets core to default zap.Core if not configured.
 	if config.core == nil {
 		w := Provider(config.Writer).Build(key, config)
 		config.core = w
@@ -349,12 +349,12 @@ func (logger *Component) WithCallerSkip(callerSkip int, fields ...Field) *Compon
 	}
 }
 
-// ConfigDir 获取日志路径
+// ConfigDir returns log directory path if a fileWriter logger is set.
 func (logger *Component) ConfigDir() string {
 	return logger.config.Dir
 }
 
-// ConfigName 获取日志名称
+// ConfigName returns logger name.
 func (logger *Component) ConfigName() string {
 	return logger.config.Name
 }

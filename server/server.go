@@ -12,7 +12,7 @@ import (
 	"github.com/gotomicro/ego/core/standard"
 )
 
-// Option 可选项
+// Option overrides a Container's default configuration.
 type Option func(c *ServiceInfo)
 
 // ConfigInfo represents service configurator

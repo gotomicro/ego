@@ -5,7 +5,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Option 可选项
+// Option overrides a Container's default configuration.
 type Option func(c *Container)
 
 // WithServerOption inject server option to grpc server

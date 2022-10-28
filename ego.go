@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	// 引入file的config协议
+	// econf/file package should be imported first
 	_ "github.com/gotomicro/ego/core/econf/file"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
@@ -57,8 +57,9 @@ type opts struct {
 	arguments         []string // 命令行参数
 }
 
-//go:generate protoc -I. --go_out=module=github.com/gotomicro/ego/core/eerrors,Mcore/eerrors/errors.proto=github.com/gotomicro/ego/core/eerrors:core/eerrors core/eerrors/errors.proto
 // New new Ego
+//
+//go:generate protoc -I. --go_out=module=github.com/gotomicro/ego/core/eerrors,Mcore/eerrors/errors.proto=github.com/gotomicro/ego/core/eerrors:core/eerrors core/eerrors/errors.proto
 func New(options ...Option) *Ego {
 	e := &Ego{
 		// 第一部分 系统数据
@@ -111,7 +112,7 @@ func New(options ...Option) *Ego {
 	e.inits = []func() error{
 		e.parseFlags,
 		e.printBanner,
-		//printLogger,
+		// printLogger,
 		loadConfig,
 		initMaxProcs,
 		e.initLogger,
