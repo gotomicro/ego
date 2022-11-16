@@ -6,7 +6,6 @@ import (
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/transport"
 )
 
 // Option overrides a Container's default configuration.
@@ -52,7 +51,7 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 
 	// 其次执行，自定义header头，这样才能赋值到ctx里
-	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(customHeader(transport.CustomContextKeys()))))
+	// options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(customHeader(transport.CustomContextKeys()))))
 
 	// 默认日志
 	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(c.loggerUnaryClientInterceptor())))
