@@ -25,31 +25,33 @@ func init() {
 	customKeyStore.length = len(customKeyStore.keyArr)
 }
 
-// Set 设置context key arr
+// Set overrides custom keys with provided array.
 func Set(arr []string) {
+	length := len(arr)
 	customKeyStore.keyArr = arr
+	customKeyStore.keyMap = make(map[string]*contextKey, length)
 	for _, value := range arr {
 		customKeyStore.keyMap[value] = newContextKey(value)
 	}
-	customKeyStore.length = len(customKeyStore.keyArr)
+	customKeyStore.length = length
 }
 
-// CustomContextKeys 自定义context
+// CustomContextKeys returns extra keys in array
 func CustomContextKeys() []string {
 	return customKeyStore.keyArr
 }
 
-// CustomContextKeysLength 自定义context keys长度
+// CustomContextKeysLength returns extra keys length
 func CustomContextKeysLength() int {
 	return customKeyStore.length
 }
 
-// WithValue 设置数据
+// WithValue appends key and value to a new context.
 func WithValue(ctx context.Context, key string, value interface{}) context.Context {
 	return context.WithValue(ctx, getContextKey(key), value)
 }
 
-// Value 获取数据
+// Value gets value of specific key from context.
 func Value(ctx context.Context, key string) interface{} {
 	return ctx.Value(getContextKey(key))
 }
