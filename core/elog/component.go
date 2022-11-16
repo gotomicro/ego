@@ -109,7 +109,6 @@ func newLogger(name string, key string, config *Config) *Component {
 		l.AutoLevel(name + ".level")
 	}
 	return l
-
 }
 
 // ZapLogger returns *zap.Logger
