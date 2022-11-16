@@ -1,38 +1,36 @@
 package constant
 
 const (
-	// EnvAppName is ego application name.
+	// EnvAppName defines your application name.
 	EnvAppName = "EGO_NAME"
-	// EnvAppMode is ego application running mode.
+	// EnvAppMode defines your application running mode, you can set EGO_MODE with words such as "development/testing/production".
 	EnvAppMode = "EGO_MODE"
-	// EnvAppRegion is ego application instance running region
+	// EnvAppRegion defines your application running region, such as "ASIA".
 	EnvAppRegion = "EGO_REGION"
-	// EnvAppZone is ego application instance running zone
+	// EnvAppZone defines your application running zone "ShangHai2".
 	EnvAppZone = "EGO_ZONE"
-	// EnvAppHost is ego application instance host name
+	// EnvAppHost defines your application running HOST name.
 	EnvAppHost = "EGO_HOST"
-	// EnvAppInstance is ego application unique instance ID
+	// EnvAppInstance defines your application replication unique ID.
 	EnvAppInstance = "EGO_INSTANCE"
-	// EgoDebug means if turn on debug mode or not, when set true, verbose log will be print in terminal.
+	// EgoDebug when set to true, ego will print verbose logs.
 	EgoDebug = "EGO_DEBUG"
-	// EgoConfigPath chooses what configuration path will be used to start application.
+	// EgoConfigPath defines your application configuration dsn.
 	EgoConfigPath = "EGO_CONFIG_PATH"
-	// EgoLogPath if user config log writer as fileWriter, EGO_LOG_PATH means directory path of log file.
+	// EgoLogPath if your application used file writer logger to print logs, EgoLogPath is logs directory.
 	EgoLogPath = "EGO_LOG_PATH"
-	// EgoLogAddApp if set true, all log entries will append application name filed.
-	// EgoLogAddApp 应用日志增加应用名环境变量，如果增加该环境变量，日志里会将应用名写入到app字段里
+	// EgoLogAddApp defines if we should append application name to every logger entries.
 	EgoLogAddApp = "EGO_LOG_ADD_APP"
-	// EgoLogExtraKeys 扩展追踪字段，通常用于打印自定义Headers/Metadata。如用户ID(X-Ego-Uid)、订单ID(X-Ego-Order-Id)等。
-	// 配置格式 {key1},{key2},{key3}...，多个 key 之间通过 "," 分割。
-	// 比如 export EGO_LOG_EXTRA_KEYS=X-Ego-Uid,X-Ego-Order-Id
-	// 这些扩展的追踪字段会根据配置的 key1、key2、key3 等键名，从 Headers(HTTP) 或 Metadata(gRPC) 查找对应值并打印到请求日志中
+	// EgoLogExtraKeys used to append extra tracing keys to every access logger entries, the keys usually comes from HTTP Headers or gRPC Metadata.
+	// you can trace you custom business clues, such as "X-Biz-Uid"(your application user ID) or "X-Biz-Order-Id"(your application order ID).
+	// each keys separated with ",". For example, export EGO_LOG_EXTRA_KEYS=X-Ego-Uid,X-Ego-Order-Id
 	EgoLogExtraKeys = "EGO_LOG_EXTRA_KEYS"
-	// EgoLogWriter writer方式： file | stderr
+	// EgoLogWriter defines your log writer, available types are: "file/stderr"
 	EgoLogWriter = "EGO_LOG_WRITER"
-	// EgoLogTimeType 记录的时间类型，默认 second，millisecond，%Y-%m-%d %H:%M:%S
+	// EgoLogTimeType defines time format on your logger entries, available types are "second/millisecond/%Y-%m-%d %H:%M:%S"
 	EgoLogTimeType = "EGO_LOG_TIME_TYPE"
-	// EgoTraceIDName 应用链路ID环境变量，不配置，默认x-trace-id
+	// EgoTraceIDName defines tracing ID NAME, default value is "x-trace-id"
 	EgoTraceIDName = "EGO_TRACE_ID_NAME"
-	// EgoGovernorEnableConfig 是否开启查看config
+	// EgoGovernorEnableConfig defines if you can query current configuration with governor APIs.
 	EgoGovernorEnableConfig = "EGO_GOVERNOR_ENABLE_CONFIG"
 )

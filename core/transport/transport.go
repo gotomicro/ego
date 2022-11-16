@@ -25,13 +25,15 @@ func init() {
 	customKeyStore.length = len(customKeyStore.keyArr)
 }
 
-// Set 设置context key arr
+// Set overrides custom keys with provided array.
 func Set(arr []string) {
+	length := len(arr)
 	customKeyStore.keyArr = arr
+	customKeyStore.keyMap = make(map[string]*contextKey, length)
 	for _, value := range arr {
 		customKeyStore.keyMap[value] = newContextKey(value)
 	}
-	customKeyStore.length = len(customKeyStore.keyArr)
+	customKeyStore.length = length
 }
 
 // CustomContextKeys returns custom content key list

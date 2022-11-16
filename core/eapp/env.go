@@ -33,7 +33,9 @@ func initEnv() {
 	egoLogAddApp = os.Getenv(constant.EgoLogAddApp)
 	egoTraceIDName = ienv.EnvOrStr(constant.EgoTraceIDName, "x-trace-id")
 	egoGovernorEnableConfig = os.Getenv(constant.EgoGovernorEnableConfig)
-	egoLogExtraKeys = strings.Split(os.Getenv(constant.EgoLogExtraKeys), ",")
+	if envEgoLogExtraKeys := strings.TrimSpace(os.Getenv(constant.EgoLogExtraKeys)); envEgoLogExtraKeys != "" {
+		egoLogExtraKeys = strings.Split(envEgoLogExtraKeys, ",")
+	}
 	egoLogWriter = ienv.EnvOrStr(constant.EgoLogWriter, "file")
 	egoLogTimeType = ienv.EnvOrStr(constant.EgoLogTimeType, "second")
 	if IsDevelopmentMode() {
