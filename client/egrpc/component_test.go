@@ -45,7 +45,7 @@ func Test_newComponent(t *testing.T) {
 	// address为空的时候会panic
 	assert.Panics(t, func() {
 		cfg := DefaultConfig()
-		//cfg.OnFail = "error"
+		// cfg.OnFail = "error"
 		newComponent("test-cmp", cfg, elog.DefaultLogger)
 	})
 

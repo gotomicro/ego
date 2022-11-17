@@ -129,10 +129,10 @@ func startClientAuthTLSServer() *Component {
 	config := DefaultConfig()
 	config.Port = 20000
 	config.EnableTLS = true
-	config.TLSKeyFile = "./testdata/egoServer/egoServer-key.pem"
-	config.TLSCertFile = "./testdata/egoServer/egoServer.pem"
+	config.TLSKeyFile = "./testdata/ego-server/ego-server-key.pem"
+	config.TLSCertFile = "./testdata/ego-server/ego-server.pem"
 	config.TLSClientAuth = "RequireAndVerifyClientCert"
-	config.TLSClientCAs = []string{"./testdata/egoClient/ca.pem"}
+	config.TLSClientCAs = []string{"./testdata/ego-client/ca.pem"}
 	container := DefaultContainer()
 	container.config = config
 	return container.Build()
@@ -140,13 +140,13 @@ func startClientAuthTLSServer() *Component {
 
 func loadConfig(t *testing.T, loadClientCert bool) *tls.Config {
 	pool := x509.NewCertPool()
-	ca, err := os.ReadFile("./testdata/egoServer/ca.pem")
+	ca, err := os.ReadFile("./testdata/ego-server/ca.pem")
 	assert.Nil(t, err)
 	assert.True(t, pool.AppendCertsFromPEM(ca))
 	cf := &tls.Config{}
 	cf.RootCAs = pool
 	if loadClientCert {
-		serverCert, err := tls.LoadX509KeyPair("./testdata/egoClient/anyClient.pem", "./testdata/egoClient/anyClient-key.pem")
+		serverCert, err := tls.LoadX509KeyPair("./testdata/ego-client/any-client.pem", "./testdata/ego-client/any-client-key.pem")
 		assert.Nil(t, err)
 		cf.Certificates = []tls.Certificate{serverCert}
 	}
@@ -192,7 +192,7 @@ func TestServerReadTimeout(t *testing.T) {
 	latency := time.Since(t1)
 	logger.Info("cost1", zap.Duration("cost", latency))
 	if n != 0 || err != io.EOF {
-		t.Error(fmt.Errorf("Read = %v, %v, wanted %v, %v", n, err, 0, io.EOF))
+		t.Error(fmt.Errorf("read = %v, %v, wanted %v, %v", n, err, 0, io.EOF))
 		return
 	}
 	minLatency := timeout / 5 * 4
@@ -279,7 +279,7 @@ func testServerTimeouts(timeout time.Duration) error {
 
 	expected := "req=1"
 	if string(got) != expected || err != nil {
-		return fmt.Errorf("Unexpected response for request #1; got %q ,%v; expected %q, nil",
+		return fmt.Errorf("unexpected response for request #1; got %q ,%v; expected %q, nil",
 			string(got), err, expected)
 	}
 
@@ -287,7 +287,7 @@ func testServerTimeouts(timeout time.Duration) error {
 	t1 := time.Now()
 	conn, err := net.Dial("tcp", ts.Listener.Addr().String())
 	if err != nil {
-		return fmt.Errorf("Dial: %v", err)
+		return fmt.Errorf("dial fail: %v", err)
 	}
 	buf := make([]byte, 1)
 	n, err := conn.Read(buf)
@@ -295,7 +295,7 @@ func testServerTimeouts(timeout time.Duration) error {
 	latency = time.Since(t1)
 	fmt.Printf("latency--------------->"+"%+v\n", latency)
 	if n != 0 || err != io.EOF {
-		return fmt.Errorf("Read = %v, %v, wanted %v, %v", n, err, 0, io.EOF)
+		return fmt.Errorf("read = %v, %v, wanted %v, %v", n, err, 0, io.EOF)
 	}
 	minLatency := timeout / 5 * 4
 	if latency < minLatency {
@@ -314,7 +314,7 @@ func testServerTimeouts(timeout time.Duration) error {
 	expected = "req=2"
 
 	if string(got) != expected || err != nil {
-		return fmt.Errorf("Get #2 got %q, %v, want %q, nil", string(got), err, expected)
+		return fmt.Errorf("get #2 got %q, %v, want %q, nil", string(got), err, expected)
 	}
 	return nil
 }

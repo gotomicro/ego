@@ -52,11 +52,11 @@ func GetServiceValue(s *server.ServiceInfo) string {
 	return s.GetServiceValue()
 }
 
-//func GetService(s string) *server.ServiceInfo {
+// func GetService(s string) *server.ServiceInfo {
 //	var si server.ServiceInfo
 //	_ = json.Unmarshal([]byte(s), &si)
 //	return &si
-//}
+// }
 
 // Configuration ...
 type Configuration struct {

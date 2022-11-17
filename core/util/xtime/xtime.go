@@ -15,15 +15,15 @@ func Duration(str string) time.Duration {
 }
 
 // TS RFC 3339 with seconds
-// Deprecated: this function will be moved to internal package, user should not use it any more.
+// Deprecated: this function will be moved to internal package, user should not use it anymore.
 var TS TimeFormat = "2006-01-02 15:04:05"
 
 // TimeFormat ...
-// Deprecated: this function will be moved to internal package, user should not use it any more.
+// Deprecated: this function will be moved to internal package, user should not use it anymore.
 type TimeFormat string
 
 // Format 格式化
-// Deprecated: this function will be moved to internal package, user should not use it any more.
+// Deprecated: this function will be moved to internal package, user should not use it anymore.
 func (ts TimeFormat) Format(t time.Time) string {
 	return t.Format(string(ts))
 }

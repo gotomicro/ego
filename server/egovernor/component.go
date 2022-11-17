@@ -142,27 +142,26 @@ func (c *Component) Start() error {
 				EnableOpenMetrics: true,
 			},
 		).ServeHTTP(w, r)
-		//promhttp.Handler().ServeHTTP(w, r)
+		// promhttp.Handler().ServeHTTP(w, r)
 	})
 	err := c.Server.Serve(c.listener)
 	if err == http.ErrServerClosed {
 		return nil
 	}
 	return err
-
 }
 
-//Stop ..
+// Stop ..
 func (c *Component) Stop() error {
 	return c.Server.Close()
 }
 
-//GracefulStop ..
+// GracefulStop ..
 func (c *Component) GracefulStop(ctx context.Context) error {
 	return c.Server.Shutdown(ctx)
 }
 
-//Info ..
+// Info ..
 func (c *Component) Info() *server.ServiceInfo {
 	info := server.ApplyOptions(
 		server.WithScheme("http"),

@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2020 go-kratos
+// # Copyright (c) 2020 go-kratos
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -131,8 +131,8 @@ func buildComment(upperCamelValue, comment string) string {
 	return fmt.Sprintf("// %s %s", upperCamelValue, comment)
 }
 
-var filedLevelCommentRgx, _ = regexp.Compile(`@([\w\.]+)=([_a-zA-Z0-9-,]+)`)
-var filedLevelCommentQuotedRgx, _ = regexp.Compile(`@([\w\.]+)="(.+)"`)
+var filedLevelCommentRgx, _ = regexp.Compile(`@([\w.]+)=([_a-zA-Z0-9-,]+)`)
+var filedLevelCommentQuotedRgx, _ = regexp.Compile(`@([\w.]+)="(.+)"`)
 var fileLevelCommentRgx, _ = regexp.Compile(`@(\w+)=([_a-zA-Z0-9-,]+)`)
 
 type annotation struct {

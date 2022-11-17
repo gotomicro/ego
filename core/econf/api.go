@@ -83,7 +83,7 @@ func Get(key string) interface{} {
 	return defaultConfiguration.Get(key)
 }
 
-// Set set config value for key
+// Set sets config value for key
 func Set(key string, val interface{}) {
 	_ = defaultConfiguration.Set(key, val)
 }

@@ -28,10 +28,9 @@ type (
 	Schedule = cron.Schedule
 	// Parser ...
 	Parser = cron.Parser
-
 	// Job ...
 	Job = cron.Job
-	//NamedJob ..
+	// NamedJob ..
 	NamedJob interface {
 		Run(ctx context.Context) error
 		Name() string

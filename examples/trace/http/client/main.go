@@ -41,7 +41,7 @@ func callHTTP() error {
 	fmt.Printf("carrier--------------->"+"%+v\n", carrier.Keys())
 
 	// Inject traceId Into Header
-	//c1 := etrace.HeaderInjector(ctx, req.Header)
+	// c1 := etrace.HeaderInjector(ctx, req.Header)
 	fmt.Println(span.SpanContext().TraceID())
 	info, err := req.SetContext(ctx).Get("http://127.0.0.1:9007/hello")
 	if err != nil {

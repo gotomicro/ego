@@ -96,7 +96,7 @@ func timeoutMiddleware(timeout time.Duration) func(c *gin.Context) {
 				c.Abort()
 			}
 
-			//cancel to clear resources after finished
+			// cancel to clear resources after finished
 			cancel()
 		}()
 
@@ -108,7 +108,6 @@ func timeoutMiddleware(timeout time.Duration) func(c *gin.Context) {
 
 // defaultServerInterceptor 默认拦截器，包含日志记录、Recover等功能
 func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
-
 	return func(ctx *gin.Context) {
 		var beg = time.Now()
 		var rw *resWriter

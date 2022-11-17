@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-// hello world, the web server
 func HelloServer(w http.ResponseWriter, req *http.Request) {
 	<-req.Context().Done()
 	io.WriteString(w, "hello, world!\n")
