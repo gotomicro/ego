@@ -1,9 +1,10 @@
 package main
 
 import (
+	"time"
+
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
-	"time"
 )
 
 //  export EGO_DEBUG=true && go run main.go --config=config.toml

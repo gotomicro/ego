@@ -52,7 +52,7 @@ func (c *Configuration) SetKeyDelim(delim string) {
 	c.keyDelim = delim
 }
 
-// Sub returns new Configuration instance representing a sub tree of this instance.
+// Sub returns new Configuration instance representing a subtree of this instance.
 func (c *Configuration) Sub(key string) *Configuration {
 	return &Configuration{
 		keyDelim: c.keyDelim,

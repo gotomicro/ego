@@ -11,7 +11,7 @@ func FunctionName(i interface{}) string {
 }
 
 // ObjectName returns the object's path and name of given pointer.
-// Deprecated: this function will be moved to internal package, user should not use it any more.
+// Deprecated: this function will be moved to internal package, user should not use it anymore.
 func ObjectName(i interface{}) string {
 	typ := reflect.TypeOf(i)
 	if typ.Kind() == reflect.Ptr {

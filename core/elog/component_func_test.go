@@ -16,12 +16,12 @@ func Test_timeEncoder(t *testing.T) {
 	assert.Equal(t, int64(1609495200), enc.elems[0].(int64))
 }
 
-//func Test_timeDebugEncoder(t *testing.T) {
+// func Test_timeDebugEncoder(t *testing.T) {
 //	te, _ := time.Parse("2006-01-02 15:04:05", "2021-01-01 10:00:00")
 //	enc := &sliceArrayEncoder{}
 //	timeDebugEncoder(te, enc)
 //	assert.Equal(t, "2021-01-01 10:00:00", enc.elems[0].(string))
-//}
+// }
 
 func Test_debugEncodeLevel1(t *testing.T) {
 	type args struct {

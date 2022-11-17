@@ -27,9 +27,9 @@ func main() {
 		server := egin.Load("server.http").Build()
 		server.GET("/hello", func(c *gin.Context) {
 			time.Sleep(10 * time.Second)
-			//startTime := time.Now()
-			//ehttp.DefaultContainer().Build().R().SetContext(c.Request.Context()).Get("http://127.0.0.1:12345/longtime")
-			//fmt.Println("cost: ", time.Now().Sub(startTime))
+			// startTime := time.Now()
+			// ehttp.DefaultContainer().Build().R().SetContext(c.Request.Context()).Get("http://127.0.0.1:12345/longtime")
+			// fmt.Println("cost: ", time.Now().Sub(startTime))
 			c.JSON(200, "Hello EGO")
 			return
 		})

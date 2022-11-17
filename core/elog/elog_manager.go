@@ -12,7 +12,6 @@ var (
 
 // WriterBuilder 根据key初始化writer
 type WriterBuilder interface {
-	// Build(key string, commonConfig *Config, lv zap.AtomicLevel) (zapcore.Core, CloseFunc)
 	Build(key string, commonConfig *Config) Writer
 	Scheme() string
 }

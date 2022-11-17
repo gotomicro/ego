@@ -38,7 +38,7 @@ func callGrpc() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		time.Sleep(xtime.Duration("620us"))
-		//time.Sleep(xtime.Duration("10s"))
+		// time.Sleep(xtime.Duration("10s"))
 		cancel()
 	}()
 

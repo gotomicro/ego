@@ -106,12 +106,12 @@ func (c *Component) Start() error {
 	// 因为start和stop在多个goroutine里，需要对Server上写锁
 	c.mu.Lock()
 	c.Server = &http.Server{
-		Addr: c.config.Address(),
-		//Handler:           http.TimeoutHandler(c, 1*time.Second, "timeout"),
+		Addr:              c.config.Address(),
 		Handler:           c,
 		ReadHeaderTimeout: c.config.ServerReadHeaderTimeout,
 		ReadTimeout:       c.config.ServerReadTimeout,
 		WriteTimeout:      c.config.ServerWriteTimeout,
+		// Handler:           http.TimeoutHandler(c, 1*time.Second, "timeout"),
 	}
 	c.mu.Unlock()
 	var err error

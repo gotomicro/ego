@@ -14,7 +14,7 @@ import (
 	"github.com/gotomicro/ego/server/egrpc"
 )
 
-//  export EGO_DEBUG=true && go run main.go --config=config.toml
+// export EGO_DEBUG=true && go run main.go --config=config.toml
 func main() {
 	if err := ego.New().Serve(func() server.Server {
 		component := egrpc.Load("server.grpc").Build()
@@ -36,12 +36,12 @@ func (g Greeter) SayHello(ctx context.Context, request *helloworld.HelloRequest)
 	if request.Name == "error" {
 		return nil, status.Error(codes.Unavailable, "error")
 	}
-	//header := metadata.Pairs("x-header-key", "val")
-	//err := grpc.SendHeader(context, header)
-	//if err != nil {
+	// header := metadata.Pairs("x-header-key", "val")
+	// err := grpc.SendHeader(context, header)
+	// if err != nil {
 	//	return nil, fmt.Errorf("set header fail, %w", err)
-	//}
-	//go func() {
+	// }
+	// go func() {
 	//	for {
 	//		select {
 	//		case <-ctx.Done():
@@ -49,12 +49,12 @@ func (g Greeter) SayHello(ctx context.Context, request *helloworld.HelloRequest)
 	//			return
 	//		}
 	//	}
-	//}()
+	// }()
 
 	<-ctx.Done()
 	return nil, ctx.Err()
 
-	//time.Sleep(xtime.Duration("2s"))
+	// time.Sleep(xtime.Duration("2s"))
 	return &helloworld.HelloResponse{
 		Message: "Hello EGO, I'm " + g.server.Address(),
 	}, nil

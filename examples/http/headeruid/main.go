@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-//  export EGO_DEBUG=true && go run main.go --config=config.toml
+// export EGO_DEBUG=true && go run main.go --config=config.toml
 func main() {
 	if err := ego.New().Serve(func() *egin.Component {
 		server := egin.Load("server.http").Build()
@@ -32,8 +32,8 @@ func main() {
 			pCtx := transport.WithValue(ctx.Request.Context(), "X-Ego-Uid", 9527)
 			ctx.Request = ctx.Request.WithContext(pCtx)
 			// Get traceId from Request's context
-			//span, _ := etrace.StartSpanFromContext(ctx.Request.Context(), "Handle: /Hello")
-			//defer span.Finish()
+			// span, _ := etrace.StartSpanFromContext(ctx.Request.Context(), "Handle: /Hello")
+			// defer span.Finish()
 
 			_, span := etrace.NewTracer(trace.SpanKindServer).Start(ctx.Request.Context(), "Handle: /Hello", nil)
 			defer span.End()

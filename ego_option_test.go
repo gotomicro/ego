@@ -47,11 +47,11 @@ func TestWithHang(t *testing.T) {
 }
 
 func TestWithArguments(t *testing.T) {
-	//arguments default
+	// arguments default
 	app := New()
 	assert.Equal(t, os.Args[1:], app.opts.arguments)
 
-	//arguments set
+	// arguments set
 	app = New(
 		WithArguments([]string{"--foo", "bar"}),
 	)

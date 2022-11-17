@@ -65,28 +65,28 @@ func WithWrappers(wrappers ...JobWrapper) Option {
 	}
 }
 
-//WithJob 指定Job
+// WithJob 指定Job
 func WithJob(job FuncJob) Option {
 	return func(c *Container) {
 		c.config.job = job
 	}
 }
 
-//WithSeconds 开启秒单位
+// WithSeconds 开启秒单位
 func WithSeconds() Option {
 	return func(c *Container) {
 		c.config.EnableSeconds = true
 	}
 }
 
-//WithParser 设置时间 parser
+// WithParser 设置时间 parser
 func WithParser(p cron.Parser) Option {
 	return func(c *Container) {
 		c.config.parser = p
 	}
 }
 
-//WithLocation 设置时区
+// WithLocation 设置时区
 func WithLocation(loc *time.Location) Option {
 	return func(c *Container) {
 		c.config.loc = loc
