@@ -1,0 +1,7 @@
+[server.grpc]
+    network = "unix"
+    host = "server.sock"
+    enableAccessInterceptorReq = true
+    enableAccessInterceptorRes = true
+[server.governor]
+    port = 9003

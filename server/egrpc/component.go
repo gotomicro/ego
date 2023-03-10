@@ -78,7 +78,10 @@ func (c *Component) Init() error {
 	if err != nil {
 		c.logger.Panic("new grpc server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
 	}
-	c.config.Port = listener.Addr().(*net.TCPAddr).Port
+	tcpInfo, flag := listener.Addr().(*net.TCPAddr)
+	if flag {
+		c.config.Port = tcpInfo.Port
+	}
 
 	info := server.ApplyOptions(
 		server.WithScheme("grpc"),
