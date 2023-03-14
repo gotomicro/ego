@@ -30,11 +30,11 @@ func init() {
 // Parse implements DataSource method
 func (fp *fileDataSource) Parse(path string, watch bool) econf.ConfigType {
 	if _, err := os.Stat(path); err != nil {
-		elog.Panic("invalid path", elog.FieldErr(err))
+		elog.Panic("invalid path", elog.FieldName(path), elog.FieldErr(err))
 	}
 	absolutePath, err := filepath.Abs(path)
 	if err != nil {
-		elog.Panic("can't get absolutePath", elog.FieldErr(err))
+		elog.Panic("can't get absolutePath", elog.FieldName(absolutePath), elog.FieldErr(err))
 	}
 	fp.path = absolutePath
 	fp.enableWatch = watch
