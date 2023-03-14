@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+	"os"
 
 	"github.com/BurntSushi/toml"
 	"github.com/gotomicro/ego/core/econf"
@@ -46,6 +47,14 @@ func NewDataSource(configAddr string, watch bool) (econf.DataSource, econf.Unmar
 	urlObj, err := url.Parse(configAddr)
 	if err == nil && len(urlObj.Scheme) > 1 {
 		scheme = urlObj.Scheme
+	}
+
+	// 如果是默认file协议，判断下文件是否存在
+	if scheme == defaultScheme {
+		_, err := os.Stat(configAddr)
+		if err != nil {
+			return nil, nil, "", ErrDefaultConfigNotExist
+		}
 	}
 
 	creatorFunc, exist := registry[scheme]
