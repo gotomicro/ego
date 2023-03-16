@@ -33,4 +33,6 @@ const (
 	EgoTraceIDName = "EGO_TRACE_ID_NAME"
 	// EgoGovernorEnableConfig defines if you can query current configuration with governor APIs.
 	EgoGovernorEnableConfig = "EGO_GOVERNOR_ENABLE_CONFIG"
+	// EgoLogEnableAddCaller when set to true, your log will show caller, default value is false
+	EgoLogEnableAddCaller = "EGO_LOG_ENABLE_ADD_CALLER"
 )

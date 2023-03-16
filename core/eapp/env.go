@@ -21,6 +21,7 @@ var (
 	egoLogWriter            string
 	egoGovernorEnableConfig string
 	egoLogTimeType          string
+	egoLogEnableAddCaller   bool
 )
 
 func initEnv() {
@@ -41,6 +42,7 @@ func initEnv() {
 	if IsDevelopmentMode() {
 		egoLogTimeType = "%Y-%m-%d %H:%M:%S"
 	}
+	egoLogEnableAddCaller = ienv.EnvOrBool(constant.EgoLogEnableAddCaller, false)
 }
 
 // AppMode returns application running mode.
@@ -106,4 +108,8 @@ func EgoLogTimeType() string {
 // SetEgoDebug returns the flag if debug mode has been triggered
 func SetEgoDebug(flag string) {
 	egoDebug = flag
+}
+
+func EgoLogEnableAddCaller() bool {
+	return egoLogEnableAddCaller
 }
