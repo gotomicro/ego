@@ -721,3 +721,17 @@ func TestWithZapConfig(t *testing.T) {
 	assert.Contains(t, string(logged), `"L":"INFO"`)
 	os.Remove(filePath)
 }
+
+func TestConfig_AddCaller(t *testing.T) {
+	logger := DefaultContainer().Build(
+		WithDebug(true),
+		WithEnableAddCaller(true),
+		WithEnableAsync(false),
+	)
+	logger.Info("hello")
+	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
+	logged, err := ioutil.ReadFile(filePath)
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), `elog/component_test.go:`)
+	os.Remove(filePath)
+}

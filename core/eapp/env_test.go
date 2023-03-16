@@ -96,3 +96,12 @@ func TestEgoLogWriter(t *testing.T) {
 	out := EgoLogWriter()
 	assert.Equal(t, "stderr", out)
 }
+
+func TestEgoLogEnableAddCaller(t *testing.T) {
+	os.Setenv(constant.EgoLogEnableAddCaller, "true")
+	defer os.Unsetenv(constant.EgoLogEnableAddCaller)
+
+	initEnv()
+	out := EgoLogEnableAddCaller()
+	assert.True(t, out)
+}

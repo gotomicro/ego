@@ -48,7 +48,7 @@ func defaultConfig() *Config {
 		Dir:             dir,
 		Level:           "info",
 		CallerSkip:      1,
-		EnableAddCaller: false,
+		EnableAddCaller: eapp.EgoLogEnableAddCaller(),
 		EnableAsync:     true,
 		asyncStopFunc:   func() error { return nil },
 		encoderConfig:   nil,
