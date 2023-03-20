@@ -88,6 +88,10 @@ func (c *Configuration) LoadFromDataSource(ds DataSource, unmarshaller Unmarshal
 	}
 
 	go func() {
+		// 首次加载配置执行 OnChange
+		for _, change := range c.onChanges {
+			change(c)
+		}
 		for range ds.IsConfigChanged() {
 			if content, err := ds.ReadConfig(); err == nil {
 				_ = c.Load(content, unmarshaller)
