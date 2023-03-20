@@ -3,8 +3,8 @@ package egin
 import (
 	"net/http"
 
+	"github.com/fasthttp/websocket"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 // Upgrade protocol to WebSocket
