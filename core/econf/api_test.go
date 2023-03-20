@@ -7,6 +7,7 @@ import (
 	"path"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -75,9 +76,14 @@ func newWithConfigFile(t *testing.T) (*econf.Configuration, string, func(), *syn
 	assert.Nil(t, err)
 
 	wg := &sync.WaitGroup{}
-	wg.Add(1)
+	wg.Add(2)
+	var init int64
 	v.OnChange(func(configuration *econf.Configuration) {
-		t.Logf("config file changed")
+		if atomic.CompareAndSwapInt64(&init, 0, 1) {
+			t.Logf("config init")
+		} else {
+			t.Logf("config file changed")
+		}
 		wg.Done()
 	})
 	err = v.LoadFromDataSource(provider, parser, econf.WithTagName(tag))
@@ -115,9 +121,14 @@ func newWithSymlinkedConfigFile(t *testing.T) (*econf.Configuration, string, str
 	require.Nil(t, err)
 
 	wg := &sync.WaitGroup{}
-	wg.Add(1)
+	wg.Add(2)
+	var init int64
 	v.OnChange(func(configuration *econf.Configuration) {
-		t.Logf("config file changed")
+		if atomic.CompareAndSwapInt64(&init, 0, 1) {
+			t.Logf("config init")
+		} else {
+			t.Logf("config file changed")
+		}
 		wg.Done()
 	})
 	err = v.LoadFromDataSource(provider, parser, econf.WithTagName(tag))
