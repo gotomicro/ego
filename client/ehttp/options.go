@@ -85,3 +85,10 @@ func WithEnableAccessInterceptorRes(enableAccessInterceptorRes bool) Option {
 		c.config.EnableAccessInterceptorRes = enableAccessInterceptorRes
 	}
 }
+
+// WithPathRelabel 设置路径重命名
+func WithPathRelabel(match string, replacement string) Option {
+	return func(c *Container) {
+		c.config.PathRelabel = append(c.config.PathRelabel, Relabel{Match: match, Replacement: replacement})
+	}
+}

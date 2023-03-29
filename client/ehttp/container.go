@@ -1,6 +1,8 @@
 package ehttp
 
 import (
+	"regexp"
+
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 )
@@ -30,6 +32,13 @@ func Load(key string) *Container {
 	if err := econf.UnmarshalKey(key, &c.config); err != nil {
 		c.logger.Panic("parse config error", elog.FieldErr(err), elog.FieldKey(key))
 		return c
+	}
+	for idx, relabel := range c.config.PathRelabel {
+		if reg, err := regexp.Compile(relabel.Match); err == nil {
+			c.config.PathRelabel[idx].matchReg = reg
+		} else {
+			c.logger.Panic("parse path relabel error", elog.FieldErr(err), elog.FieldKey(key))
+		}
 	}
 	c.name = key
 	return c
