@@ -1,6 +1,7 @@
 package ehttp
 
 import (
+	"regexp"
 	"runtime"
 	"time"
 
@@ -21,6 +22,13 @@ type Config struct {
 	EnableKeepAlives           bool          // 是否开启长连接，默认打开
 	EnableAccessInterceptor    bool          // 是否开启记录请求数据，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
+	PathRelabel                []Relabel     // path 重命名 (metric 用)
+}
+
+type Relabel struct {
+	Match       string
+	matchReg    *regexp.Regexp
+	Replacement string
 }
 
 // DefaultConfig ...

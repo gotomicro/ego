@@ -93,12 +93,26 @@ func beg(ctx context.Context) time.Time {
 func fixedInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
 	return func(cli *resty.Client, req *resty.Request) error {
 		// 这个URL可能不准，每次请求都需要重复url.Parse()，会增加一定的性能损耗
-		concatURL := strings.TrimRight(config.Addr, "/") + "/" + strings.TrimLeft(req.URL, "/")
+		var concatURL string
+		if config.Addr == "" {
+			// 没有配置addr，host可能在url里面 (request.Get("http://xxx.com/xxx"))
+			concatURL = req.URL
+		} else {
+			concatURL = strings.TrimRight(config.Addr, "/") + "/" + strings.TrimLeft(req.URL, "/")
+		}
 		u, err := url.Parse(concatURL)
 		if err != nil {
 			logger.Warn("invalid url", elog.String("concatURL", concatURL), elog.FieldErr(err))
 			req.SetContext(context.WithValue(context.WithValue(req.Context(), begKey{}, time.Now()), urlKey{}, &url.URL{}))
 			return err
+		}
+		if len(config.PathRelabel) > 0 {
+			for _, relabel := range config.PathRelabel {
+				if relabel.matchReg.MatchString(u.Path) {
+					u.Path = relabel.Replacement
+					break
+				}
+			}
 		}
 		req.SetContext(context.WithValue(context.WithValue(req.Context(), begKey{}, time.Now()), urlKey{}, u))
 		return nil
