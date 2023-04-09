@@ -32,7 +32,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		SetDebug(config.RawDebug).
 		SetTimeout(config.ReadTimeout).
 		SetHeader("app", eapp.Name()).
-		SetHostURL(config.Addr)
+		SetBaseURL(config.Addr)
 	for _, interceptor := range interceptors {
 		onBefore, onAfter, onErr := interceptor(name, config, logger)
 		if onBefore != nil {

@@ -5,11 +5,13 @@ import (
 	"net"
 
 	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/internal/egrpclog"
 	"github.com/gotomicro/ego/server"
 	"go.uber.org/zap/zapgrpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -29,6 +31,7 @@ type Component struct {
 	listener   net.Listener
 	serverInfo *server.ServiceInfo
 	quit       chan error
+	invokers   []func() error // 用户初始化函数
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
@@ -38,8 +41,12 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 	newServer := grpc.NewServer(config.serverOptions...)
 	reflection.Register(newServer)
-	healthpb.RegisterHealthServer(newServer, health.NewServer())
-
+	healthSvc := health.NewServer()
+	// server should register all the services manually
+	// use empty service name for all etcd services' health status,
+	// see https://github.com/grpc/grpc/blob/master/doc/health-checking.md for more
+	healthSvc.SetServingStatus(eapp.Name(), healthpb.HealthCheckResponse_SERVING)
+	healthpb.RegisterHealthServer(newServer, healthSvc)
 	return &Component{
 		name:       name,
 		config:     config,
@@ -63,6 +70,12 @@ func (c *Component) PackageName() string {
 
 // Init 初始化
 func (c *Component) Init() error {
+	for _, fn := range c.invokers {
+		err := fn()
+		if err != nil {
+			return err
+		}
+	}
 	var (
 		listener net.Listener
 		err      error
@@ -99,6 +112,30 @@ func (c *Component) Start() error {
 	return err
 }
 
+// Health implements server.Component interface.
+// Experimental
+func (c *Component) Health() bool {
+	addr := c.config.Address()
+	if c.config.Network == "unix" {
+		addr = "unix:" + addr
+	}
+	cc, err := grpc.DialContext(context.Background(), addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		c.logger.Error("health connection err", elog.FieldErr(err))
+		return false
+	}
+	healthClient := healthpb.NewHealthClient(cc)
+	resp, err := healthClient.Check(context.Background(), &healthpb.HealthCheckRequest{
+		Service: eapp.Name(),
+	})
+	if err != nil {
+		c.logger.Error("health rpc err", elog.FieldErr(err))
+		return false
+	}
+	c.logger.Info("grpc health connection OK")
+	return resp.Status == healthpb.HealthCheckResponse_SERVING
+}
+
 // Stop implements server.Component interface
 // it will terminate echo server immediately
 func (c *Component) Stop() error {
@@ -122,6 +159,11 @@ func (c *Component) GracefulStop(ctx context.Context) error {
 			return nil
 		}
 	}
+}
+
+// Invoker returns server info, used by governor and consumer balancer
+func (c *Component) Invoker(fns ...func() error) {
+	c.invokers = append(c.invokers, fns...)
 }
 
 // Info returns server info, used by governor and consumer balancer

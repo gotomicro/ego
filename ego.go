@@ -33,12 +33,13 @@ type Ego struct {
 	cancel func()          // cancel
 
 	// 第二部分 运行程序
-	inits      []func() error       // 系统初始化函数
-	invokers   []func() error       // 用户初始化函数
-	servers    []server.Server      // 服务
-	crons      []ecron.Ecron        // 定时任务
-	jobs       map[string]ejob.Ejob // 短时任务
-	registerer eregistry.Registry   // 注册中心
+	inits        []func() error       // 系统初始化函数
+	invokers     []func() error       // 用户初始化函数
+	servers      []server.Server      // 服务
+	orderServers []server.OrderServer // 有顺序的服务，需要监听health。成功后，才启动下一步
+	crons        []ecron.Ecron        // 定时任务
+	jobs         map[string]ejob.Ejob // 短时任务
+	registerer   eregistry.Registry   // 注册中心
 
 	// 第三部分 可选方法
 	opts opts
@@ -151,6 +152,14 @@ func (e *Ego) Serve(s ...server.Server) *Ego {
 	return e
 }
 
+// OrderServe 设置服务
+func (e *Ego) OrderServe(s ...server.OrderServer) *Ego {
+	e.smu.Lock()
+	defer e.smu.Unlock()
+	e.orderServers = append(e.orderServers, s...)
+	return e
+}
+
 // Cron 设置定时任务
 func (e *Ego) Cron(w ...ecron.Ecron) *Ego {
 	e.crons = append(e.crons, w...)
@@ -204,8 +213,11 @@ func (e *Ego) Run() error {
 
 	e.waitSignals() // start signal listen task in goroutine
 
-	// 启动服务
+	// 启动Order服务
 	_ = e.startServers(e.ctx)
+
+	// 启动服务
+	_ = e.startOrderServers(e.ctx)
 
 	// 启动定时任务
 	_ = e.startCrons()
@@ -238,8 +250,21 @@ func (e *Ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 				})
 			}(s)
 		}
+		for _, s := range e.orderServers {
+			func(s server.Server) {
+				// todo
+				e.cycle.Run(func() error {
+					return s.GracefulStop(ctx)
+				})
+			}(s)
+		}
 	} else {
 		for _, s := range e.servers {
+			func(s server.Server) {
+				e.cycle.Run(s.Stop)
+			}(s)
+		}
+		for _, s := range e.orderServers {
 			func(s server.Server) {
 				e.cycle.Run(s.Stop)
 			}(s)

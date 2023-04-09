@@ -20,6 +20,7 @@ import (
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/etrace/otel"
 	"github.com/gotomicro/ego/core/util/xcolor"
+	"github.com/gotomicro/ego/internal/retry"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/automaxprocs/maxprocs"
 	"golang.org/x/sync/errgroup"
@@ -76,6 +77,41 @@ func (e *Ego) startServers(ctx context.Context) error {
 			err = s.Start()
 			return
 		})
+	}
+	return nil
+}
+
+func (e *Ego) startOrderServers(ctx context.Context) error {
+	// start order servers
+	for _, s := range e.orderServers {
+		s := s
+		e.cycle.Run(func() (err error) {
+			_ = s.Init()
+			err = e.registerer.RegisterService(ctx, s.Info())
+			if err != nil {
+				e.logger.Error("register service err", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err))
+			}
+			defer func() {
+				_ = e.registerer.UnregisterService(ctx, s.Info())
+			}()
+			e.logger.Info("start order server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldAddr(s.Info().Label()))
+			defer e.logger.Info("stop order server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err), elog.FieldAddr(s.Info().Label()))
+			err = s.Start()
+			return
+		})
+		isHealth := false
+		for r := retry.Begin(); r.Continue(ctx); {
+			// 检测server的health接口
+			// 如果成功，那么就跳出循环
+			if s.Health() {
+				isHealth = true
+				break
+			}
+		}
+		if !isHealth {
+			return fmt.Errorf("start order server fail,err:  " + s.Name())
+		}
+
 	}
 	return nil
 }

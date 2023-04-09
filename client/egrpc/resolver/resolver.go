@@ -101,16 +101,17 @@ func (b *baseResolver) Close() {
 
 // run 更新节点信息
 // State
-//      Addresses   []Address{  IP列表
-//                  	Addr: IP 地址,
-//						ServerName: 应用名称, 如：svc-user
-//						Attributes: 节点基本信息： server.ServiceInfo
-//                  }
-//      Attributes： {  用于负载均衡的配置，目前需要通过后台来设置
-//						constant.KeyRouteConfig    路由配置
-//						constant.KeyProviderConfig 服务提供方元信息
-//						constant.KeyConsumerConfig 服务消费方配置信息
-//                   }
+//
+//	     Addresses   []Address{  IP列表
+//	                 	Addr: IP 地址,
+//							ServerName: 应用名称, 如：svc-user
+//							Attributes: 节点基本信息： server.ServiceInfo
+//	                 }
+//	     Attributes： {  用于负载均衡的配置，目前需要通过后台来设置
+//							constant.KeyRouteConfig    路由配置
+//							constant.KeyProviderConfig 服务提供方元信息
+//							constant.KeyConsumerConfig 服务消费方配置信息
+//	                  }
 func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 	go func() {
 		for {

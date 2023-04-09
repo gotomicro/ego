@@ -117,7 +117,7 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 		// 也可以直接使用econf.Sub(c.name).GetBool("EnableAccessInterceptorReq")，不过从econf动态查找配置性能可能会比较差，暂时先用锁代替
 		c.config.mu.RLock()
 		if c.config.EnableAccessInterceptorReq || c.config.AccessInterceptorReqResFilter != "" {
-			ctx.Request.Body = ioutil.NopCloser(io.TeeReader(ctx.Request.Body, &rb))
+			ctx.Request.Body = io.NopCloser(io.TeeReader(ctx.Request.Body, &rb))
 		}
 		// 只有开启了EnableAccessInterceptorRes时才替换response writer
 		if c.config.EnableAccessInterceptorRes || c.config.AccessInterceptorReqResFilter != "" {
