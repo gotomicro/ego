@@ -16,8 +16,11 @@ import (
 	"strings"
 	"sync"
 
+	healthcheck "github.com/RaMin0/gin-health-check"
 	"github.com/gin-gonic/gin"
+	"github.com/go-resty/resty/v2"
 	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
 )
@@ -36,6 +39,7 @@ type Component struct {
 	listener         net.Listener
 	routerCommentMap map[string]string // router的中文注释，非并发安全
 	embedWrapper     *EmbedWrapper
+	invokers         []func() error // 用户初始化函数
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
@@ -73,6 +77,12 @@ func (c *Component) PackageName() string {
 
 // Init 初始化
 func (c *Component) Init() error {
+	for _, fn := range c.invokers {
+		err := fn()
+		if err != nil {
+			return err
+		}
+	}
 	var err error
 	if c.config.Network == "local" {
 		c.listener = newLocalListener()
@@ -84,6 +94,18 @@ func (c *Component) Init() error {
 	}
 	c.config.Port = c.listener.Addr().(*net.TCPAddr).Port
 	return nil
+}
+
+// Health implements server.Component interface.
+func (c *Component) Health() bool {
+	cli, err := resty.New().
+		SetHeader("app", eapp.Name()).
+		SetBaseURL("http://"+c.config.Address()).R().SetHeader(healthcheck.DefaultHeaderName, healthcheck.DefaultHeaderValue).Get("/")
+	if err != nil {
+		c.logger.Error("health fail", elog.FieldErr(err))
+		return false
+	}
+	return cli.StatusCode() == healthcheck.DefaultResponseCode && cli.String() == healthcheck.DefaultResponseText
 }
 
 // RegisterRouteComment 注册路由注释
@@ -157,6 +179,12 @@ func (c *Component) Info() *server.ServiceInfo {
 		server.WithKind(constant.ServiceProvider),
 	)
 	return &info
+}
+
+// Invoker returns server info, used by governor and consumer balancer
+// Experimental
+func (c *Component) Invoker(fns ...func() error) {
+	c.invokers = append(c.invokers, fns...)
 }
 
 func commentUniqKey(method, path string) string {

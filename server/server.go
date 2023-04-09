@@ -73,6 +73,16 @@ type Server interface {
 	Info() *ServiceInfo
 }
 
+// OrderServer ...
+// Experimental
+type OrderServer interface {
+	standard.Component
+	GracefulStop(ctx context.Context) error
+	Info() *ServiceInfo
+	Health() bool
+	Invoker(fns ...func() error) // 用户初始化函数，放在order server里执行
+}
+
 // Route ...
 type Route struct {
 	// 权重组，按照

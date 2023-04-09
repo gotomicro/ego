@@ -1,7 +1,6 @@
 package file
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -65,7 +64,7 @@ func extParser(configAddr string) econf.ConfigType {
 
 // ReadConfig implements DataSource method
 func (fp *fileDataSource) ReadConfig() (content []byte, err error) {
-	return ioutil.ReadFile(fp.path)
+	return os.ReadFile(fp.path)
 }
 
 // Close implements DataSource method
