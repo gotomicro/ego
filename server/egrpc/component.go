@@ -68,7 +68,7 @@ func (c *Component) PackageName() string {
 	return PackageName
 }
 
-// Init 初始化
+// Init 初始化一些信息
 func (c *Component) Init() error {
 	for _, fn := range c.invokers {
 		err := fn()
@@ -76,6 +76,17 @@ func (c *Component) Init() error {
 			return err
 		}
 	}
+	info := server.ApplyOptions(
+		server.WithScheme("grpc"),
+		server.WithAddress(c.config.Address()),
+		server.WithKind(constant.ServiceProvider),
+	)
+	c.serverInfo = &info
+	return nil
+}
+
+// Start implements server.Component interface.
+func (c *Component) Start() error {
 	var (
 		listener net.Listener
 		err      error
@@ -95,20 +106,8 @@ func (c *Component) Init() error {
 	if flag {
 		c.config.Port = tcpInfo.Port
 	}
-
-	info := server.ApplyOptions(
-		server.WithScheme("grpc"),
-		server.WithAddress(listener.Addr().String()),
-		server.WithKind(constant.ServiceProvider),
-	)
 	c.listener = listener
-	c.serverInfo = &info
-	return nil
-}
-
-// Start implements server.Component interface.
-func (c *Component) Start() error {
-	err := c.Server.Serve(c.listener)
+	err = c.Server.Serve(c.listener)
 	return err
 }
 

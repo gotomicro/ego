@@ -83,16 +83,6 @@ func (c *Component) Init() error {
 			return err
 		}
 	}
-	var err error
-	if c.config.Network == "local" {
-		c.listener = newLocalListener()
-	} else {
-		c.listener, err = net.Listen(c.config.Network, c.config.Address())
-		if err != nil {
-			c.logger.Panic("new egin server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
-		}
-	}
-	c.config.Port = c.listener.Addr().(*net.TCPAddr).Port
 	return nil
 }
 
@@ -115,6 +105,16 @@ func (c *Component) RegisterRouteComment(method, path, comment string) {
 
 // Start implements server.Component interface.
 func (c *Component) Start() error {
+	var err error
+	if c.config.Network == "local" {
+		c.listener = newLocalListener()
+	} else {
+		c.listener, err = net.Listen(c.config.Network, c.config.Address())
+		if err != nil {
+			c.logger.Panic("new egin server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
+		}
+	}
+	c.config.Port = c.listener.Addr().(*net.TCPAddr).Port
 	for _, route := range c.Engine.Routes() {
 		info, flag := c.routerCommentMap[commentUniqKey(route.Method, route.Path)]
 		// 如果有注释，日志打出来
@@ -136,7 +136,6 @@ func (c *Component) Start() error {
 		// Handler:           http.TimeoutHandler(c, 1*time.Second, "timeout"),
 	}
 	c.mu.Unlock()
-	var err error
 	if c.config.EnableTLS {
 		config, errTLS := c.buildTLSConfig()
 		if errTLS != nil {
