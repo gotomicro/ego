@@ -176,7 +176,7 @@ func (c *Component) GracefulStop(ctx context.Context) error {
 func (c *Component) Info() *server.ServiceInfo {
 	info := server.ApplyOptions(
 		server.WithScheme("http"),
-		server.WithAddress(c.config.Address()),
+		server.WithAddress(c.listener.Addr().String()),
 		server.WithKind(constant.ServiceProvider),
 	)
 	return &info
