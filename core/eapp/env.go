@@ -110,6 +110,7 @@ func SetEgoDebug(flag string) {
 	egoDebug = flag
 }
 
+// EgoLogEnableAddCaller ...
 func EgoLogEnableAddCaller() bool {
 	return egoLogEnableAddCaller
 }

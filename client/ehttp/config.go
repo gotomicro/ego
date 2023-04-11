@@ -25,6 +25,7 @@ type Config struct {
 	PathRelabel                []Relabel     // path 重命名 (metric 用)
 }
 
+// Relabel ...
 type Relabel struct {
 	Match       string
 	matchReg    *regexp.Regexp
