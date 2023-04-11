@@ -207,16 +207,19 @@ func (e *Ego) Run() error {
 		return e.err
 	}
 	// 如果存在短时任务，那么只执行短时任务
-	if len(e.jobs) > 0 {
+	// 如果没有order server，说明job在前面执行
+	if len(e.jobs) > 0 && len(e.orderServers) == 0 {
 		return e.startJobs()
 	}
 
 	e.waitSignals() // start signal listen task in goroutine
 
-	// 启动Order服务
-	_ = e.startServers(e.ctx)
+	// 当没有job，才启动服务
+	if len(e.jobs) == 0 {
+		_ = e.startServers(e.ctx)
+	}
 
-	// 启动服务
+	// 启动Order服务
 	_ = e.startOrderServers(e.ctx)
 
 	// 启动定时任务
