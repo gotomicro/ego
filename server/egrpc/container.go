@@ -1,10 +1,11 @@
 package egrpc
 
 import (
+	"google.golang.org/grpc"
+
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/util/xnet"
-	"google.golang.org/grpc"
 )
 
 // Container defines a component instance.
@@ -60,9 +61,10 @@ func (c *Container) Build(options ...Option) *Component {
 		streamInterceptors = []grpc.StreamServerInterceptor{c.defaultStreamServerInterceptor()}
 	}
 
+	// prometheus metric 必须在业务拦截器执行完之后
 	if c.config.EnableMetricInterceptor {
-		options = append(options, WithUnaryInterceptor(prometheusUnaryServerInterceptor))
-		options = append(options, WithStreamInterceptor(prometheusStreamServerInterceptor))
+		unaryInterceptors = append(unaryInterceptors, prometheusUnaryServerInterceptor)
+		streamInterceptors = append(streamInterceptors, prometheusStreamServerInterceptor)
 	}
 
 	for _, option := range options {
