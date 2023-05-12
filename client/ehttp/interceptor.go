@@ -135,6 +135,9 @@ func logInterceptor(name string, config *Config, logger *elog.Component) (resty.
 }
 
 func metricInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
+	if !config.EnableMetricsInterceptor {
+		return nil, nil, nil
+	}
 	addr := strings.TrimRight(config.Addr, "/")
 	afterFn := func(cli *resty.Client, res *resty.Response) error {
 		method := res.Request.Method + "." + res.Request.Context().Value(urlKey{}).(*url.URL).Path

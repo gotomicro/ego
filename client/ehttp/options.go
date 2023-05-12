@@ -65,6 +65,13 @@ func WithEnableTraceInterceptor(enableTraceInterceptor bool) Option {
 	}
 }
 
+// WithEnableMetricsInterceptor 设置开启 Metrics 拦截器
+func WithEnableMetricsInterceptor(enableMetricsInterceptor bool) Option {
+	return func(c *Container) {
+		c.config.EnableMetricsInterceptor = enableMetricsInterceptor
+	}
+}
+
 // WithEnableKeepAlives 设置是否开启长连接，默认打开
 func WithEnableKeepAlives(enableKeepAlives bool) Option {
 	return func(c *Container) {

@@ -23,6 +23,7 @@ type Config struct {
 	EnableAccessInterceptor    bool          // 是否开启记录请求数据，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
 	PathRelabel                []Relabel     // path 重命名 (metric 用)
+	EnableMetricsInterceptor   bool          // 是否开启监控，默认开启
 }
 
 // Relabel ...
@@ -46,5 +47,6 @@ func DefaultConfig() *Config {
 		EnableTraceInterceptor:     true,
 		EnableAccessInterceptor:    false,
 		EnableAccessInterceptorRes: false,
+		EnableMetricsInterceptor:   true,
 	}
 }
