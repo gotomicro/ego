@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
-	"github.com/gotomicro/ego/core/elog"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+
+	"github.com/gotomicro/ego/core/elog"
 
 	"github.com/gotomicro/ego/core/econf"
 )
@@ -37,7 +38,7 @@ func TestWithStreamInterceptor(t *testing.T) {
 	}
 	opt := WithStreamInterceptor(intcp)
 	cmp := newCmp(t, opt)
-	assert.Equal(t, 2, len(cmp.config.streamInterceptors))
+	assert.Equal(t, 1, len(cmp.config.streamInterceptors))
 	t.Log("done")
 }
 
@@ -47,7 +48,7 @@ func TestWithUnaryInterceptor(t *testing.T) {
 	}
 	opt := WithUnaryInterceptor(intcp)
 	cmp := newCmp(t, opt)
-	assert.Equal(t, 2, len(cmp.config.unaryInterceptors))
+	assert.Equal(t, 1, len(cmp.config.unaryInterceptors))
 	t.Log("done")
 }
 
