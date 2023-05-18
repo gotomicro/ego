@@ -92,3 +92,10 @@ func WithLocation(loc *time.Location) Option {
 		c.config.loc = loc
 	}
 }
+
+// WithSpec 设置执行周期
+func WithSpec(spec string) Option {
+	return func(c *Container) {
+		c.config.Spec = spec
+	}
+}
