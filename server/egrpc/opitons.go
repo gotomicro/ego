@@ -1,6 +1,9 @@
 package egrpc
 
 import (
+	"context"
+
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gotomicro/ego/core/elog"
 	"google.golang.org/grpc"
 )
@@ -38,6 +41,20 @@ func WithUnaryInterceptor(interceptors ...grpc.UnaryServerInterceptor) Option {
 			c.config.unaryInterceptors = make([]grpc.UnaryServerInterceptor, 0)
 		}
 		c.config.unaryInterceptors = append(c.config.unaryInterceptors, interceptors...)
+	}
+}
+
+// WithUnaryServerResourceExtractor sets the resource extractor of unary server request.
+func WithUnaryServerResourceExtractor(fn func(context.Context, interface{}, *grpc.UnaryServerInfo) string) Option {
+	return func(c *Container) {
+		c.config.unaryServerResourceExtract = fn
+	}
+}
+
+// WithUnaryServerBlockFallback sets the block fallback handler of unary server request.
+func WithUnaryServerBlockFallback(fn func(context.Context, interface{}, *grpc.UnaryServerInfo, *base.BlockError) (interface{}, error)) Option {
+	return func(c *Container) {
+		c.config.unaryServerBlockFallback = fn
 	}
 }
 

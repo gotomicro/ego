@@ -1,9 +1,11 @@
 package egrpc
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gotomicro/ego/core/eflag"
 
 	"google.golang.org/grpc"
@@ -23,12 +25,15 @@ type Config struct {
 	EnableSkipHealthLog        bool          // 是否屏蔽探活日志，默认开启
 	SlowLogThreshold           time.Duration // 服务慢日志，默认500ms
 	EnableAccessInterceptor    bool          // 是否开启，记录请求数据
+	EnableSentinel             bool          // 是否开启限流，默认不开启
 	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
 	EnableLocalMainIP          bool          // 自动获取ip地址
 	serverOptions              []grpc.ServerOption
 	streamInterceptors         []grpc.StreamServerInterceptor
 	unaryInterceptors          []grpc.UnaryServerInterceptor
+	unaryServerResourceExtract func(context.Context, interface{}, *grpc.UnaryServerInfo) string // sentinel 的限流策略
+	unaryServerBlockFallback   func(context.Context, interface{}, *grpc.UnaryServerInfo, *base.BlockError) (interface{}, error)
 }
 
 // DefaultConfig represents default config
