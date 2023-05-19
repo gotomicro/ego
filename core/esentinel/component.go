@@ -2,7 +2,7 @@ package esentinel
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	sentinelapi "github.com/alibaba/sentinel-golang/api"
@@ -36,7 +36,7 @@ func newComponent(config *Config, logger *elog.Component) error {
 
 func syncFlowRules(filePath string, logger *elog.Component) (err error) {
 	var rules []*flow.Rule
-	content, err := ioutil.ReadFile(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		logger.Error("load sentinel flow rules", elog.FieldErr(err), elog.FieldKey(filePath))
 		return err

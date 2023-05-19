@@ -67,6 +67,11 @@ func (c *Container) Build(options ...Option) *Component {
 		streamInterceptors = append(streamInterceptors, prometheusStreamServerInterceptor)
 	}
 
+	// 启用sentinel
+	if c.config.EnableSentinel {
+		unaryInterceptors = append(unaryInterceptors, c.sentinelInterceptor())
+	}
+
 	for _, option := range options {
 		option(c)
 	}

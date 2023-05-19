@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -372,4 +374,38 @@ func getPeerIP(ctx context.Context) string {
 		return addSlice[0]
 	}
 	return ""
+}
+
+// NewUnaryServerInterceptor creates the unary server interceptor wrapped with Sentinel entry.
+func (c *Container) sentinelInterceptor() grpc.UnaryServerInterceptor {
+	return func(
+		ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (interface{}, error) {
+		// method as resource name by default
+		resourceName := info.FullMethod
+		if c.config.unaryServerResourceExtract != nil {
+			resourceName = c.config.unaryServerResourceExtract(ctx, req, info)
+		}
+		entry, blockErr := sentinel.Entry(
+			resourceName,
+			sentinel.WithResourceType(base.ResTypeRPC),
+			sentinel.WithTrafficType(base.Inbound),
+		)
+		if blockErr != nil {
+			if c.config.unaryServerBlockFallback != nil {
+				return c.config.unaryServerBlockFallback(ctx, req, info, blockErr)
+			}
+			return nil, blockErr
+		}
+		defer entry.Exit()
+
+		res, err := handler(ctx, req)
+		if err != nil {
+			sentinel.TraceError(entry, err)
+		}
+		return res, err
+	}
 }
