@@ -1,0 +1,8 @@
+[
+  {
+    "resource": "/helloworld.Greeter/SayHello",
+    "threshold": 2,
+    "tokenCalculateStrategy": 0,
+    "controlBehavior": 0
+  }
+]
