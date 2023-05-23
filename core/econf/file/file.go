@@ -52,7 +52,7 @@ func extParser(configAddr string) econf.ConfigType {
 	switch ext {
 	case ".json":
 		return econf.ConfigTypeJSON
-	case ".toml":
+	case ".toml", "":
 		return econf.ConfigTypeToml
 	case ".yaml":
 		return econf.ConfigTypeYaml
