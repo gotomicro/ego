@@ -35,4 +35,7 @@ const (
 	EgoGovernorEnableConfig = "EGO_GOVERNOR_ENABLE_CONFIG"
 	// EgoLogEnableAddCaller when set to true, your log will show caller, default value is false
 	EgoLogEnableAddCaller = "EGO_LOG_ENABLE_ADD_CALLER"
+	// EgoDefaultConfigExt defines default config file extension, support ".toml"，".yaml"，".json",
+	// EgoDefaultConfigExt effective only the configuration file path without extension name
+	EgoDefaultConfigExt = "EGO_DEFAULT_CONFIG_EXT"
 )

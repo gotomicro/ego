@@ -1,6 +1,7 @@
 package file
 
 import (
+	"github.com/gotomicro/ego/core/constant"
 	"log"
 	"os"
 	"path/filepath"
@@ -49,10 +50,14 @@ func (fp *fileDataSource) Parse(path string, watch bool) econf.ConfigType {
 
 func extParser(configAddr string) econf.ConfigType {
 	ext := filepath.Ext(configAddr)
+	if ext == "" { // 如果配置文件没有扩展名，尝试从环境变量获取配置文件的扩展名
+		ext = os.Getenv(constant.EgoDefaultConfigExt)
+	}
+
 	switch ext {
 	case ".json":
 		return econf.ConfigTypeJSON
-	case ".toml", "":
+	case ".toml":
 		return econf.ConfigTypeToml
 	case ".yaml":
 		return econf.ConfigTypeYaml
