@@ -67,6 +67,7 @@ func DefaultConfig() *Config {
 		EnableAccessInterceptor:    true,
 		EnableTraceInterceptor:     true,
 		EnableMetricInterceptor:    true,
+		EnableSentinel:             true,
 		SlowLogThreshold:           xtime.Duration("500ms"),
 		EnableWebsocketCheckOrigin: false,
 		TrustedPlatform:            "",

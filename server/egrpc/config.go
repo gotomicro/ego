@@ -47,6 +47,7 @@ func DefaultConfig() *Config {
 		EnableMetricInterceptor:    true,
 		EnableSkipHealthLog:        true,
 		EnableTraceInterceptor:     true,
+		EnableSentinel:             true,
 		SlowLogThreshold:           xtime.Duration("500ms"),
 		EnableAccessInterceptor:    true,
 		EnableAccessInterceptorReq: false,
