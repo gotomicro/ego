@@ -29,6 +29,7 @@ import (
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/esentinel"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/internal/tools"
@@ -350,6 +351,11 @@ func (c *Container) sentinelMiddleware() gin.HandlerFunc {
 			resourceName = c.config.resourceExtract(ctx)
 		}
 
+		if !esentinel.IsResExist(resourceName) {
+			ctx.Next()
+			return
+		}
+
 		entry, err := sentinel.Entry(
 			resourceName,
 			sentinel.WithResourceType(base.ResTypeWeb),
@@ -366,6 +372,7 @@ func (c *Container) sentinelMiddleware() gin.HandlerFunc {
 		}
 
 		defer entry.Exit()
+
 		ctx.Next()
 	}
 }

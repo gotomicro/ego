@@ -12,18 +12,21 @@ import (
 
 	sentinel "github.com/alibaba/sentinel-golang/api"
 	"github.com/alibaba/sentinel-golang/core/base"
+	sentinelBase "github.com/alibaba/sentinel-golang/core/base"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
+	gcode "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 
 	"github.com/gotomicro/ego/core/eerrors"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/esentinel"
 	"github.com/gotomicro/ego/core/etrace"
 	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/core/util/xstring"
@@ -389,6 +392,12 @@ func (c *Container) sentinelInterceptor() grpc.UnaryServerInterceptor {
 		if c.config.unaryServerResourceExtract != nil {
 			resourceName = c.config.unaryServerResourceExtract(ctx, req, info)
 		}
+
+		if !esentinel.IsResExist(resourceName) {
+			return handler(ctx, req)
+		}
+
+		var entry *sentinelBase.SentinelEntry = nil
 		entry, blockErr := sentinel.Entry(
 			resourceName,
 			sentinel.WithResourceType(base.ResTypeRPC),
@@ -398,7 +407,8 @@ func (c *Container) sentinelInterceptor() grpc.UnaryServerInterceptor {
 			if c.config.unaryServerBlockFallback != nil {
 				return c.config.unaryServerBlockFallback(ctx, req, info, blockErr)
 			}
-			return nil, blockErr
+
+			return nil, eerrors.New(int(gcode.ResourceExhausted), "blocked by sentinel", blockErr.Error())
 		}
 		defer entry.Exit()
 

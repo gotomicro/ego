@@ -11,8 +11,8 @@ import (
 
 func TestInterceptor(t *testing.T) {
 	comp := DefaultContainer().Build()
-	// healthcheck，默认中间件，监控中间件
-	assert.Equal(t, 3, len(comp.Handlers))
+	// healthcheck，默认中间件，监控中间件，限流中间件
+	assert.Equal(t, 4, len(comp.Handlers))
 }
 
 func TestWithTrustedPlatform(t *testing.T) {
