@@ -54,9 +54,7 @@ func syncFlowRules(filePath string, logger *elog.Component) (err error) {
 	}
 	if len(rules) > 0 {
 		_, _ = flow.LoadRules(rules)
-		for _, r := range rules {
-			addResMap(r.Resource)
-		}
+		addResMap(rules)
 	}
 	return nil
 }
@@ -111,11 +109,13 @@ func watch(filePath string, logger *elog.Component) {
 	<-done
 }
 
-func addResMap(res string) {
+func addResMap(rules []*flow.Rule) {
 	rMux.Lock()
 	defer rMux.Unlock()
 
-	resMap[res] = struct{}{}
+	for _, r := range rules {
+		resMap[r.Resource] = struct{}{}
+	}
 }
 
 // IsResExist check if a resource exists
