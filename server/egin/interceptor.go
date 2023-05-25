@@ -351,24 +351,27 @@ func (c *Container) sentinelMiddleware() gin.HandlerFunc {
 			resourceName = c.config.resourceExtract(ctx)
 		}
 
-		if esentinel.IsResExist(resourceName) {
-			entry, err := sentinel.Entry(
-				resourceName,
-				sentinel.WithResourceType(base.ResTypeWeb),
-				sentinel.WithTrafficType(base.Inbound),
-			)
-
-			if err != nil {
-				if c.config.blockFallback != nil {
-					c.config.blockFallback(ctx)
-				} else {
-					ctx.AbortWithStatus(http.StatusTooManyRequests)
-				}
-				return
-			}
-
-			defer entry.Exit()
+		if !esentinel.IsResExist(resourceName) {
+			ctx.Next()
+			return
 		}
+
+		entry, err := sentinel.Entry(
+			resourceName,
+			sentinel.WithResourceType(base.ResTypeWeb),
+			sentinel.WithTrafficType(base.Inbound),
+		)
+
+		if err != nil {
+			if c.config.blockFallback != nil {
+				c.config.blockFallback(ctx)
+			} else {
+				ctx.AbortWithStatus(http.StatusTooManyRequests)
+			}
+			return
+		}
+
+		defer entry.Exit()
 
 		ctx.Next()
 	}

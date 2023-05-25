@@ -393,22 +393,24 @@ func (c *Container) sentinelInterceptor() grpc.UnaryServerInterceptor {
 			resourceName = c.config.unaryServerResourceExtract(ctx, req, info)
 		}
 
-		var entry *sentinelBase.SentinelEntry = nil
-		if esentinel.IsResExist(resourceName) {
-			entry, blockErr := sentinel.Entry(
-				resourceName,
-				sentinel.WithResourceType(base.ResTypeRPC),
-				sentinel.WithTrafficType(base.Inbound),
-			)
-			if blockErr != nil {
-				if c.config.unaryServerBlockFallback != nil {
-					return c.config.unaryServerBlockFallback(ctx, req, info, blockErr)
-				}
-
-				return nil, eerrors.New(int(gcode.ResourceExhausted), "blocked by sentinel", blockErr.Error())
-			}
-			defer entry.Exit()
+		if !esentinel.IsResExist(resourceName) {
+			return handler(ctx, req)
 		}
+
+		var entry *sentinelBase.SentinelEntry = nil
+		entry, blockErr := sentinel.Entry(
+			resourceName,
+			sentinel.WithResourceType(base.ResTypeRPC),
+			sentinel.WithTrafficType(base.Inbound),
+		)
+		if blockErr != nil {
+			if c.config.unaryServerBlockFallback != nil {
+				return c.config.unaryServerBlockFallback(ctx, req, info, blockErr)
+			}
+
+			return nil, eerrors.New(int(gcode.ResourceExhausted), "blocked by sentinel", blockErr.Error())
+		}
+		defer entry.Exit()
 
 		res, err := handler(ctx, req)
 		if err != nil {
