@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sync"
 
 	sentinelapi "github.com/alibaba/sentinel-golang/api"
 	sentinelconfig "github.com/alibaba/sentinel-golang/core/config"
@@ -22,6 +23,11 @@ type Component struct {
 	// logger *elog.Component
 	// err    error
 }
+
+var (
+	rMux   = new(sync.RWMutex)
+	resMap = make(map[string]struct{})
+)
 
 func newComponent(config *Config, logger *elog.Component) error {
 	if config.FlowRulesFile != "" {
@@ -48,6 +54,9 @@ func syncFlowRules(filePath string, logger *elog.Component) (err error) {
 	}
 	if len(rules) > 0 {
 		_, _ = flow.LoadRules(rules)
+		for _, r := range rules {
+			addResMap(r.Resource)
+		}
 	}
 	return nil
 }
@@ -100,4 +109,21 @@ func watch(filePath string, logger *elog.Component) {
 		logger.Panic("dir err", elog.FieldErr(err))
 	}
 	<-done
+}
+
+func addResMap(res string) {
+	rMux.Lock()
+	defer rMux.Unlock()
+
+	resMap[res] = struct{}{}
+}
+
+// IsResExist check if a resource exists
+func IsResExist(res string) bool {
+	rMux.RLock()
+	defer rMux.RUnlock()
+
+	_, exist := resMap[res]
+
+	return exist
 }
