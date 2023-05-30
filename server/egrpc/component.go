@@ -87,11 +87,6 @@ func (c *Component) Init() error {
 		server.WithKind(constant.ServiceProvider),
 	)
 	c.serverInfo = &info
-	return nil
-}
-
-// Start implements server.Component interface.
-func (c *Component) Start() error {
 	var (
 		listener net.Listener
 		err      error
@@ -112,6 +107,11 @@ func (c *Component) Start() error {
 		c.config.Port = tcpInfo.Port
 	}
 	c.listener = listener
+	return nil
+}
+
+// Start implements server.Component interface.
+func (c *Component) Start() error {
 	return c.Server.Serve(c.listener)
 }
 
