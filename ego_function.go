@@ -81,15 +81,16 @@ func (e *Ego) startServers(ctx context.Context) error {
 	return nil
 }
 
-func (e *Ego) startOrderServers(ctx context.Context) error {
+func (e *Ego) startOrderServers(ctx context.Context) (err error, isNeedStop bool) {
 	// start order servers
 	for _, s := range e.orderServers {
 		s := s
 		_ = s.Prepare()
 		// 如果存在短时任务，那么只执行短时任务
 		// 说明job在前面执行
+		// 如果job执行完后，下面的操作需要stop
 		if len(e.jobs) > 0 {
-			return e.startJobs()
+			return e.startJobs(), true
 		}
 		_ = s.Init()
 		e.cycle.Run(func() (err error) {
@@ -115,11 +116,11 @@ func (e *Ego) startOrderServers(ctx context.Context) error {
 			}
 		}
 		if !isHealth {
-			return fmt.Errorf("start order server fail,err:  " + s.Name())
+			return fmt.Errorf("start order server fail,err:  " + s.Name()), true
 		}
 
 	}
-	return nil
+	return nil, false
 }
 
 func (e *Ego) startCrons() error {
