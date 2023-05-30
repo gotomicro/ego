@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/server"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,6 +48,15 @@ func TestEgoNew(t *testing.T) {
 	assert.NotNil(t, app.servers)
 	assert.NotNil(t, app.jobs)
 	assert.NotNil(t, app.logger)
+}
+
+func TestEgoEconfRace(t *testing.T) {
+	New()
+	go func() {
+		econf.OnChange(func(c *econf.Configuration) {})
+	}()
+	econf.OnChange(func(c *econf.Configuration) {})
+
 }
 
 type testServer struct {
