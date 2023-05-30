@@ -76,6 +76,11 @@ func (c *Component) Init() error {
 			return err
 		}
 	}
+	return nil
+}
+
+// Start implements server.Component interface.
+func (c *Component) Start() error {
 	info := server.ApplyOptions(
 		server.WithScheme("grpc"),
 		server.WithAddress(c.config.Address()),
@@ -102,13 +107,7 @@ func (c *Component) Init() error {
 		c.config.Port = tcpInfo.Port
 	}
 	c.listener = listener
-	return nil
-}
-
-// Start implements server.Component interface.
-func (c *Component) Start() error {
-	err := c.Server.Serve(c.listener)
-	return err
+	return c.Server.Serve(c.listener)
 }
 
 // Health implements server.Component interface.
