@@ -254,7 +254,7 @@ func (e *Ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 			}(s)
 		}
 		for _, s := range e.orderServers {
-			func(s server.Server) {
+			func(s server.OrderServer) {
 				// todo
 				e.cycle.Run(func() error {
 					return s.GracefulStop(ctx)
@@ -268,7 +268,7 @@ func (e *Ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 			}(s)
 		}
 		for _, s := range e.orderServers {
-			func(s server.Server) {
+			func(s server.OrderServer) {
 				e.cycle.Run(s.Stop)
 			}(s)
 		}

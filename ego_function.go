@@ -85,12 +85,13 @@ func (e *Ego) startOrderServers(ctx context.Context) error {
 	// start order servers
 	for _, s := range e.orderServers {
 		s := s
-		_ = s.Init()
+		_ = s.Prepare()
 		// 如果存在短时任务，那么只执行短时任务
 		// 说明job在前面执行
 		if len(e.jobs) > 0 {
 			return e.startJobs()
 		}
+		_ = s.Init()
 		e.cycle.Run(func() (err error) {
 			err = e.registerer.RegisterService(ctx, s.Info())
 			if err != nil {
