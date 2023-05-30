@@ -69,7 +69,9 @@ func (c *Configuration) WriteConfig() error {
 
 // OnChange register a callback when configuration change emit.
 func (c *Configuration) OnChange(fn func(*Configuration)) {
+	c.mu.Lock()
 	c.onChanges = append(c.onChanges, fn)
+	c.mu.Unlock()
 }
 
 // LoadFromDataSource ...
@@ -89,15 +91,20 @@ func (c *Configuration) LoadFromDataSource(ds DataSource, unmarshaller Unmarshal
 
 	go func() {
 		// 首次加载配置执行 OnChange
+		c.mu.RLock()
 		for _, change := range c.onChanges {
 			change(c)
 		}
+		c.mu.RUnlock()
+
 		for range ds.IsConfigChanged() {
 			if content, err := ds.ReadConfig(); err == nil {
 				_ = c.Load(content, unmarshaller)
+				c.mu.RLock()
 				for _, change := range c.onChanges {
 					change(c)
 				}
+				c.mu.RUnlock()
 			}
 		}
 	}()
