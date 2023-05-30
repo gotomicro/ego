@@ -68,8 +68,8 @@ func (c *Component) PackageName() string {
 	return PackageName
 }
 
-// Init 初始化一些信息
-func (c *Component) Init() error {
+// Prepare 预准备一些数据
+func (c *Component) Prepare() error {
 	for _, fn := range c.invokers {
 		err := fn()
 		if err != nil {
@@ -79,8 +79,8 @@ func (c *Component) Init() error {
 	return nil
 }
 
-// Start implements server.Component interface.
-func (c *Component) Start() error {
+// Init 初始化一些信息
+func (c *Component) Init() error {
 	info := server.ApplyOptions(
 		server.WithScheme("grpc"),
 		server.WithAddress(c.config.Address()),
@@ -107,6 +107,11 @@ func (c *Component) Start() error {
 		c.config.Port = tcpInfo.Port
 	}
 	c.listener = listener
+	return nil
+}
+
+// Start implements server.Component interface.
+func (c *Component) Start() error {
 	return c.Server.Serve(c.listener)
 }
 

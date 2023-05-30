@@ -77,6 +77,10 @@ type Server interface {
 // Experimental
 type OrderServer interface {
 	standard.Component
+	// Prepare 用于一些准备数据
+	// 因为在OrderServer中，也会有invoker操作，需要放这个里面执行，需要区分他和真正server的init操作
+	// server的init操作有一些listen，必须先执行，否则有些通信，会有问题
+	Prepare() error
 	GracefulStop(ctx context.Context) error
 	Info() *ServiceInfo
 	Health() bool
