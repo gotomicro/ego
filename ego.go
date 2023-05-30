@@ -220,7 +220,12 @@ func (e *Ego) Run() error {
 	}
 
 	// 启动Order服务
-	_ = e.startOrderServers(e.ctx)
+	err, isNeedStop := e.startOrderServers(e.ctx)
+	// job情况不需要执行下面的操作
+	// order server执行有问题的也需要stop
+	if isNeedStop {
+		return err
+	}
 
 	// 启动定时任务
 	_ = e.startCrons()
