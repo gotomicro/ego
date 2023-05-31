@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -33,7 +32,6 @@ import (
 	"github.com/gotomicro/ego/internal/ecode"
 	"github.com/gotomicro/ego/internal/egrpcinteceptor"
 	"github.com/gotomicro/ego/internal/tools"
-	"github.com/gotomicro/ego/internal/xcpu"
 )
 
 func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -331,26 +329,26 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 			}
 		}()
 
-		if enableCPUUsage(ctx) {
-			var stat = xcpu.Stat{}
-			xcpu.ReadStat(&stat)
-			if stat.Usage > 0 {
-				// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
-				header := metadata.Pairs("cpu-usage", strconv.Itoa(int(stat.Usage)))
-				err = grpc.SetHeader(ctx, header)
-				if err != nil {
-					c.logger.Error("set header error", elog.FieldErr(err))
-				}
-			}
-		}
+		//if enableCPUUsage(ctx) {
+		//	var stat = xcpu.Stat{}
+		//	xcpu.ReadStat(&stat)
+		//	if stat.Usage > 0 {
+		//		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
+		//		header := metadata.Pairs("cpu-usage", strconv.Itoa(int(stat.Usage)))
+		//		err = grpc.SetHeader(ctx, header)
+		//		if err != nil {
+		//			c.logger.Error("set header error", elog.FieldErr(err))
+		//		}
+		//	}
+		//}
 		return handler(ctx, req)
 	}
 }
 
 // enableCPUUsage 是否开启cpu利用率
-func enableCPUUsage(ctx context.Context) bool {
-	return tools.GrpcHeaderValue(ctx, "enable-cpu-usage") == "true"
-}
+//func enableCPUUsage(ctx context.Context) bool {
+//	return tools.GrpcHeaderValue(ctx, "enable-cpu-usage") == "true"
+//}
 
 // getPeerName 获取对端应用名称
 func getPeerName(ctx context.Context) string {

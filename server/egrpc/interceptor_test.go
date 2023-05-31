@@ -42,25 +42,25 @@ func Test_getPeerIP(t *testing.T) {
 	assert.Equal(t, "127.0.0.1", value)
 }
 
-func Test_enableCPUUsage(t *testing.T) {
-	md := metadata.New(map[string]string{
-		"enable-cpu-usage": "true",
-	})
-	ctx := metadata.NewIncomingContext(context.Background(), md)
-	value := enableCPUUsage(ctx)
-	assert.Equal(t, true, value)
-
-	ctx2 := metadata.NewIncomingContext(context.Background(), nil)
-	value2 := enableCPUUsage(ctx2)
-	assert.Equal(t, false, value2)
-
-	md3 := metadata.New(map[string]string{
-		"enable-cpu-usage": "test",
-	})
-	ctx3 := metadata.NewIncomingContext(context.Background(), md3)
-	value3 := enableCPUUsage(ctx3)
-	assert.Equal(t, false, value3)
-}
+//func Test_enableCPUUsage(t *testing.T) {
+//	md := metadata.New(map[string]string{
+//		"enable-cpu-usage": "true",
+//	})
+//	ctx := metadata.NewIncomingContext(context.Background(), md)
+//	value := enableCPUUsage(ctx)
+//	assert.Equal(t, true, value)
+//
+//	ctx2 := metadata.NewIncomingContext(context.Background(), nil)
+//	value2 := enableCPUUsage(ctx2)
+//	assert.Equal(t, false, value2)
+//
+//	md3 := metadata.New(map[string]string{
+//		"enable-cpu-usage": "test",
+//	})
+//	ctx3 := metadata.NewIncomingContext(context.Background(), md3)
+//	value3 := enableCPUUsage(ctx3)
+//	assert.Equal(t, false, value3)
+//}
 
 func Test_ServerAccessLogger(t *testing.T) {
 	// 使用非异步日志
