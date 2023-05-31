@@ -29,7 +29,6 @@ func TestDefaultConfig(t *testing.T) {
 		EnableAccessInterceptor:      false,
 		EnableAccessInterceptorReq:   false,
 		EnableAccessInterceptorRes:   false,
-		EnableCPUUsage:               true,
 		EnableFailOnNonTempDialError: true,
 		EnableServiceConfig:          true,
 		keepAlive:                    nil,
