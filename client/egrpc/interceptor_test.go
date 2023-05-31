@@ -184,8 +184,8 @@ type GreeterHeader struct {
 // SayHello ...
 func (g GreeterHeader) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
 	appName := tools.GrpcHeaderValue(context, "app")
-	cpu := tools.GrpcHeaderValue(context, "enable-cpu-usage")
-	assert.Equal(g.t, "true", cpu)
+	//cpu := tools.GrpcHeaderValue(context, "enable-cpu-usage")
+	//assert.Equal(g.t, "true", cpu)
 	assert.Equal(g.t, "egrpc.test", appName)
 
 	return &helloworld.HelloResponse{

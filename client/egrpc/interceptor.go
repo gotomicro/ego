@@ -107,9 +107,9 @@ func (c *Container) defaultUnaryClientInterceptor() grpc.UnaryClientInterceptor 
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
 		ctx = metadata.AppendToOutgoingContext(ctx, "app", eapp.Name())
-		if c.config.EnableCPUUsage {
-			ctx = metadata.AppendToOutgoingContext(ctx, "enable-cpu-usage", "true")
-		}
+		//if c.config.EnableCPUUsage {
+		//	ctx = metadata.AppendToOutgoingContext(ctx, "enable-cpu-usage", "true")
+		//}
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
@@ -287,9 +287,9 @@ func (c *Container) defaultStreamClientInterceptor() grpc.StreamClientIntercepto
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
 		ctx = metadata.AppendToOutgoingContext(ctx, "app", eapp.Name())
-		if c.config.EnableCPUUsage {
-			ctx = metadata.AppendToOutgoingContext(ctx, "enable-cpu-usage", "true")
-		}
+		//if c.config.EnableCPUUsage {
+		//	ctx = metadata.AppendToOutgoingContext(ctx, "enable-cpu-usage", "true")
+		//}
 		return streamer(ctx, desc, cc, method, opts...)
 	}
 }
