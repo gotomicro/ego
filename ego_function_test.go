@@ -3,16 +3,19 @@ package ego
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"runtime"
-	"testing"
-
+	"github.com/BurntSushi/toml"
+	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/task/ejob"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"os"
+	"path"
+	"runtime"
+	"strings"
+	"testing"
 )
 
 func Test_loadConfig(t *testing.T) {
@@ -128,4 +131,27 @@ func Test_runSerialFuncLogError(t *testing.T) {
 	logged, err := ioutil.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"Test_runSerialFuncLogError"`)
+}
+
+func Test_initLogger(t *testing.T) {
+	app := &Ego{}
+	err := os.Setenv(constant.EgoDebug, "true")
+	assert.Nil(t, err)
+	cfg := `
+[logger.default]
+   debug = true
+   enableAddCaller = true
+`
+	err = econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
+	assert.NoError(t, err)
+
+	err = app.initLogger()
+	assert.Nil(t, err)
+	elog.Info("hello")
+	elog.DefaultLogger.Flush()
+	filePath := path.Join(elog.DefaultLogger.ConfigDir(), elog.DefaultLogger.ConfigName())
+	logged, err := os.ReadFile(filePath)
+	assert.Nil(t, err)
+	// 验证日志打印的caller是否正确 当前位置为ego/ego_function_test.go:150
+	assert.Contains(t, string(logged), "hello", `ego/ego_function_test.go:150`)
 }
