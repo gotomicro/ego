@@ -221,7 +221,7 @@ func loadConfig() error {
 // initLogger init application and Ego logger
 func (e *Ego) initLogger() error {
 	if econf.Get(e.opts.configPrefix+"logger.default") != nil {
-		elog.DefaultLogger = elog.Load(e.opts.configPrefix + "logger.default").Build()
+		elog.DefaultLogger = elog.Load(e.opts.configPrefix + "logger.default").Build(elog.WithCallSkip(2)) // DefaultLogger 默认为2层
 		elog.EgoLogger.Info("reinit default logger", elog.FieldComponent(elog.PackageName))
 		e.opts.afterStopClean = append(e.opts.afterStopClean, elog.DefaultLogger.Flush)
 	}
