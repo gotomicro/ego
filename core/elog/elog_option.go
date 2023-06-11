@@ -55,3 +55,10 @@ func WithEncoderConfig(encoderConfig *zapcore.EncoderConfig) Option {
 		c.config.encoderConfig = encoderConfig
 	}
 }
+
+// WithCallSkip 支持自定义调用层级
+func WithCallSkip(callerSkip int) Option {
+	return func(c *Container) {
+		c.config.CallerSkip = callerSkip
+	}
+}
