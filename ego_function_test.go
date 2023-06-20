@@ -155,3 +155,72 @@ func Test_initLogger(t *testing.T) {
 	// 验证日志打印的caller是否正确 当前位置为ego/ego_function_test.go:150
 	assert.Contains(t, string(logged), "hello", `ego/ego_function_test.go:150`)
 }
+
+func Test_initSysLogger(t *testing.T) {
+	t.Run("没有ego的配置内容", func(t *testing.T) {
+		app := &Ego{}
+		cfg := ``
+		err := econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
+		assert.NoError(t, err)
+
+		err = app.initLogger()
+		assert.Nil(t, err)
+		elog.EgoLogger.Info("hello1")
+		elog.EgoLogger.Flush()
+		filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
+		logged, err := os.ReadFile(filePath)
+		assert.Nil(t, err)
+		// 验证日志是否打印了hello
+		assert.Contains(t, string(logged), "hello1")
+		// 验证日志文件名是否为ego.sys
+		assert.Equal(t, elog.EgoLoggerName, elog.EgoLogger.ConfigName())
+	})
+
+	t.Run("有ego的配置内容，但是没有配置name选项", func(t *testing.T) {
+		econf.Reset()
+		app := &Ego{}
+		cfg := `
+[logger.ego]
+   debug = true
+`
+		err := econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
+		assert.NoError(t, err)
+
+		err = app.initLogger()
+		assert.Nil(t, err)
+		elog.EgoLogger.Info("hello2")
+		elog.EgoLogger.Flush()
+		filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
+		logged, err := os.ReadFile(filePath)
+		assert.Nil(t, err)
+		// 验证日志是否打印了hello
+		assert.Contains(t, string(logged), "hello2")
+		// 验证日志文件名是否为ego.sys
+		assert.Equal(t, elog.EgoLoggerName, elog.EgoLogger.ConfigName())
+	})
+
+	t.Run("有ego的配置内容，并且有配置name选项", func(t *testing.T) {
+		econf.Reset()
+		app := &Ego{}
+		fileName := "ego.sys.log"
+		cfg := `
+[logger.ego]
+   debug = true
+   name = "ego.sys.log"
+`
+		err := econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
+		assert.NoError(t, err)
+
+		err = app.initLogger()
+		assert.Nil(t, err)
+		elog.EgoLogger.Info("hello3")
+		elog.EgoLogger.Flush()
+		filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
+		logged, err := os.ReadFile(filePath)
+		assert.Nil(t, err)
+		// 验证日志是否打印了hello
+		assert.Contains(t, string(logged), "hello3")
+		// 验证日志文件名是否为ego.sys.log
+		assert.Equal(t, fileName, elog.EgoLogger.ConfigName())
+	})
+}
