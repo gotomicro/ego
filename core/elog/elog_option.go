@@ -14,6 +14,17 @@ func WithFileName(name string) Option {
 	}
 }
 
+// WithDefaultFileName 设置默认的文件名,只有在配置的文件名不存在或者为兜底默认值的时候才会生效
+func WithDefaultFileName(name string) Option {
+	return func(c *Container) {
+		// 只有当配置的文件名为空或者为兜底默认值的时候才会生效
+		// 因为Container的默认值为DefaultLoggerName 如果配置了文件名，那么就不会使用默认的文件名了
+		if c.config.Name == "" || c.config.Name == DefaultLoggerName {
+			c.config.Name = name
+		}
+	}
+}
+
 // WithDebug 设置在命令行显示
 func WithDebug(debug bool) Option {
 	return func(c *Container) {

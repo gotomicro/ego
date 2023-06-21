@@ -227,7 +227,7 @@ func (e *Ego) initLogger() error {
 	}
 
 	if econf.Get(e.opts.configPrefix+"logger.ego") != nil {
-		elog.EgoLogger = elog.Load(e.opts.configPrefix + "logger.ego").Build(elog.WithFileName(elog.EgoLoggerName))
+		elog.EgoLogger = elog.Load(e.opts.configPrefix + "logger.ego").Build(elog.WithDefaultFileName(elog.EgoLoggerName))
 		elog.EgoLogger.Info("reinit ego logger", elog.FieldComponent(elog.PackageName))
 		e.opts.afterStopClean = append(e.opts.afterStopClean, elog.EgoLogger.Flush)
 	}
