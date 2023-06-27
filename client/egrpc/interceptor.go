@@ -317,9 +317,13 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 
 		for _, key := range loggerKeys {
 			if value := tools.ContextValue(ctx, key); value != "" {
-				fields = append(fields, elog.FieldCustomKeyValue(key, value))
 				// 替换context
-				ctx = transport.WithValue(ctx, key, value)
+				ctx = metadata.AppendToOutgoingContext(ctx, key, value)
+
+				// grpc metadata 存在同一个 key set 多次，客户端可通过日志排查这种错误使用。
+				if md, ok := metadata.FromOutgoingContext(ctx); ok {
+					fields = append(fields, elog.FieldCustomKeyValue(key, strings.Join(md[strings.ToLower(key)], ";")))
+				}
 			}
 		}
 
