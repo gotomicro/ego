@@ -26,6 +26,7 @@ var (
 func SetGlobalTracer(tp trace.TracerProvider) {
 	globalTracer = registeredTracer{true}
 	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 }
 
 // IsGlobalTracerRegistered returns a `bool` to indicate if a tracer has been globally registered
