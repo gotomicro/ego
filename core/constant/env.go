@@ -38,4 +38,6 @@ const (
 	// EgoDefaultConfigExt defines default config file extension, support ".toml"，".yaml"，".json",
 	// EgoDefaultConfigExt effective only the configuration file path without extension name
 	EgoDefaultConfigExt = "EGO_DEFAULT_CONFIG_EXT"
+	// EgoDeploymentEnv defines deployment environment, such as "k8s", "ecs"
+	EgoDeploymentEnv = "EGO_DEPLOYMENT_ENV"
 )
