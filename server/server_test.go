@@ -43,6 +43,7 @@ func TestServiceInfo(t *testing.T) {
 					"buildTime":  "",
 					"egoVersion": "unknown version",
 					"key":        "val",
+					"depEnv":     "",
 					"startTime":  xtime.TS.Format(time.Now()),
 				},
 			},

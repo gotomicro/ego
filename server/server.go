@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/gotomicro/ego/core/constant"
@@ -164,5 +165,6 @@ func defaultServiceInfo() ServiceInfo {
 	si.Metadata["buildTime"] = eapp.BuildTime()
 	si.Metadata["appVersion"] = eapp.AppVersion()
 	si.Metadata["egoVersion"] = eapp.EgoVersion()
+	si.Metadata["depEnv"] = os.Getenv(constant.EgoDeploymentEnv) // 部署环境
 	return si
 }
