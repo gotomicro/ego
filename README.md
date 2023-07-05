@@ -12,7 +12,7 @@
 English | [简体中文](./README-zh.md)
 
 ## 1 Docs
-The offical docs for developers.
+The official docs for developers.
 
 View [https://ego.gocn.vip](https://ego.gocn.vip)
 
