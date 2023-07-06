@@ -122,10 +122,10 @@ func (c *Container) Build(options ...Option) *Component {
 	econf.OnChange(func(newConf *econf.Configuration) {
 		c.config.mu.Lock()
 		cf := newConf.Sub(c.name)
-		c.config.EnableAccessInterceptorReq = cf.GetBool("EnableAccessInterceptorReq")
-		c.config.EnableAccessInterceptorRes = cf.GetBool("EnableAccessInterceptorRes")
-		if c.config.AccessInterceptorReqResFilter != cf.GetString("AccessInterceptorReqResFilter") {
-			c.config.AccessInterceptorReqResFilter = cf.GetString("AccessInterceptorReqResFilter")
+		c.config.EnableAccessInterceptorReq = cf.GetBool("enableAccessInterceptorReq")
+		c.config.EnableAccessInterceptorRes = cf.GetBool("enableAccessInterceptorRes")
+		if c.config.AccessInterceptorReqResFilter != cf.GetString("accessInterceptorReqResFilter") {
+			c.config.AccessInterceptorReqResFilter = cf.GetString("accessInterceptorReqResFilter")
 			if err := c.setAiReqResCelPrg(); err != nil {
 				c.logger.Warn("init AccessInterceptorReqResFilter fail", elog.FieldErr(err), elog.String("AccessInterceptorReqResFilter", c.config.AccessInterceptorReqResFilter))
 			}
