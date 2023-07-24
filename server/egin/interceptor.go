@@ -149,8 +149,8 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 				elog.FieldIP(ctx.ClientIP()),
 				elog.FieldSize(int32(ctx.Writer.Size())),
 				elog.FieldPeerIP(getPeerIP(ctx.Request.RemoteAddr)),
-				elog.FieldCode(int32(ctx.Writer.Status())),
-				elog.FieldUniformCode(int32(ctx.Writer.Status())),
+				// elog.FieldCode(int32(ctx.Writer.Status())),
+				// elog.FieldUniformCode(int32(ctx.Writer.Status())),
 			)
 
 			for _, key := range loggerKeys {
@@ -184,6 +184,11 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 
 			// slow log
 			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
+				// 最后添加状态码
+				fields = append(fields,
+					elog.FieldCode(int32(ctx.Writer.Status())),
+					elog.FieldUniformCode(int32(ctx.Writer.Status())),
+				)
 				c.logger.Warn("slow", fields...)
 			}
 
@@ -196,17 +201,21 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					}
 				}
 
+				// BrokenPipe 使用用户的status
 				if brokenPipe {
 					// If the connection is dead, we can't write a status to it.
 					ctx.Error(rec.(error)) // nolint: errcheck
 					ctx.Abort()
 				} else {
+					// 如果不是，默认使用500错误码
 					if c.config.recoveryFunc == nil {
 						c.config.recoveryFunc = defaultRecoveryFunc
 					}
-
 					c.config.recoveryFunc(ctx, rec)
 				}
+
+				// 上面BrokenPipe使用的是用户ctx.Writer.Status()
+				// 如果不是BrokenPipe，那么会将Writer.Status()设置为500
 
 				event = "recover"
 				stackInfo := stack(3)
@@ -214,6 +223,8 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					elog.FieldEvent(event),
 					zap.ByteString("stack", stackInfo),
 					elog.FieldErrAny(rec),
+					elog.FieldCode(int32(ctx.Writer.Status())),
+					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
 				c.logger.Error("access", fields...)
 				return
@@ -223,6 +234,8 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 				fields = append(fields,
 					elog.FieldEvent(event),
 					elog.FieldErrAny(ctx.Errors.ByType(gin.ErrorTypePrivate).String()),
+					elog.FieldCode(int32(ctx.Writer.Status())),
+					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
 				c.logger.Info("access", fields...)
 			}

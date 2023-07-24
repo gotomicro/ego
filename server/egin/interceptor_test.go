@@ -37,7 +37,8 @@ func TestPanicInHandler(t *testing.T) {
 
 	// 使用recover组件
 	router.Use(container.defaultServerInterceptor())
-	router.GET("/recovery", func(_ *gin.Context) {
+	router.GET("/recovery", func(c *gin.Context) {
+		c.Status(200)
 		panic("we have a panic")
 	})
 	// 调用触发panic的接口
@@ -45,7 +46,7 @@ func TestPanicInHandler(t *testing.T) {
 	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	fmt.Printf("logged--------------->"+"%+v\n", string(logged))
 	assert.Nil(t, err)
-	// TEST
+	// 虽然程序里返回200，只要panic就会为500
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	var m map[string]interface{}
 	n := strings.Index(string(logged), "{")
@@ -54,6 +55,7 @@ func TestPanicInHandler(t *testing.T) {
 	assert.Contains(t, m["event"], `recover`)
 	assert.Contains(t, string(logged), "we have a panic")
 	assert.Contains(t, m["method"], `GET./recovery`)
+	assert.Contains(t, string(logged), "500")
 	assert.Contains(t, string(logged), t.Name())
 	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }

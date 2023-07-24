@@ -2,6 +2,7 @@ package egrpc
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http/httptest"
@@ -91,6 +92,41 @@ func Test_ServerAccessLogger(t *testing.T) {
 	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), "/helloworld.Greeter/SayHello")
+	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+}
+
+func Test_ServerPanicAccessLogger(t *testing.T) {
+	// 使用非异步日志
+	logger := elog.DefaultContainer().Build(
+		elog.WithDebug(false),
+		elog.WithEnableAddCaller(true),
+		elog.WithEnableAsync(false),
+	)
+	cmp := DefaultContainer().Build(
+		WithNetwork("bufnet"),
+		WithLogger(logger),
+	)
+	helloworld.RegisterGreeterServer(cmp.Server, &PanicGreeter{})
+	_ = cmp.Init()
+	go func() {
+		_ = cmp.Start()
+	}()
+
+	client, err := grpc.Dial("",
+		grpc.WithInsecure(),
+		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
+			return cmp.Listener().(*bufconn.Listener).Dial()
+		}))
+	assert.Nil(t, err)
+	cli := helloworld.NewGreeterClient(client)
+	_, err = cli.SayHello(context.Background(), &helloworld.HelloRequest{})
+	assert.Contains(t, err.Error(), "panic recover, origin err: we have a panic")
+
+	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	fmt.Printf("logged--------------->"+"%+v\n", string(logged))
+	assert.Nil(t, err)
+	assert.Contains(t, string(logged), "500")
+	assert.Contains(t, string(logged), `"code":13`)
 	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
@@ -188,6 +224,19 @@ type Greeter struct {
 
 // SayHello ...
 func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+	return &helloworld.HelloResponse{
+		Message: "Hello",
+	}, nil
+}
+
+// Greeter ...
+type PanicGreeter struct {
+	helloworld.UnimplementedGreeterServer
+}
+
+// SayHello ...
+func (g PanicGreeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
+	panic("we have a panic")
 	return &helloworld.HelloResponse{
 		Message: "Hello",
 	}, nil
