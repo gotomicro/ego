@@ -149,8 +149,8 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 				elog.FieldIP(ctx.ClientIP()),
 				elog.FieldSize(int32(ctx.Writer.Size())),
 				elog.FieldPeerIP(getPeerIP(ctx.Request.RemoteAddr)),
-				elog.FieldCode(int32(ctx.Writer.Status())),
-				elog.FieldUniformCode(int32(ctx.Writer.Status())),
+				// elog.FieldCode(int32(ctx.Writer.Status())),
+				// elog.FieldUniformCode(int32(ctx.Writer.Status())),
 			)
 
 			for _, key := range loggerKeys {
@@ -184,6 +184,11 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 
 			// slow log
 			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
+				// 最后添加状态码
+				fields = append(fields,
+					elog.FieldCode(int32(ctx.Writer.Status())),
+					elog.FieldUniformCode(int32(ctx.Writer.Status())),
+				)
 				c.logger.Warn("slow", fields...)
 			}
 
@@ -214,6 +219,8 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					elog.FieldEvent(event),
 					zap.ByteString("stack", stackInfo),
 					elog.FieldErrAny(rec),
+					elog.FieldCode(500),
+					elog.FieldUniformCode(500),
 				)
 				c.logger.Error("access", fields...)
 				return
@@ -223,6 +230,8 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 				fields = append(fields,
 					elog.FieldEvent(event),
 					elog.FieldErrAny(ctx.Errors.ByType(gin.ErrorTypePrivate).String()),
+					elog.FieldCode(int32(ctx.Writer.Status())),
+					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
 				c.logger.Info("access", fields...)
 			}

@@ -12,16 +12,6 @@ import (
 	sentinel "github.com/alibaba/sentinel-golang/api"
 	"github.com/alibaba/sentinel-golang/core/base"
 	sentinelBase "github.com/alibaba/sentinel-golang/core/base"
-	"github.com/prometheus/client_golang/prometheus"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
-	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/grpc"
-	gcode "google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
-
 	"github.com/gotomicro/ego/core/eerrors"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
@@ -32,6 +22,17 @@ import (
 	"github.com/gotomicro/ego/internal/ecode"
 	"github.com/gotomicro/ego/internal/egrpcinteceptor"
 	"github.com/gotomicro/ego/internal/tools"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/grpc"
+	gcode "google.golang.org/grpc/codes"
+	grpcCode "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
 )
 
 func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -255,6 +256,7 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				stack = stack[:runtime.Stack(stack, true)]
 				fields = append(fields, elog.FieldStack(stack))
 				event = "recover"
+				err = status.New(grpcCode.Internal, "panic recover, origin err: "+err.Error()).Err()
 			}
 
 			isSlow := false
