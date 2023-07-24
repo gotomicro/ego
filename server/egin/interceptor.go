@@ -201,17 +201,21 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					}
 				}
 
+				// BrokenPipe 使用用户的status
 				if brokenPipe {
 					// If the connection is dead, we can't write a status to it.
 					ctx.Error(rec.(error)) // nolint: errcheck
 					ctx.Abort()
 				} else {
+					// 如果不是，默认使用500错误码
 					if c.config.recoveryFunc == nil {
 						c.config.recoveryFunc = defaultRecoveryFunc
 					}
-
 					c.config.recoveryFunc(ctx, rec)
 				}
+
+				// 上面BrokenPipe使用的是用户ctx.Writer.Status()
+				// 如果不是BrokenPipe，那么会将Writer.Status()设置为500
 
 				event = "recover"
 				stackInfo := stack(3)
@@ -219,8 +223,8 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					elog.FieldEvent(event),
 					zap.ByteString("stack", stackInfo),
 					elog.FieldErrAny(rec),
-					elog.FieldCode(500),
-					elog.FieldUniformCode(500),
+					elog.FieldCode(int32(ctx.Writer.Status())),
+					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
 				c.logger.Error("access", fields...)
 				return
