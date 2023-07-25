@@ -40,9 +40,10 @@ func Load(key string) *Container {
 	if c.config.EnableLocalMainIP {
 		host, _, err = xnet.GetLocalMainIP()
 		if err != nil {
-			host = ""
+			elog.Error("get local main ip error", elog.FieldErr(err))
+		} else {
+			c.config.Host = host
 		}
-		c.config.Host = host
 	}
 	c.name = key
 	return c

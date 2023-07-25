@@ -3,27 +3,23 @@ package egovernor
 import (
 	"fmt"
 
-	"github.com/gotomicro/ego/core/util/xnet"
+	"github.com/gotomicro/ego/core/eflag"
 )
 
 // Config 配置
 type Config struct {
-	Host    string
-	Port    int
-	Network string
+	Host              string
+	Port              int
+	EnableLocalMainIP bool
+	Network           string
 }
 
 // DefaultConfig 默认配置
 func DefaultConfig() *Config {
-	host, port, err := xnet.GetLocalMainIP()
-	if err != nil {
-		host = "localhost"
-	}
-
 	return &Config{
-		Host:    host,
+		Host:    eflag.String("host"),
 		Network: "tcp4",
-		Port:    port,
+		Port:    9003,
 	}
 }
 
