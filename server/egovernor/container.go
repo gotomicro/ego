@@ -2,8 +2,8 @@ package egovernor
 
 import (
 	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/util/xnet"
 )
 
 // Container defines a component instance.
@@ -31,9 +31,18 @@ func Load(key string) *Container {
 		c.err = err
 		return c
 	}
-	// 修改host信息
-	if eflag.String("host") != "" {
-		c.config.Host = eflag.String("host")
+	var (
+		host string
+		err  error
+	)
+	// 获取网卡ip
+	if c.config.EnableLocalMainIP {
+		host, _, err = xnet.GetLocalMainIP()
+		if err != nil {
+			elog.Error("get local main ip error", elog.FieldErr(err))
+		} else {
+			c.config.Host = host
+		}
 	}
 	c.name = key
 	return c
