@@ -32,8 +32,9 @@ func Load(key string) *Container {
 		return c
 	}
 	// 修改host信息
-	if eflag.String("host") != "" {
-		c.config.Host = eflag.String("host")
+	host := eflag.String("host")
+	if host != "" && host != "127.0.0.1" && host != "0.0.0.0" {
+		c.config.Host = host
 	}
 	c.name = key
 	return c
