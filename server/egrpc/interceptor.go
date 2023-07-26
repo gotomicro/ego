@@ -10,7 +10,6 @@ import (
 	"time"
 
 	sentinel "github.com/alibaba/sentinel-golang/api"
-	"github.com/alibaba/sentinel-golang/core/base"
 	sentinelBase "github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gotomicro/ego/core/eerrors"
 	"github.com/gotomicro/ego/core/elog"
@@ -28,7 +27,6 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
-	gcode "google.golang.org/grpc/codes"
 	grpcCode "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -400,15 +398,15 @@ func (c *Container) sentinelInterceptor() grpc.UnaryServerInterceptor {
 		var entry *sentinelBase.SentinelEntry = nil
 		entry, blockErr := sentinel.Entry(
 			resourceName,
-			sentinel.WithResourceType(base.ResTypeRPC),
-			sentinel.WithTrafficType(base.Inbound),
+			sentinel.WithResourceType(sentinelBase.ResTypeRPC),
+			sentinel.WithTrafficType(sentinelBase.Inbound),
 		)
 		if blockErr != nil {
 			if c.config.unaryServerBlockFallback != nil {
 				return c.config.unaryServerBlockFallback(ctx, req, info, blockErr)
 			}
 
-			return nil, eerrors.New(int(gcode.ResourceExhausted), "blocked by sentinel", blockErr.Error())
+			return nil, eerrors.New(int(grpcCode.ResourceExhausted), "blocked by sentinel", blockErr.Error())
 		}
 		defer entry.Exit()
 
