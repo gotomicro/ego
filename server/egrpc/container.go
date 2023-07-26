@@ -63,10 +63,10 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 
 	// prometheus metric 必须在业务拦截器执行完之后
-	if c.config.EnableMetricInterceptor {
-		unaryInterceptors = append(unaryInterceptors, prometheusUnaryServerInterceptor)
-		streamInterceptors = append(streamInterceptors, prometheusStreamServerInterceptor)
-	}
+	//if c.config.EnableMetricInterceptor {
+	//unaryInterceptors = append(unaryInterceptors, prometheusUnaryServerInterceptor)
+	//streamInterceptors = append(streamInterceptors, prometheusStreamServerInterceptor)
+	//}
 
 	// 启用sentinel
 	if c.config.EnableSentinel {

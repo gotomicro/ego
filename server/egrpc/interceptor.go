@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,31 +33,6 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 )
-
-func prometheusUnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	startTime := time.Now()
-	serviceName, _ := egrpcinteceptor.SplitMethodName(info.FullMethod)
-	emetric.ServerStartedCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), serviceName)
-	resp, err := handler(ctx, req)
-	statusInfo := ecode.Convert(err)
-
-	emetric.ServerHandleHistogram.ObserveWithExemplar(time.Since(startTime).Seconds(), prometheus.Labels{
-		"tid": etrace.ExtractTraceID(ctx),
-	}, emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), serviceName)
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), statusInfo.Code().String(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())), serviceName)
-	return resp, err
-}
-
-func prometheusStreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	startTime := time.Now()
-	serviceName, _ := egrpcinteceptor.SplitMethodName(info.FullMethod)
-	emetric.ServerStartedCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), serviceName)
-	err := handler(srv, ss)
-	statusInfo := ecode.Convert(err)
-	emetric.ServerHandleHistogram.Observe(time.Since(startTime).Seconds(), emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), serviceName)
-	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), statusInfo.Message(), http.StatusText(ecode.GrpcToHTTPStatusCode(statusInfo.Code())), serviceName)
-	return err
-}
 
 func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	tracer := etrace.NewTracer(trace.SpanKindServer)
@@ -182,6 +158,7 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 				stack = stack[:runtime.Stack(stack, true)]
 				fields = append(fields, elog.FieldStack(stack))
 				event = "recover"
+				err = status.New(grpcCode.Internal, "panic recover, origin err: "+err.Error()).Err()
 			}
 			spbStatus := ecode.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
@@ -211,12 +188,22 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 					// 非核心报错只做warning
 					c.logger.Warn("access", fields...)
 				}
+				c.prometheusStreamServerInterceptor(stream, info, spbStatus, cost)
 				return
 			}
 			c.logger.Info("access", fields...)
+			c.prometheusStreamServerInterceptor(stream, info, spbStatus, cost)
 		}()
 		return handler(srv, stream)
 	}
+}
+
+func (c *Container) prometheusStreamServerInterceptor(ss grpc.ServerStream, info *grpc.StreamServerInfo, pbStatus *status.Status, dur time.Duration) {
+	cost := float64(dur.Microseconds()) / 1000
+	serviceName, _ := egrpcinteceptor.SplitMethodName(info.FullMethod)
+	emetric.ServerStartedCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), serviceName)
+	emetric.ServerHandleHistogram.Observe(cost, emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), serviceName)
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), pbStatus.Message(), strconv.Itoa(ecode.GrpcToHTTPStatusCode(pbStatus.Code())), serviceName)
 }
 
 func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor {
@@ -262,12 +249,13 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				isSlow = true
 			}
 
+			spbStatus := ecode.Convert(err)
 			// 如果没有开启日志组件、并且没有错误，没有慢日志，那么直接返回不记录日志
 			if err == nil && !c.config.EnableAccessInterceptor && !isSlow {
+				c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
 				return
 			}
 
-			spbStatus := ecode.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
 			fields = append(fields,
@@ -321,12 +309,14 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 					// 非核心报错只做warning
 					c.logger.Warn("access", fields...)
 				}
+				c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
 				return
 			}
 
 			if c.config.EnableAccessInterceptor {
 				c.logger.Info("access", fields...)
 			}
+			c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
 		}()
 
 		//if enableCPUUsage(ctx) {
@@ -343,6 +333,19 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 		//}
 		return handler(ctx, req)
 	}
+}
+
+func (c *Container) prometheusUnaryServerInterceptor(ctx context.Context, info *grpc.UnaryServerInfo, pbStatus *status.Status, dur time.Duration) {
+	if !c.config.EnableMetricInterceptor {
+		return
+	}
+	cost := float64(dur.Microseconds()) / 1000
+	serviceName, _ := egrpcinteceptor.SplitMethodName(info.FullMethod)
+	emetric.ServerStartedCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), serviceName)
+	emetric.ServerHandleHistogram.ObserveWithExemplar(cost, prometheus.Labels{
+		"tid": etrace.ExtractTraceID(ctx),
+	}, emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), serviceName)
+	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), pbStatus.Code().String(), strconv.Itoa(ecode.GrpcToHTTPStatusCode(pbStatus.Code())), serviceName)
 }
 
 // enableCPUUsage 是否开启cpu利用率

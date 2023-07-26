@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -107,7 +108,8 @@ func timeoutMiddleware(timeout time.Duration) func(c *gin.Context) {
 	}
 }
 
-// defaultServerInterceptor 默认拦截器，包含日志记录、Recover等功能
+// defaultServerInterceptor 默认拦截器，包含日志记录、Recover、监控功能
+// 监控放里面是因为，例如panic会改写http status。这样才能统计准确
 func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var beg = time.Now()
@@ -216,7 +218,6 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 
 				// 上面BrokenPipe使用的是用户ctx.Writer.Status()
 				// 如果不是BrokenPipe，那么会将Writer.Status()设置为500
-
 				event = "recover"
 				stackInfo := stack(3)
 				fields = append(fields,
@@ -226,6 +227,7 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					elog.FieldCode(int32(ctx.Writer.Status())),
 					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
+				c.metricServerInterceptor(ctx, cost)
 				c.logger.Error("access", fields...)
 				return
 			}
@@ -237,6 +239,7 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					elog.FieldCode(int32(ctx.Writer.Status())),
 					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
+				c.metricServerInterceptor(ctx, cost)
 				c.logger.Info("access", fields...)
 			}
 		}()
@@ -309,19 +312,19 @@ func function(pc uintptr) []byte {
 	return name
 }
 
-func metricServerInterceptor() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		beg := time.Now()
-		host := c.Request.Host
-		method := c.Request.Method + "." + c.FullPath()
-		app := extractAPP(c)
-		emetric.ServerStartedCounter.Inc(emetric.TypeHTTP, method, app, host)
-		c.Next()
-		emetric.ServerHandleHistogram.ObserveWithExemplar(time.Since(beg).Seconds(), prometheus.Labels{
-			"tid": etrace.ExtractTraceID(c.Request.Context()),
-		}, emetric.TypeHTTP, method, app, host)
-		emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, method, app, http.StatusText(c.Writer.Status()), http.StatusText(c.Writer.Status()), host)
+func (c *Container) metricServerInterceptor(ctx *gin.Context, value time.Duration) {
+	if !c.config.EnableMetricInterceptor {
+		return
 	}
+	cost := float64(value.Microseconds()) / 1000
+	host := ctx.Request.Host
+	method := ctx.Request.Method + "." + ctx.FullPath()
+	app := extractAPP(ctx)
+	emetric.ServerStartedCounter.Inc(emetric.TypeHTTP, method, app, host)
+	emetric.ServerHandleHistogram.ObserveWithExemplar(cost, prometheus.Labels{
+		"tid": etrace.ExtractTraceID(ctx.Request.Context()),
+	}, emetric.TypeHTTP, method, app, host)
+	emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, method, app, http.StatusText(ctx.Writer.Status()), strconv.Itoa(ctx.Writer.Status()), host)
 }
 
 // todo 如果业务崩了，logger recover
