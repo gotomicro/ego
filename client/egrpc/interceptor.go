@@ -348,7 +348,13 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		}
 
 		if c.config.EnableAccessInterceptorReq {
-			fields = append(fields, elog.Any("req", json.RawMessage(xstring.JSON(req))))
+			var reqMap = map[string]interface{}{
+				"payload": xstring.JSON(req),
+			}
+			if md, ok := metadata.FromOutgoingContext(ctx); ok {
+				reqMap["metadata"] = md
+			}
+			fields = append(fields, elog.Any("req", reqMap))
 		}
 		if c.config.EnableAccessInterceptorRes {
 			fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
