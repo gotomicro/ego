@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/gotomicro/ego/client/ehttp/resolver"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
@@ -23,7 +24,7 @@ import (
 	"github.com/gotomicro/ego/core/util/xdebug"
 )
 
-type interceptor func(name string, cfg *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook)
+type interceptor func(name string, cfg *Config, logger *elog.Component, builder resolver.Resolver) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook)
 
 func logAccess(name string, config *Config, logger *elog.Component, req *resty.Request, res *resty.Response, err error) {
 	u := req.Context().Value(urlKey{}).(*url.URL)
@@ -90,7 +91,7 @@ func beg(ctx context.Context) time.Time {
 	return begTime
 }
 
-func fixedInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
+func fixedInterceptor(name string, config *Config, logger *elog.Component, builder resolver.Resolver) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
 	return func(cli *resty.Client, req *resty.Request) error {
 		// 这个URL可能不准，每次请求都需要重复url.Parse()，会增加一定的性能损耗
 		var concatURL string
@@ -114,12 +115,16 @@ func fixedInterceptor(name string, config *Config, logger *elog.Component) (rest
 				}
 			}
 		}
+		// 只有存在，才会更新
+		if builder.GetAddr() != "" {
+			cli.HostURL = builder.GetAddr()
+		}
 		req.SetContext(context.WithValue(context.WithValue(req.Context(), begKey{}, time.Now()), urlKey{}, u))
 		return nil
 	}, nil, nil
 }
 
-func logInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
+func logInterceptor(name string, config *Config, logger *elog.Component, builder resolver.Resolver) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
 	afterFn := func(cli *resty.Client, response *resty.Response) error {
 		logAccess(name, config, logger, response.Request, response, nil)
 		return nil
@@ -134,7 +139,7 @@ func logInterceptor(name string, config *Config, logger *elog.Component) (resty.
 	return nil, afterFn, errorFn
 }
 
-func metricInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
+func metricInterceptor(name string, config *Config, logger *elog.Component, builder resolver.Resolver) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
 	if !config.EnableMetricsInterceptor {
 		return nil, nil, nil
 	}
@@ -157,7 +162,7 @@ func metricInterceptor(name string, config *Config, logger *elog.Component) (res
 	return nil, afterFn, errorFn
 }
 
-func traceInterceptor(name string, config *Config, logger *elog.Component) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
+func traceInterceptor(name string, config *Config, logger *elog.Component, builder resolver.Resolver) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
 	tracer := etrace.NewTracer(trace.SpanKindClient)
 	attrs := []attribute.KeyValue{
 		semconv.RPCSystemKey.String("http"),

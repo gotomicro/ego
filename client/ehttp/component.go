@@ -4,9 +4,13 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/gotomicro/ego/client/ehttp/resolver"
+	"github.com/gotomicro/ego/core/eregistry"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/gotomicro/ego/core/eapp"
@@ -22,9 +26,23 @@ type Component struct {
 	config *Config
 	logger *elog.Component
 	*resty.Client
+	builder resolver.Builder
 }
 
 func newComponent(name string, config *Config, logger *elog.Component) *Component {
+	// addr可以为空
+	// 以下方法是为了支持k8s解析域名， k8s:///svc-user:9002 http接口，一定要是三斜线，跟gRPC统一
+	egoTarget, err := parseTarget(config.Addr)
+	if err != nil {
+		elog.Panic("parse addr error", elog.FieldErr(err), elog.FieldKey(config.Addr))
+	}
+	addr := strings.ReplaceAll(config.Addr, egoTarget.Scheme+"://", "http://")
+	builder := resolver.Get(egoTarget.Scheme)
+	resolver, err := builder.Build(addr)
+	if err != nil {
+		elog.Panic("build resolver error", elog.FieldErr(err), elog.FieldKey(config.Addr))
+	}
+
 	// resty的默认方法，无法设置长连接个数，和是否开启长连接，这里重新构造http client。
 	cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	interceptors := []interceptor{fixedInterceptor, logInterceptor, metricInterceptor, traceInterceptor}
@@ -32,9 +50,9 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		SetDebug(config.RawDebug).
 		SetTimeout(config.ReadTimeout).
 		SetHeader("app", eapp.Name()).
-		SetBaseURL(config.Addr)
+		SetBaseURL(addr)
 	for _, interceptor := range interceptors {
-		onBefore, onAfter, onErr := interceptor(name, config, logger)
+		onBefore, onAfter, onErr := interceptor(name, config, logger, resolver)
 		if onBefore != nil {
 			cli.OnBeforeRequest(onBefore)
 		}
@@ -47,11 +65,32 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	}
 
 	return &Component{
-		name:   name,
-		config: config,
-		logger: logger,
-		Client: cli,
+		name:    name,
+		config:  config,
+		logger:  logger,
+		Client:  cli,
+		builder: builder,
 	}
+}
+
+func parseTarget(addr string) (eregistry.Target, error) {
+	target, err := url.Parse(addr)
+	if err != nil {
+		return eregistry.Target{}, err
+	}
+	endpoint := target.Path
+	if endpoint == "" {
+		endpoint = target.Opaque
+	}
+	endpoint = strings.TrimPrefix(endpoint, "/")
+
+	egoTarget := eregistry.Target{
+		Protocol:  eregistry.ProtocolHTTP,
+		Scheme:    target.Scheme,
+		Endpoint:  endpoint,
+		Authority: target.Host,
+	}
+	return egoTarget, nil
 }
 
 func createTransport(config *Config) *http.Transport {
