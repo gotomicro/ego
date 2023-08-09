@@ -103,6 +103,21 @@ func TestPanicInCustomHandler(t *testing.T) {
 	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
+func TestBind(t *testing.T) {
+	container := DefaultContainer()
+	cmp := container.Build()
+	type User struct {
+		Name string `json:"name" form:"name"`
+	}
+	// 异常header会导致EOF问题
+	cmp.POST("/hello", func(c *gin.Context) {
+		err := c.Bind(&User{})
+		assert.NoError(t, err)
+	})
+	// RUN
+	performRequest(cmp, "POST", "/hello")
+}
+
 func TestPanicWithBrokenPipe(t *testing.T) {
 	const expectCode = 204
 

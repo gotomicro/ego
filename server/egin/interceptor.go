@@ -312,16 +312,17 @@ func function(pc uintptr) []byte {
 	return name
 }
 
-func (c *Container) metricServerInterceptor(ctx *gin.Context, value time.Duration) {
+func (c *Container) metricServerInterceptor(ctx *gin.Context, cost time.Duration) {
 	if !c.config.EnableMetricInterceptor {
 		return
 	}
-	cost := float64(value.Microseconds()) / 1000
+
 	host := ctx.Request.Host
 	method := ctx.Request.Method + "." + ctx.FullPath()
 	app := extractAPP(ctx)
 	emetric.ServerStartedCounter.Inc(emetric.TypeHTTP, method, app, host)
-	emetric.ServerHandleHistogram.ObserveWithExemplar(cost, prometheus.Labels{
+	// HandleHistogram的单位是s，需要用s单位
+	emetric.ServerHandleHistogram.ObserveWithExemplar(cost.Seconds(), prometheus.Labels{
 		"tid": etrace.ExtractTraceID(ctx.Request.Context()),
 	}, emetric.TypeHTTP, method, app, host)
 	emetric.ServerHandleCounter.Inc(emetric.TypeHTTP, method, app, http.StatusText(ctx.Writer.Status()), strconv.Itoa(ctx.Writer.Status()), host)

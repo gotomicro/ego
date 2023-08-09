@@ -198,11 +198,11 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 	}
 }
 
-func (c *Container) prometheusStreamServerInterceptor(ss grpc.ServerStream, info *grpc.StreamServerInfo, pbStatus *status.Status, dur time.Duration) {
-	cost := float64(dur.Microseconds()) / 1000
+func (c *Container) prometheusStreamServerInterceptor(ss grpc.ServerStream, info *grpc.StreamServerInfo, pbStatus *status.Status, cost time.Duration) {
 	serviceName, _ := egrpcinteceptor.SplitMethodName(info.FullMethod)
 	emetric.ServerStartedCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), serviceName)
-	emetric.ServerHandleHistogram.Observe(cost, emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), serviceName)
+	// HandleHistogram的单位是s，需要用s单位
+	emetric.ServerHandleHistogram.Observe(cost.Seconds(), emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), serviceName)
 	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), pbStatus.Message(), strconv.Itoa(ecode.GrpcToHTTPStatusCode(pbStatus.Code())), serviceName)
 }
 
@@ -335,14 +335,14 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 	}
 }
 
-func (c *Container) prometheusUnaryServerInterceptor(ctx context.Context, info *grpc.UnaryServerInfo, pbStatus *status.Status, dur time.Duration) {
+func (c *Container) prometheusUnaryServerInterceptor(ctx context.Context, info *grpc.UnaryServerInfo, pbStatus *status.Status, cost time.Duration) {
 	if !c.config.EnableMetricInterceptor {
 		return
 	}
-	cost := float64(dur.Microseconds()) / 1000
 	serviceName, _ := egrpcinteceptor.SplitMethodName(info.FullMethod)
 	emetric.ServerStartedCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), serviceName)
-	emetric.ServerHandleHistogram.ObserveWithExemplar(cost, prometheus.Labels{
+	// HandleHistogram的单位是s，需要用s单位
+	emetric.ServerHandleHistogram.ObserveWithExemplar(cost.Seconds(), prometheus.Labels{
 		"tid": etrace.ExtractTraceID(ctx),
 	}, emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), serviceName)
 	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), pbStatus.Code().String(), strconv.Itoa(ecode.GrpcToHTTPStatusCode(pbStatus.Code())), serviceName)
