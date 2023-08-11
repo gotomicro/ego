@@ -36,7 +36,13 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	if err != nil {
 		elog.Panic("parse addr error", elog.FieldErr(err), elog.FieldKey(config.Addr))
 	}
-	addr := strings.ReplaceAll(config.Addr, egoTarget.Scheme+"://", "http://")
+	// 这里的目的是为了，将k8s:// 替换为 http://，所以需要判断下是否为非HTTP，HTTPS。
+	// 因为resty默认只要http和https的协议
+	addr := config.Addr
+	if egoTarget.Scheme != "http" && egoTarget.Scheme != "https" {
+		// 因为内部协议，都是内网，所以直接替换为HTTP
+		addr = strings.ReplaceAll(config.Addr, egoTarget.Scheme+"://", "http://")
+	}
 	builder := resolver.Get(egoTarget.Scheme)
 	resolver, err := builder.Build(addr)
 	if err != nil {
