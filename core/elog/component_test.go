@@ -73,6 +73,21 @@ writer = "stderr"
 	return Load("stderr").Build()
 }
 
+func newStdoutLogger() *Component {
+	conf := `
+[stdout]
+level = "info"
+writer = "stdout"
+`
+	var err error
+	if err = econf.LoadFromReader(strings.NewReader(conf), toml.Unmarshal); err != nil {
+		log.Println("load conf fail", err)
+		return nil
+	}
+	log.Println("start to send logs to stdout")
+	return Load("stdout").Build()
+}
+
 func newAliLogger() *Component {
 	conf := `
 [ali]
@@ -145,6 +160,19 @@ func BenchmarkStderrWriter(b *testing.B) {
 	b.Logf("Logging at a disabled level with some accumulated context.")
 	logger := newStderrLogger()
 	b.Run("stderr\n", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0))
+			}
+		})
+	})
+}
+
+func BenchmarkStdoutWriter(b *testing.B) {
+	b.Logf("Logging at a disabled level with some accumulated context.")
+	logger := newStdoutLogger()
+	b.Run("stdout\n", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
