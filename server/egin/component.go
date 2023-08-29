@@ -260,3 +260,10 @@ func newLocalListener() net.Listener {
 	}
 	return l
 }
+
+// 使用已存在的listener
+func (c *Component) UseListener(listener net.Listener) {
+	if listener != nil {
+		c.listener = listener
+	}
+}
