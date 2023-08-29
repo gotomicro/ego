@@ -52,6 +52,10 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		listener:         nil,
 		routerCommentMap: make(map[string]string),
 	}
+	// 判断是否存在自定义listener
+	if config.listener != nil {
+		comp.listener = config.listener
+	}
 
 	if config.EmbedPath != "" {
 		comp.embedWrapper = &EmbedWrapper{
@@ -88,6 +92,18 @@ func (c *Component) Prepare() error {
 
 // Init 初始化
 func (c *Component) Init() error {
+	// 如果没有配置listener
+	if c.config.listener == nil {
+		if err := c.defaultListener(); err != nil {
+			return err
+		}
+	}
+
+	c.config.Port = c.listener.Addr().(*net.TCPAddr).Port
+	return nil
+}
+
+func (c *Component) defaultListener() error {
 	var err error
 	if c.config.Network == "local" {
 		c.listener = newLocalListener()
@@ -97,7 +113,6 @@ func (c *Component) Init() error {
 			c.logger.Panic("new egin server err", elog.FieldErrKind("listen err"), elog.FieldErr(err))
 		}
 	}
-	c.config.Port = c.listener.Addr().(*net.TCPAddr).Port
 	return nil
 }
 
@@ -260,4 +275,3 @@ func newLocalListener() net.Listener {
 	}
 	return l
 }
-
