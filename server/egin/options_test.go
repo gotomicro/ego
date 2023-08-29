@@ -1,6 +1,9 @@
 package egin
 
 import (
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -91,4 +94,16 @@ func TestWithContextTimeout(t *testing.T) {
 	timeout := time.Duration(100)
 	comp := DefaultContainer().Build(WithContextTimeout(timeout))
 	assert.Equal(t, timeout, comp.config.ContextTimeout)
+}
+
+func TestWithListener(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 处理http请求
+		io.WriteString(w, "Hello,Client")
+	}))
+	defer server.Close()
+
+	lister := server.Listener
+	comp := DefaultContainer().Build(WithListener(lister))
+	assert.Equal(t, lister, comp.config.listener)
 }
