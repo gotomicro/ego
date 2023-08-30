@@ -3,6 +3,7 @@ package egin
 import (
 	"crypto/tls"
 	"embed"
+	"net"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -111,5 +112,11 @@ func WithContextTimeout(timeout time.Duration) Option {
 func WithRecoveryFunc(f gin.RecoveryFunc) Option {
 	return func(c *Container) {
 		c.config.recoveryFunc = f
+	}
+}
+
+func WithListener(listener net.Listener) Option {
+	return func(c *Container) {
+		c.config.listener = listener
 	}
 }
