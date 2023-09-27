@@ -66,6 +66,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 	// 设置信任的header头
 	comp.Engine.TrustedPlatform = config.TrustedPlatform
+	comp.Engine.UseH2C = config.EnableH2C
 	return comp
 }
 
