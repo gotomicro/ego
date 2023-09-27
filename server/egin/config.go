@@ -48,6 +48,7 @@ type Config struct {
 	TLSClientCAs                  []string      // https client的ca，当需要双向认证的时候指定可以倒入自签证书
 	TrustedPlatform               string        // 需要用户换成自己的CDN名字，获取客户端IP地址
 	EmbedPath                     string        // 嵌入embed path数据
+	EnableH2C                     bool          // 开启HTTP2
 	embedFs                       embed.FS      // 需要在build时候注入embed.Fs
 	TLSSessionCache               tls.ClientSessionCache
 	blockFallback                 func(*gin.Context)
