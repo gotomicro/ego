@@ -3,18 +3,15 @@ package ehttp
 import (
 	"net"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gotomicro/ego/client/ehttp/resolver"
-	"github.com/gotomicro/ego/core/eregistry"
-	"golang.org/x/net/publicsuffix"
-
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/eregistry"
 )
 
 // PackageName 设置包名
@@ -36,23 +33,28 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	if err != nil {
 		elog.Panic("parse addr error", elog.FieldErr(err), elog.FieldKey(config.Addr))
 	}
-	addr := strings.ReplaceAll(config.Addr, egoTarget.Scheme+"://", "http://")
+	// 这里的目的是为了，将k8s:// 替换为 http://，所以需要判断下是否为非HTTP，HTTPS。
+	// 因为resty默认只要http和https的协议
+	addr := config.Addr
+	if egoTarget.Scheme != "http" && egoTarget.Scheme != "https" {
+		// 因为内部协议，都是内网，所以直接替换为HTTP
+		addr = strings.ReplaceAll(config.Addr, egoTarget.Scheme+"://", "http://")
+	}
 	builder := resolver.Get(egoTarget.Scheme)
-	resolver, err := builder.Build(addr)
+	resolverBuild, err := builder.Build(addr)
 	if err != nil {
 		elog.Panic("build resolver error", elog.FieldErr(err), elog.FieldKey(config.Addr))
 	}
 
 	// resty的默认方法，无法设置长连接个数，和是否开启长连接，这里重新构造http client。
-	cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	interceptors := []interceptor{fixedInterceptor, logInterceptor, metricInterceptor, traceInterceptor}
-	cli := resty.NewWithClient(&http.Client{Transport: createTransport(config), Jar: cookieJar}).
+	cli := resty.NewWithClient(&http.Client{Transport: createTransport(config), Jar: config.cookieJar}).
 		SetDebug(config.RawDebug).
 		SetTimeout(config.ReadTimeout).
 		SetHeader("app", eapp.Name()).
 		SetBaseURL(addr)
 	for _, interceptor := range interceptors {
-		onBefore, onAfter, onErr := interceptor(name, config, logger, resolver)
+		onBefore, onAfter, onErr := interceptor(name, config, logger, resolverBuild)
 		if onBefore != nil {
 			cli.OnBeforeRequest(onBefore)
 		}

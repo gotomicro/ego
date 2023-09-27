@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"embed"
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -56,6 +57,7 @@ type Config struct {
 	aiReqResCelPrg                cel.Program
 	mu                            sync.RWMutex     // mutex for EnableAccessInterceptorReq、EnableAccessInterceptorRes、AccessInterceptorReqResFilter、aiReqResCelPrg
 	recoveryFunc                  gin.RecoveryFunc // recoveryFunc 处理接口没有被 recover 的 panic，默认返回 500 并且没有任何 response body
+	listener                      net.Listener     // a generic network listener 默认是net.Listen()方法生成,如果有需要自行传入可采用option方式进行替换
 }
 
 // DefaultConfig ...

@@ -1,6 +1,9 @@
 package ehttp
 
-import "time"
+import (
+	"net/http"
+	"time"
+)
 
 // WithAddr 设置HTTP地址
 func WithAddr(addr string) Option {
@@ -97,5 +100,13 @@ func WithEnableAccessInterceptorRes(enableAccessInterceptorRes bool) Option {
 func WithPathRelabel(match string, replacement string) Option {
 	return func(c *Container) {
 		c.config.PathRelabel = append(c.config.PathRelabel, Relabel{Match: match, Replacement: replacement})
+	}
+}
+
+// WithJar 设置Cookie，设置后，请求第一次接口后获取Cookie，第二次请求会带上Cookie，适合一些登录场景
+// 例子：cookieJar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+func WithJar(jar http.CookieJar) Option {
+	return func(c *Container) {
+		c.config.cookieJar = jar
 	}
 }

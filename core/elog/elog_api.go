@@ -13,6 +13,7 @@ func init() {
 	registry = make(map[string]WriterBuilder)
 	Register(&stderrWriterBuilder{})
 	Register(&rotateWriterBuilder{})
+	Register(&stdoutWriterBuilder{})
 	DefaultLogger = DefaultContainer().Build(WithFileName(DefaultLoggerName), WithCallSkip(2)) // DefaultLogger 默认为2层
 	EgoLogger = DefaultContainer().Build(WithFileName(EgoLoggerName))
 }
