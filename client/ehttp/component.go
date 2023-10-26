@@ -48,7 +48,13 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 	// resty的默认方法，无法设置长连接个数，和是否开启长连接，这里重新构造http client。
 	interceptors := []interceptor{fixedInterceptor, logInterceptor, metricInterceptor, traceInterceptor}
-	cli := resty.NewWithClient(&http.Client{Transport: createTransport(config), Jar: config.cookieJar}).
+	// 如果有设置自定义httpClient，那么不为空，使用用户自定义httpClient
+	if config.httpClient == nil {
+		// 如果用户没有设置，使用ego默认的httpClient
+		config.httpClient = &http.Client{Transport: createTransport(config), Jar: config.cookieJar}
+	}
+
+	cli := resty.NewWithClient(config.httpClient).
 		SetDebug(config.RawDebug).
 		SetTimeout(config.ReadTimeout).
 		SetHeader("app", eapp.Name()).

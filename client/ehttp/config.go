@@ -25,6 +25,7 @@ type Config struct {
 	EnableAccessInterceptorRes bool           // 是否开启记录响应参数，默认不开启
 	PathRelabel                []Relabel      // path 重命名 (metric 用)
 	cookieJar                  http.CookieJar // 用于缓存cookie
+	httpClient                 *http.Client   // 自定义http client
 	EnableMetricsInterceptor   bool           // 是否开启监控，默认开启
 }
 

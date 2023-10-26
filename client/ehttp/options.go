@@ -110,3 +110,10 @@ func WithJar(jar http.CookieJar) Option {
 		c.config.cookieJar = jar
 	}
 }
+
+// WithHTTPClient 设置自定义client
+func WithHTTPClient(httpClient *http.Client) Option {
+	return func(c *Container) {
+		c.config.httpClient = httpClient
+	}
+}

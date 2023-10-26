@@ -25,7 +25,7 @@ require (
 	github.com/spf13/cast v1.4.1
 	github.com/stretchr/testify v1.8.4
 	github.com/wk8/go-ordered-map v1.0.0
-	go.opencensus.io v0.23.0
+	go.opencensus.io v0.24.0
 	go.opentelemetry.io/otel v1.18.0
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.18.0
@@ -35,7 +35,7 @@ require (
 	go.uber.org/automaxprocs v1.5.1
 	go.uber.org/zap v1.21.0
 	golang.org/x/sync v0.3.0
-	golang.org/x/tools v0.9.1
+	golang.org/x/tools v0.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98
 	google.golang.org/grpc v1.58.1
@@ -93,7 +93,7 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
