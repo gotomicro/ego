@@ -26,7 +26,7 @@ type Config struct {
 	PathRelabel                []Relabel      // path 重命名 (metric 用)
 	cookieJar                  http.CookieJar // 用于缓存cookie
 	httpClient                 *http.Client   // 自定义http client
-	EnableMetricsInterceptor   bool           // 是否开启监控，默认开启
+	EnableMetricInterceptor    bool           // 是否开启Metric采集，默认禁用，开启metrics采集，可能造成metrics在prometheus中膨胀会导致占用大量的prometheus内存
 }
 
 // Relabel ...
@@ -50,6 +50,6 @@ func DefaultConfig() *Config {
 		EnableTraceInterceptor:     true,
 		EnableAccessInterceptor:    false,
 		EnableAccessInterceptorRes: false,
-		EnableMetricsInterceptor:   true,
+		EnableMetricInterceptor:    false,
 	}
 }

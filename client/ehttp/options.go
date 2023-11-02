@@ -68,10 +68,10 @@ func WithEnableTraceInterceptor(enableTraceInterceptor bool) Option {
 	}
 }
 
-// WithEnableMetricsInterceptor 设置开启 Metrics 拦截器
-func WithEnableMetricsInterceptor(enableMetricsInterceptor bool) Option {
+// WithEnableMetricInterceptor 设置开启 Metrics 拦截器
+func WithEnableMetricInterceptor(enableMetricsInterceptor bool) Option {
 	return func(c *Container) {
-		c.config.EnableMetricsInterceptor = enableMetricsInterceptor
+		c.config.EnableMetricInterceptor = enableMetricsInterceptor
 	}
 }
 
