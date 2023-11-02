@@ -11,11 +11,12 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/gotomicro/ego/client/ehttp/resolver"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gotomicro/ego/client/ehttp/resolver"
 
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/elog"
@@ -140,7 +141,7 @@ func logInterceptor(name string, config *Config, logger *elog.Component, builder
 }
 
 func metricInterceptor(name string, config *Config, logger *elog.Component, builder resolver.Resolver) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
-	if !config.EnableMetricsInterceptor {
+	if !config.EnableMetricInterceptor {
 		return nil, nil, nil
 	}
 	addr := strings.TrimRight(config.Addr, "/")
