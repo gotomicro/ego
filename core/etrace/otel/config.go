@@ -3,10 +3,6 @@ package otel
 import (
 	"context"
 
-	"github.com/gotomicro/ego/core/eapp"
-	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/internal/ienv"
 	jaegerv2 "go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -14,6 +10,11 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/internal/ienv"
 )
 
 // Config ...
@@ -29,10 +30,11 @@ type Config struct {
 
 // otlpConfig otlp上报协议配置
 type otlpConfig struct {
-	Endpoint   string                 // oltp endpoint
-	Headers    map[string]string      // 默认提供一个 请求头的参数配置
-	options    []otlptracegrpc.Option // 预留自定义配置：   例如 grpc WithGRPCConn
-	resOptions []resource.Option      // res 预留自定以配置
+	Endpoint       string                 // oltp endpoint
+	Headers        map[string]string      // 默认提供一个 请求头的参数配置
+	EnableInsecure bool                   // 是否启用不安全连接 default: true
+	options        []otlptracegrpc.Option // 预留自定义配置：   例如 grpc WithGRPCConn
+	resOptions     []resource.Option      // res 预留自定以配置
 }
 
 // jaegerConfig jaeger上报协议配置
@@ -68,7 +70,8 @@ func DefaultConfig() *Config {
 			EndpointType:      "collector",
 		},
 		Otlp: otlpConfig{
-			Endpoint: ienv.EnvOrStr("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+			Endpoint:       ienv.EnvOrStr("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+			EnableInsecure: true,
 		},
 		OtelType:     "otlp",
 		PanicOnError: true,
@@ -150,11 +153,15 @@ func (config *Config) buildJaegerTP() trace.TracerProvider {
 func (config *Config) buildOtlpTP() trace.TracerProvider {
 	// otlp exporter
 	options := []otlptracegrpc.Option{
-		otlptracegrpc.WithInsecure(),                     // WithInsecure disables client transport security for the exporter's gRPC
 		otlptracegrpc.WithHeaders(config.Otlp.Headers),   // WithHeaders will send the provided headers with each gRPC requests.
 		otlptracegrpc.WithEndpoint(config.Otlp.Endpoint), // WithEndpoint sets the target endpoint the exporter will connect to. If unset, localhost:4317 will be used as a default.
 		// otlptracegrpc.WithDialOption(grpc.WithBlock()), //默认不设置 同步状态，会产生阻塞等待 Ready
 	}
+	if config.Otlp.EnableInsecure {
+		// WithInsecure disables client transport security for the exporter's gRPC
+		options = append(options, otlptracegrpc.WithInsecure())
+	}
+
 	options = append(options, config.Otlp.options...)
 	traceClient := otlptracegrpc.NewClient(options...)
 	ctx := context.Background()
