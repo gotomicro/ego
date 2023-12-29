@@ -186,12 +186,15 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 
 			// slow log
 			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
-				// 最后添加状态码
-				fields = append(fields,
-					elog.FieldCode(int32(ctx.Writer.Status())),
-					elog.FieldUniformCode(int32(ctx.Writer.Status())),
-				)
-				c.logger.Warn("slow", fields...)
+				// 非长连接模式下，记入warn慢日志
+				if ctx.GetHeader("Accept") != "text/event-stream" {
+					// 最后添加状态码
+					fields = append(fields,
+						elog.FieldCode(int32(ctx.Writer.Status())),
+						elog.FieldUniformCode(int32(ctx.Writer.Status())),
+					)
+					c.logger.Warn("slow", fields...)
+				}
 			}
 
 			if rec := recover(); rec != nil {
