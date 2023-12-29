@@ -13,6 +13,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 
@@ -169,7 +170,9 @@ func traceInterceptor(name string, config *Config, logger *elog.Component, build
 		semconv.RPCSystemKey.String("http"),
 	}
 	beforeFn := func(cli *resty.Client, req *resty.Request) error {
-		ctx, span := tracer.Start(req.Context(), req.Method, nil, trace.WithAttributes(attrs...))
+		// 需要拿到header，才能将链路穿起来
+		carrier := propagation.HeaderCarrier(req.Header)
+		ctx, span := tracer.Start(req.Context(), req.Method, carrier, trace.WithAttributes(attrs...))
 		span.SetAttributes(
 			semconv.PeerServiceKey.String(name),
 			semconv.HTTPMethodKey.String(req.Method),
