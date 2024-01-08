@@ -28,9 +28,10 @@ type Config struct {
 	EnableAccessInterceptor    bool          // 是否开启记录请求数据，默认不开启
 	EnableAccessInterceptorReq bool          // 是否开启记录请求参数，默认不开启
 	EnableAccessInterceptorRes bool          // 是否开启记录响应参数，默认不开启
-	//EnableCPUUsage               bool          // 是否开启CPU利用率，默认开启
+	// EnableCPUUsage               bool          // 是否开启CPU利用率，默认开启
 	EnableServiceConfig          bool // 是否开启服务配置，默认开启
 	EnableFailOnNonTempDialError bool
+	MaxCallRecvMsgSize           int64 // 最大接收消息大小，默认4MB
 
 	keepAlive   *keepalive.ClientParameters
 	dialOptions []grpc.DialOption
@@ -56,6 +57,7 @@ func DefaultConfig() *Config {
 		EnableAccessInterceptorReq:   false,
 		EnableAccessInterceptorRes:   false,
 		EnableServiceConfig:          true,
-		//EnableCPUUsage:               true,
+		// EnableCPUUsage:               true,
+		MaxCallRecvMsgSize: 1024 * 1024 * 4,
 	}
 }

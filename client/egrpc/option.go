@@ -95,3 +95,10 @@ func WithName(name string) Option {
 		c.name = name
 	}
 }
+
+// WithMaxRecvMsgSize 设置最大接收消息大小
+func WithMaxRecvMsgSize(maxRecvMsgSize int64) Option {
+	return func(c *Container) {
+		c.config.MaxCallRecvMsgSize = maxRecvMsgSize
+	}
+}
