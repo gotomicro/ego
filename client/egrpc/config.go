@@ -31,7 +31,7 @@ type Config struct {
 	// EnableCPUUsage               bool          // 是否开启CPU利用率，默认开启
 	EnableServiceConfig          bool // 是否开启服务配置，默认开启
 	EnableFailOnNonTempDialError bool
-	MaxCallRecvMsgSize           int64 // 最大接收消息大小，默认4MB
+	MaxCallRecvMsgSize           int // 最大接收消息大小，默认4MB
 
 	keepAlive   *keepalive.ClientParameters
 	dialOptions []grpc.DialOption

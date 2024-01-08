@@ -74,6 +74,7 @@ func (c *Container) Build(options ...Option) *Component {
 			WithDialOption(grpc.WithChainUnaryInterceptor(c.metricUnaryClientInterceptor())),
 		)
 	}
+	options = append(options, WithDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(c.config.MaxCallRecvMsgSize))))
 
 	for _, option := range options {
 		option(c)
