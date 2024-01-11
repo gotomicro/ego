@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 
-	"github.com/gotomicro/ego/server/egovernor"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/examples/helloworld"
 	"github.com/gotomicro/ego/server"
+	"github.com/gotomicro/ego/server/egovernor"
 	"github.com/gotomicro/ego/server/egrpc"
 )
 
@@ -36,6 +36,8 @@ func (g Greeter) SayHello(ctx context.Context, request *helloworld.HelloRequest)
 	if request.Name == "error" {
 		return nil, status.Error(codes.Unavailable, "error")
 	}
+	egrpc.CtxStoreSet(ctx, "x-biz-guid", "123")
+	egrpc.CtxStoreSet(ctx, "x-biz-uid", "100")
 	// header := metadata.Pairs("x-header-key", "val")
 	// err := grpc.SendHeader(context, header)
 	// if err != nil {
