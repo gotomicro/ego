@@ -12,16 +12,6 @@ import (
 
 	sentinel "github.com/alibaba/sentinel-golang/api"
 	sentinelBase "github.com/alibaba/sentinel-golang/core/base"
-	"github.com/gotomicro/ego/core/eerrors"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/core/emetric"
-	"github.com/gotomicro/ego/core/esentinel"
-	"github.com/gotomicro/ego/core/etrace"
-	"github.com/gotomicro/ego/core/transport"
-	"github.com/gotomicro/ego/core/util/xstring"
-	"github.com/gotomicro/ego/internal/ecode"
-	"github.com/gotomicro/ego/internal/egrpcinteceptor"
-	"github.com/gotomicro/ego/internal/tools"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -32,6 +22,17 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
+
+	"github.com/gotomicro/ego/core/eerrors"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
+	"github.com/gotomicro/ego/core/esentinel"
+	"github.com/gotomicro/ego/core/etrace"
+	"github.com/gotomicro/ego/core/transport"
+	"github.com/gotomicro/ego/core/util/xstring"
+	"github.com/gotomicro/ego/internal/ecode"
+	"github.com/gotomicro/ego/internal/egrpcinteceptor"
+	"github.com/gotomicro/ego/internal/tools"
 )
 
 func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
@@ -206,8 +207,23 @@ func (c *Container) prometheusStreamServerInterceptor(ss grpc.ServerStream, info
 	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCStream, info.FullMethod, getPeerName(ss.Context()), pbStatus.Message(), strconv.Itoa(ecode.GrpcToHTTPStatusCode(pbStatus.Code())), serviceName)
 }
 
+type ctxStore struct {
+	kvs map[string]any
+}
+
+type ctxStoreStruct struct{}
+
+// CtxStoreSet 从ctx中尝试获取ctxStore，并往其中插入kv
+func CtxStoreSet(ctx context.Context, k string, v any) {
+	skv, ok := ctx.Value(ctxStoreStruct{}).(*ctxStore)
+	if ok {
+		skv.kvs[k] = v
+	}
+}
+
 func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+		ctx = context.WithValue(ctx, ctxStoreStruct{}, &ctxStore{kvs: map[string]any{}})
 		// 默认过滤掉该探活日志
 		if c.config.EnableSkipHealthLog && info.FullMethod == "/grpc.health.v1.Health/Check" {
 			return handler(ctx, req)
@@ -270,7 +286,13 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				elog.FieldPeerIP(getPeerIP(ctx)),
 			)
 
+			skv, skvOk := ctx.Value(ctxStoreStruct{}).(*ctxStore)
 			for _, key := range loggerKeys {
+				if skvOk {
+					if v, ok := skv.kvs[key]; ok {
+						fields = append(fields, elog.Any(strings.ToLower(key), v))
+					}
+				}
 				if value := tools.ContextValue(ctx, key); value != "" {
 					fields = append(fields, elog.FieldCustomKeyValue(key, value))
 				}
@@ -319,7 +341,7 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 			c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
 		}()
 
-		//if enableCPUUsage(ctx) {
+		// if enableCPUUsage(ctx) {
 		//	var stat = xcpu.Stat{}
 		//	xcpu.ReadStat(&stat)
 		//	if stat.Usage > 0 {
@@ -330,7 +352,7 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 		//			c.logger.Error("set header error", elog.FieldErr(err))
 		//		}
 		//	}
-		//}
+		// }
 		return handler(ctx, req)
 	}
 }
@@ -349,9 +371,9 @@ func (c *Container) prometheusUnaryServerInterceptor(ctx context.Context, info *
 }
 
 // enableCPUUsage 是否开启cpu利用率
-//func enableCPUUsage(ctx context.Context) bool {
+// func enableCPUUsage(ctx context.Context) bool {
 //	return tools.GrpcHeaderValue(ctx, "enable-cpu-usage") == "true"
-//}
+// }
 
 // getPeerName 获取对端应用名称
 func getPeerName(ctx context.Context) string {
