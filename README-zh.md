@@ -10,7 +10,7 @@
 [![Doc](https://img.shields.io/badge/doc-%E6%96%87%E6%A1%A3-2ca5e0?style=flat&logo=appveyor)](https://ego.gocn.vip)
 
 ## 1 帮助文档
-[https://ego.gocn.vip](https://ego.gocn.vip)
+[https://ego-org.com](https://ego-org.com)
 
 ## 2 介绍
 EGO是一个集成了各种工程实践的框架。通过组件化的设计模式，保证了业务方能够统一的调用方式启动各种组件
