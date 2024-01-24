@@ -14,7 +14,7 @@ English | [简体中文](./README-zh.md)
 ## 1 Docs
 The official docs for developers.
 
-View [https://ego.gocn.vip](https://ego.gocn.vip)
+View [https://ego-org.com](https://ego-org.com)
 
 ## 2 Introduction
 EGO is a microservice-oriented governance framework implemented by golang, which integrates various engineering practices. Through the component-based design pattern, it is guaranteed that the business development can use various components in a unified way.
