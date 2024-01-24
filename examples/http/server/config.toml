@@ -3,7 +3,7 @@ port = 9007
 EnableAccessInterceptor = true
 EnableAccessInterceptorReq = true
 EnableAccessInterceptorRes = true
-AccessInterceptorReqResFilter = ''
+AccessInterceptorReqResFilter = '!(request.path.startsWith("/hello") && request.method == "GET")'
 
 [trace]
 ServiceName = "server"

@@ -1,3 +1,11 @@
+# protoc-gen-go-errors 使用说明
+
+## 使用准备
+- 需要本地提前安装好 protoc google/protobuf 等
+- 需要下载最新的 protoc-gen-go-errors 插件，并添加到本地环境变量 
+
+## 定义错误 proto 文件
+```protobuf
 syntax = "proto3";
 
 package biz.v1;
@@ -38,3 +46,11 @@ enum Err {
   // @i18n.en="invalid user id"
   ERR_USER_ID_NOT_VALID = 3;
 }
+```
+
+## 使用
+```bash
+protoc --proto_path=. --go_out=paths=source_relative:. --go-errors_out=paths=source_relative:. ./errors.proto
+```
+
+详细用例可以参考 [./error.sh](./error.sh) 脚本

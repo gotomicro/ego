@@ -44,6 +44,8 @@ var i18n = map[string]map[string]string{
 {{- end }}
 }
 
+// ReasonI18n provides error messages in a specified language. 
+// For instance, to get an error message in Chinese for "@i18n.cn", you can use ReasonI18n(e, "cn").
 func ReasonI18n(e eerrors.Error, lan string) string {
 	return i18n[eerrors.FromError(e).Reason][lan]
 }
