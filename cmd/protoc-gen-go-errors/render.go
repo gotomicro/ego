@@ -24,6 +24,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/iancoleman/strcase"
@@ -37,9 +38,9 @@ const (
 )
 
 // generateFile generates a _errors.pb.go file containing ego errors definitions.
-func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
+func generateFile(gen *protogen.Plugin, file *protogen.File) (*protogen.GeneratedFile, error) {
 	if len(file.Enums) == 0 {
-		return nil
+		return nil, nil
 	}
 	filename := file.GeneratedFilenamePrefix + "_errors.pb.go"
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
@@ -48,14 +49,14 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.P("package ", file.GoPackageName)
 	g.P()
 	g.QualifiedGoIdent(codesPackage.Ident(""))
-	generateFileContent(gen, file, g)
-	return g
+	err := generateFileContent(gen, file, g)
+	return g, err
 }
 
 // generateFileContent generates the ego errors definitions, excluding the package statement.
-func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile) {
+func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile) error {
 	if len(file.Enums) == 0 {
-		return
+		return nil
 	}
 
 	g.P("// This is a compile-time assertion to ensure that this generated file")
@@ -64,7 +65,11 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	g.P()
 	index := 0
 	for _, enum := range file.Enums {
-		if !generationErrorsSection(gen, file, g, enum) {
+		hasNoErr, err := generationErrorsSection(gen, file, g, enum)
+		if err != nil {
+			return fmt.Errorf("generationErrorsSection fail, %w", err)
+		}
+		if !hasNoErr {
 			index++
 		}
 	}
@@ -72,6 +77,7 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	if index == 0 {
 		g.Skip()
 	}
+	return nil
 }
 
 const (
@@ -80,7 +86,8 @@ const (
 	fieldLevelI18nAnnotation    = "i18n"
 )
 
-func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, enum *protogen.Enum) bool {
+// generationErrorsSection generate errors stub code
+func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedFile, enum *protogen.Enum) (bool, error) {
 	var ew errorWrapper
 	for _, v := range enum.Values {
 		var i18n = map[string]string{}
@@ -100,13 +107,17 @@ func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *proto
 
 		upperCamelValue := strcase.ToCamel(strings.ToLower(desc))
 		comment = buildComment(upperCamelValue, comment)
+		camelCode, ok := strToCode[eCode.val]
+		if !ok {
+			return false, fmt.Errorf(`invalid grpc code:"%s", valid code is:%v`, eCode.val, validCode)
+		}
 
 		err := &errorInfo{
 			Name:            string(enum.Desc.Name()),
 			Value:           desc,
 			UpperCamelValue: strcase.ToCamel(strings.ToLower(desc)),
 			LowerCamelValue: strcase.ToLowerCamel(strings.ToLower(desc)),
-			Code:            strcase.ToCamel(strings.ToLower(eCode.val)),
+			Code:            camelCode,
 			Key:             string(v.Desc.FullName()),
 			Comment:         comment,
 			HasComment:      len(comment) > 0,
@@ -115,10 +126,46 @@ func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *proto
 		ew.Errors = append(ew.Errors, err)
 	}
 	if len(ew.Errors) == 0 {
-		return true
+		return true, nil
 	}
 	g.P(ew.execute())
-	return false
+	return false, nil
+}
+
+var validCode = make([]string, 0, len(strToCode))
+
+func init() {
+	validCode = genValidCode()
+	slices.Sort(validCode)
+}
+
+func genValidCode() []string {
+	codes := make([]string, 0, len(strToCode))
+	for k := range strToCode {
+		codes = append(codes, k)
+	}
+	return codes
+}
+
+// strToCode defines valid grpc code.
+var strToCode = map[string]string{
+	`OK`:                  "OK",
+	`CANCELLED`:           "Canceled",
+	`UNKNOWN`:             "Unknown",
+	`INVALID_ARGUMENT`:    "InvalidArgument",
+	`DEADLINE_EXCEEDED`:   "DeadlineExceeded",
+	`NOT_FOUND`:           "NotFound",
+	`ALREADY_EXISTS`:      "AlreadyExists",
+	`PERMISSION_DENIED`:   "PermissionDenied",
+	`RESOURCE_EXHAUSTED`:  "ResourceExhausted",
+	`FAILED_PRECONDITION`: "FailedPrecondition",
+	`ABORTED`:             "Aborted",
+	`OUT_OF_RANGE`:        "OutOfRange",
+	`UNIMPLEMENTED`:       "Unimplemented",
+	`INTERNAL`:            "Internal",
+	`UNAVAILABLE`:         "Unavailable",
+	`DATA_LOSS`:           "DataLoss",
+	`UNAUTHENTICATED`:     "Unauthenticated",
 }
 
 // buildComment returns comment content with prefix //

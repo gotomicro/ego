@@ -47,7 +47,9 @@ func main() {
 				continue
 			}
 
-			generateFile(gen, f)
+			if _, err := generateFile(gen, f); err != nil {
+				return err
+			}
 		}
 		return nil
 	})
