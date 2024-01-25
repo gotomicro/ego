@@ -2,6 +2,8 @@ package ehttp
 
 import (
 	"context"
+	"github.com/gotomicro/ego/core/transport"
+	"github.com/spf13/cast"
 	"log"
 	"net/http"
 	"net/url"
@@ -44,13 +46,22 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 		}
 	}
 
-	var fields = make([]elog.Field, 0, 15)
+	loggerKeys := transport.CustomContextKeys()
+
+	var fields = make([]elog.Field, 0, 16)
 	fields = append(fields,
 		elog.FieldMethod(fullMethod),
 		elog.FieldName(name),
 		elog.FieldCost(cost),
 		elog.FieldAddr(u.Host),
 	)
+
+	// 支持自定义log
+	for _, key := range loggerKeys {
+		if value := transport.Value(req.Context(), key); value != nil {
+			fields = append(fields, elog.FieldCustomKeyValue(key, cast.ToString(value)))
+		}
+	}
 
 	// 开启了链路，那么就记录链路id
 	if config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {

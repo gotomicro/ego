@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/gotomicro/ego/core/transport"
 
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/client/ehttp"
@@ -39,6 +40,23 @@ func callHTTP() error {
 	// Inject traceId Into Header
 	// c1 := etrace.HeaderInjector(ctx, req.Header)
 	fmt.Println(span.SpanContext().TraceID())
+	info, err := req.SetContext(ctx).SetHeader("x-uid", "101").Get("/hello?aa=bb")
+	if err != nil {
+		return err
+	}
+	fmt.Println(info)
+	return nil
+}
+
+func callHTTPWithCustomTrace() error {
+	ctx := context.Background()
+
+	traceID := "123456"
+
+	ctx = transport.WithValue(ctx, "myTraceID", traceID)
+
+	req := httpComp.R()
+
 	info, err := req.SetContext(ctx).SetHeader("x-uid", "101").Get("/hello?aa=bb")
 	if err != nil {
 		return err
