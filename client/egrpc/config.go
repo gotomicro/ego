@@ -10,6 +10,8 @@ import (
 	"github.com/gotomicro/ego/core/util/xtime"
 )
 
+const DefaultMaxCallRecvMsgSize = 1024 * 1024 * 4
+
 // Config ...
 type Config struct {
 	Addr                       string        // 连接地址，直连为127.0.0.1:9001，服务发现为etcd:///appname
@@ -58,6 +60,6 @@ func DefaultConfig() *Config {
 		EnableAccessInterceptorRes:   false,
 		EnableServiceConfig:          true,
 		// EnableCPUUsage:               true,
-		MaxCallRecvMsgSize: 1024 * 1024 * 4,
+		MaxCallRecvMsgSize: DefaultMaxCallRecvMsgSize,
 	}
 }
