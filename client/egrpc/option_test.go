@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/gotomicro/ego/core/econf"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
+
+	"github.com/gotomicro/ego/core/econf"
 )
 
 func newCmp(t *testing.T, opt Option) *Component {
@@ -73,4 +75,17 @@ func TestWithName(t *testing.T) {
 	opt := WithName("hello")
 	cmp := newCmp(t, opt)
 	assert.Equal(t, "hello", cmp.name)
+}
+
+func TestMaxCallRecvMsgSize(t *testing.T) {
+	opt := WithMaxRecvMsgSize(1024)
+	cmp := newCmp(t, opt)
+	assert.Equal(t, 1024, cmp.config.MaxCallRecvMsgSize)
+}
+
+func TestMaxCallRecvMsgSizeWithDialOption(t *testing.T) {
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(2048)))
+	cmp := newCmp(t, WithDialOption(opts...))
+	assert.Equal(t, "grpc", cmp.name)
 }

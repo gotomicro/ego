@@ -74,11 +74,13 @@ func (c *Container) Build(options ...Option) *Component {
 			WithDialOption(grpc.WithChainUnaryInterceptor(c.metricUnaryClientInterceptor())),
 		)
 	}
-	options = append(options, WithDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(c.config.MaxCallRecvMsgSize))))
-
 	for _, option := range options {
 		option(c)
 	}
-
+	// 兼容代码直接配置 grpc.MaxCallRecvMsgSize
+	// 并保持配置文件高优先级
+	if c.config.MaxCallRecvMsgSize != DefaultMaxCallRecvMsgSize {
+		WithDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(c.config.MaxCallRecvMsgSize)))(c)
+	}
 	return newComponent(c.name, c.config, c.logger)
 }
