@@ -420,7 +420,7 @@ func (c *Container) sentinelInterceptor() grpc.UnaryServerInterceptor {
 			return handler(ctx, req)
 		}
 
-		var entry *sentinelBase.SentinelEntry = nil
+		// var entry *sentinelBase.SentinelEntry = nil
 		entry, blockErr := sentinel.Entry(
 			resourceName,
 			sentinel.WithResourceType(sentinelBase.ResTypeRPC),
