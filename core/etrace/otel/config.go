@@ -2,7 +2,7 @@ package otel
 
 import (
 	"context"
-
+	//lint:ignore SA1019
 	jaegerv2 "go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"

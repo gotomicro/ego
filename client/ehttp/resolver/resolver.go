@@ -17,7 +17,7 @@ var (
 	// m is a map from scheme to resolver builder.
 	m = make(map[string]Builder)
 	// defaultScheme is the default scheme to use.
-	defaultScheme = "http"
+	// defaultScheme = "http"
 )
 
 // Builder creates a resolver that will be used to watch name resolution updates.
@@ -99,12 +99,12 @@ func (b *baseBuilder) Scheme() string {
 }
 
 type baseResolver struct {
-	target     eregistry.Target // 使用ego的target，因为官方的target后续会不兼容
-	stop       chan struct{}
-	reg        eregistry.Registry
-	cancel     context.CancelFunc
-	addrSlices []string
-	nodeInfo   map[string]*attributes.Attributes // node节点的属性
+	target eregistry.Target // 使用ego的target，因为官方的target后续会不兼容
+	stop   chan struct{}
+	reg    eregistry.Registry
+	cancel context.CancelFunc
+	// addrSlices []string
+	nodeInfo map[string]*attributes.Attributes // node节点的属性
 }
 
 func (b *baseResolver) GetAddr() string {

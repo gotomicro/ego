@@ -3,19 +3,21 @@ package ego
 import (
 	"flag"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/gotomicro/ego/core/constant"
-	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/core/eflag"
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/task/ejob"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/BurntSushi/toml"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/gotomicro/ego/core/constant"
+	"github.com/gotomicro/ego/core/econf"
+	"github.com/gotomicro/ego/core/eflag"
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/task/ejob"
 )
 
 func Test_loadConfig(t *testing.T) {
@@ -103,6 +105,7 @@ func resetFlagSet() {
 	flag.String("test.trace", "", "write an execution trace to `file`")
 	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
 	flag.String("test.cpu", "", "comma-separated `list` of cpu counts to run each test with")
+	flag.String("test.gocoverdir", "", "gocoverdir dir")
 	flag.Int("test.parallel", runtime.GOMAXPROCS(0), "run at most `n` tests in parallel")
 	eflag.SetFlagSet(flagObj)
 }

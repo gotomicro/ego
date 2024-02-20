@@ -42,43 +42,34 @@ func Load(key string) *Container {
 
 // Build constructs a specific component from container.
 func (c *Container) Build(options ...Option) *Component {
+	var unaryInterceptors []grpc.UnaryClientInterceptor
+	var streamInterceptors []grpc.StreamClientInterceptor
 	// 最先执行trace
 	if c.config.EnableTraceInterceptor {
-		options = append(options,
-			WithDialOption(grpc.WithChainUnaryInterceptor(c.traceUnaryClientInterceptor())),
-			WithDialOption(grpc.WithChainStreamInterceptor(c.traceStreamClientInterceptor())),
-		)
+		unaryInterceptors = append(unaryInterceptors, c.traceUnaryClientInterceptor())
+		streamInterceptors = append(streamInterceptors, c.traceStreamClientInterceptor())
 	}
-
-	// 其次执行，自定义header头，这样才能赋值到ctx里
-	// options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(customHeader(transport.CustomContextKeys()))))
-
 	// 默认日志
-	options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(c.loggerUnaryClientInterceptor())))
-
+	unaryInterceptors = append(unaryInterceptors, c.loggerUnaryClientInterceptor())
 	if eapp.IsDevelopmentMode() {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(c.debugUnaryClientInterceptor())))
+		unaryInterceptors = append(unaryInterceptors, c.debugUnaryClientInterceptor())
 	}
-
 	if c.config.EnableAppNameInterceptor {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(c.defaultUnaryClientInterceptor())))
-		options = append(options, WithDialOption(grpc.WithChainStreamInterceptor(c.defaultStreamClientInterceptor())))
+		unaryInterceptors = append(unaryInterceptors, c.defaultUnaryClientInterceptor())
+		streamInterceptors = append(streamInterceptors, c.defaultStreamClientInterceptor())
 	}
-
 	if c.config.EnableTimeoutInterceptor {
-		options = append(options, WithDialOption(grpc.WithChainUnaryInterceptor(c.timeoutUnaryClientInterceptor())))
+		unaryInterceptors = append(unaryInterceptors, c.timeoutUnaryClientInterceptor())
 	}
-
 	if c.config.EnableMetricInterceptor {
-		options = append(options,
-			WithDialOption(grpc.WithChainUnaryInterceptor(c.metricUnaryClientInterceptor())),
-		)
+		unaryInterceptors = append(unaryInterceptors, c.metricUnaryClientInterceptor())
 	}
-	options = append(options, WithDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(c.config.MaxCallRecvMsgSize))))
-
 	for _, option := range options {
 		option(c)
 	}
-
+	c.config.dialOptions = append(c.config.dialOptions,
+		grpc.WithChainStreamInterceptor(streamInterceptors...),
+		grpc.WithChainUnaryInterceptor(unaryInterceptors...),
+	)
 	return newComponent(c.name, c.config, c.logger)
 }
