@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gotomicro/ego/core/elog"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/gotomicro/ego/core/elog"
 )
 
 func TestInterceptor(t *testing.T) {
@@ -99,7 +100,7 @@ func TestWithContextTimeout(t *testing.T) {
 func TestWithListener(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 处理http请求
-		io.WriteString(w, "Hello,Client")
+		_, _ = io.WriteString(w, "Hello,Client")
 	}))
 	defer server.Close()
 

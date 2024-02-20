@@ -67,6 +67,10 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 
 	dialOptions = append(dialOptions, grpc.FailOnNonTempDialError(config.EnableFailOnNonTempDialError))
 
+	if config.MaxCallRecvMsgSize != DefaultMaxCallRecvMsgSize {
+		dialOptions = append(dialOptions, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(config.MaxCallRecvMsgSize)))
+	}
+
 	startTime := time.Now()
 	cc, err := grpc.DialContext(ctx, config.Addr, dialOptions...)
 

@@ -13,6 +13,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/test/bufconn"
 
@@ -43,7 +44,7 @@ func Test_getPeerIP(t *testing.T) {
 	assert.Equal(t, "127.0.0.1", value)
 }
 
-//func Test_enableCPUUsage(t *testing.T) {
+// func Test_enableCPUUsage(t *testing.T) {
 //	md := metadata.New(map[string]string{
 //		"enable-cpu-usage": "true",
 //	})
@@ -61,7 +62,7 @@ func Test_getPeerIP(t *testing.T) {
 //	ctx3 := metadata.NewIncomingContext(context.Background(), md3)
 //	value3 := enableCPUUsage(ctx3)
 //	assert.Equal(t, false, value3)
-//}
+// }
 
 func Test_ServerAccessLogger(t *testing.T) {
 	// 使用非异步日志
@@ -81,7 +82,7 @@ func Test_ServerAccessLogger(t *testing.T) {
 	}()
 
 	client, err := grpc.Dial("",
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
 			return cmp.Listener().(*bufconn.Listener).Dial()
 		}))
@@ -113,7 +114,7 @@ func Test_ServerPanicAccessLogger(t *testing.T) {
 	}()
 
 	client, err := grpc.Dial("",
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
 			return cmp.Listener().(*bufconn.Listener).Dial()
 		}))
@@ -148,7 +149,7 @@ func Test_ServerAccessAppName(t *testing.T) {
 	}()
 
 	client, err := grpc.Dial("",
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
 			return cmp.Listener().(*bufconn.Listener).Dial()
 		}))
@@ -185,7 +186,7 @@ func TestPrometheus(t *testing.T) {
 	}()
 
 	client, err := grpc.Dial("",
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
 			return cmp.Listener().(*bufconn.Listener).Dial()
 		}))
@@ -237,7 +238,4 @@ type PanicGreeter struct {
 // SayHello ...
 func (g PanicGreeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
 	panic("we have a panic")
-	return &helloworld.HelloResponse{
-		Message: "Hello",
-	}, nil
 }

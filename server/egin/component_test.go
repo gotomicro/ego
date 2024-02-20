@@ -326,7 +326,13 @@ func eginClient(ctx context.Context, gin *Component, url string) (err error) {
 		return err
 	}
 	r, err := client.Do(req)
+	if err != nil {
+		return err
+	}
 	_, err = io.ReadAll(r.Body)
-	r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
+	if err != nil {
+		return err
+	}
 	return nil
 }
