@@ -33,5 +33,6 @@ func TestDefaultConfig(t *testing.T) {
 		EnableServiceConfig:          true,
 		keepAlive:                    nil,
 		dialOptions:                  nil,
+		MaxCallRecvMsgSize:           DefaultMaxCallRecvMsgSize,
 	}, DefaultConfig()))
 }
