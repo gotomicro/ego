@@ -297,5 +297,6 @@ func resetFlagSet() {
 	flag.Duration("test.timeout", 0, "panic test binary after duration `d` (default 0, timeout disabled)")
 	flag.String("test.cpu", "", "comma-separated `list` of cpu counts to run each test with")
 	flag.Int("test.parallel", runtime.GOMAXPROCS(0), "run at most `n` tests in parallel")
+	flag.String("test.gocoverdir", "", "gocoverdir dir")
 	SetFlagSet(flagObj)
 }
