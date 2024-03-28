@@ -19,6 +19,7 @@ type Error interface {
 	WithMd(map[string]string) Error
 	WithMessage(string) Error
 	WithMsg(string) Error
+	AppendMd(map[string]string) Error
 }
 
 const (
@@ -96,6 +97,15 @@ func (x *EgoError) WithMessage(msg string) Error {
 func (x *EgoError) WithMsg(msg string) Error {
 	err := proto.Clone(x).(*EgoError)
 	err.Message = msg
+	return err
+}
+
+// AppendMd appends metadata to current EgoError
+func (x *EgoError) AppendMd(md map[string]string) Error {
+	err := proto.Clone(x).(*EgoError)
+	for k, v := range md {
+		err.Metadata[k] = v
+	}
 	return err
 }
 
