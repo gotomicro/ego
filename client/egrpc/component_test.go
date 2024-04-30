@@ -7,14 +7,15 @@ import (
 	"net"
 	"testing"
 
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/internal/test/errcode"
-	"github.com/gotomicro/ego/internal/test/helloworld"
-	"github.com/gotomicro/ego/server/egrpc"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/internal/test/errcode"
+	"github.com/gotomicro/ego/internal/test/helloworld"
+	"github.com/gotomicro/ego/server/egrpc"
 )
 
 var svc *egrpc.Component
@@ -82,3 +83,38 @@ func (g Greeter) SayHello(context context.Context, request *helloworld.HelloRequ
 func bufDialer(context.Context, string) (net.Conn, error) {
 	return svc.Listener().(*bufconn.Listener).Dial()
 }
+
+// func Test_newComponent1(t *testing.T) {
+// 	type args struct {
+// 		name   string
+// 		config *Config
+// 		logger *elog.Component
+// 	}
+// 	// logger := &elog.Component{}
+// 	tests := []struct {
+// 		name string
+// 		args args
+// 		want *Component
+// 	}{
+// 		{
+// 			// TODO: Add test cases.
+// 			name: "",
+// 			args: args{
+// 				// name: "",
+// 				// config: &Config{
+// 				// 		EnableOfficialGrpcLog: false,
+// 				// 		EnableBlock:           false,
+// 				// 		EnableWithInsecure:    true,
+// 				// },
+// 				// 	logger: logger,
+// 			},
+// 			want: &Component{}, // name: "Case1", config: DefaultConfig(), logger: logger, err: nil
+// 		},
+// 	}
+//
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			assert.Equalf(t, tt.want, newComponent(tt.args.name, tt.args.config, tt.args.logger), "newComponent(%v, %v, %v)", tt.args.name, tt.args.config, tt.args.logger)
+// 		})
+// 	}
+// }
