@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/gotomicro/ego/core/transport"
 
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/client/ehttp"
@@ -53,7 +52,7 @@ func callHTTPWithCustomTrace() error {
 
 	traceID := "123456"
 
-	ctx = transport.WithValue(ctx, "myTraceID", traceID)
+	ctx = context.WithValue(ctx, "myTraceID", traceID)
 
 	req := httpComp.R()
 

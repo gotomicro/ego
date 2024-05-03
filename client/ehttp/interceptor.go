@@ -2,8 +2,6 @@ package ehttp
 
 import (
 	"context"
-	"github.com/gotomicro/ego/core/transport"
-	"github.com/spf13/cast"
 	"log"
 	"net/http"
 	"net/url"
@@ -11,6 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gotomicro/ego/core/transport"
+	"github.com/spf13/cast"
 
 	"github.com/go-resty/resty/v2"
 	"go.opentelemetry.io/otel/attribute"
@@ -58,7 +59,7 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 
 	// 支持自定义log
 	for _, key := range loggerKeys {
-		if value := transport.Value(req.Context(), key); value != nil {
+		if value := req.Context().Value(key); value != nil {
 			fields = append(fields, elog.FieldCustomKeyValue(key, cast.ToString(value)))
 		}
 	}

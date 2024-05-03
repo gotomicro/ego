@@ -16,10 +16,9 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/gotomicro/ego/core/transport"
 
 	"github.com/gotomicro/ego/core/elog"
 )
@@ -174,7 +173,7 @@ func TestPrometheus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	text, err := ioutil.ReadAll(res.Body)
+	text, err := io.ReadAll(res.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,12 +210,12 @@ func Test_getHeaderValue(t *testing.T) {
 
 func Test_getHeaderAssignValue(t *testing.T) {
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	transport.Set([]string{"X-Ego-Uid"})
 	c.Request, _ = http.NewRequest("GET", "/chat", nil)
 	c.Request.Header.Set("X-Ego-Uid", "9527")
 	value := getHeaderValue(c, "X-Ego-Uid", true)
 	assert.Equal(t, "9527", value)
-
-	value2 := transport.Value(c.Request.Context(), "X-Ego-Uid")
+	value2 := c.Request.Context().Value("X-Ego-Uid")
 	assert.Equal(t, "9527", value2)
 }
 

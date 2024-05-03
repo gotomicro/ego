@@ -6,12 +6,9 @@ import (
 	"go/format"
 	"log"
 	"reflect"
-	"strings"
 
 	"github.com/spf13/cast"
 	"google.golang.org/grpc/metadata"
-
-	"github.com/gotomicro/ego/core/transport"
 )
 
 // GrpcHeaderValue 获取context value
@@ -23,8 +20,12 @@ func GrpcHeaderValue(ctx context.Context, key string) string {
 	if !ok {
 		return ""
 	}
+
+	if len(md) > 0 {
+		return md.Get(key)[0]
+	}
 	// 小写
-	return strings.Join(md.Get(key), ";")
+	return ""
 }
 
 // ContextValue gRPC日志获取context value
@@ -32,7 +33,7 @@ func ContextValue(ctx context.Context, key string) string {
 	if key == "" {
 		return ""
 	}
-	return cast.ToString(transport.Value(ctx, key))
+	return cast.ToString(ctx.Value(key))
 }
 
 // ToSliceStringMap casts an empty interface to []map[string]interface{} ignoring error
