@@ -20,11 +20,9 @@ func GrpcHeaderValue(ctx context.Context, key string) string {
 	if !ok {
 		return ""
 	}
-
-	if len(md) > 0 {
+	if len(md.Get(key)) > 0 {
 		return md.Get(key)[0]
 	}
-	// 小写
 	return ""
 }
 
