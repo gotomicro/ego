@@ -1,10 +1,10 @@
 package main
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/gotomicro/ego/core/transport"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
@@ -33,7 +33,7 @@ func invokerGrpc() error {
 
 func callGrpc() error {
 	req := http.Request{}
-	parentContext := transport.WithValue(req.Context(), "X-Ego-Uid", 9527)
+	parentContext := context.WithValue(req.Context(), "X-Ego-Uid", 9527)
 	var headers metadata.MD
 	var trailers metadata.MD
 	_, err := grpcComp.SayHello(parentContext, &helloworld.HelloRequest{

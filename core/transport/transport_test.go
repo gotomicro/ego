@@ -19,11 +19,20 @@ func TestValue(t *testing.T) {
 	Set([]string{"X-EGO-Test"})
 	ctx := context.Background()
 	ctx = WithValue(ctx, "X-EGO-Test", "hello")
-	val := Value(ctx, "X-EGO-Test")
+	val := ctx.Value("X-EGO-Test")
 	assert.Equal(t, "hello", val)
 }
 
-func Test_newContextKey(t *testing.T) {
-	key := newContextKey("hello")
-	assert.Equal(t, "ego context value hello", key.String())
+//func Test_newContextKey(t *testing.T) {
+//	key := newContextKey("hello")
+//	assert.Equal(t, "ego context value hello", key.String())
+//}
+
+func TestWithValue(t *testing.T) {
+	Set([]string{"X-EGO-Test"})
+	ctx := context.Background()
+	ctx = WithValue(ctx, "X-EGO-Test", "hello1")
+	ctx = WithValue(ctx, "X-EGO-Test", "hello2")
+	val := ctx.Value("X-EGO-Test")
+	assert.Equal(t, "hello1", val)
 }

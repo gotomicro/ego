@@ -416,7 +416,13 @@ func getHeaderValue(c *gin.Context, key string, enableTrustedCustomHeader bool) 
 	value := c.GetHeader(key)
 	if value != "" {
 		// 如果信任该Header，将header数据赋值到context上
-		c.Request = c.Request.WithContext(transport.WithValue(c.Request.Context(), key, value))
+		for _, customContextKey := range transport.CustomContextKeys() {
+			// 如果header key和自定义key是一样的，写入到contet value中
+			if customContextKey == key {
+				c.Request = c.Request.WithContext(transport.WithValue(c.Request.Context(), key, value))
+			}
+		}
+
 	}
 	return value
 }

@@ -319,7 +319,6 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			if value := tools.ContextValue(ctx, key); value != "" {
 				// 替换context
 				ctx = metadata.AppendToOutgoingContext(ctx, key, value)
-
 				// grpc metadata 存在同一个 key set 多次，客户端可通过日志排查这种错误使用。
 				if md, ok := metadata.FromOutgoingContext(ctx); ok {
 					fields = append(fields, elog.FieldCustomKeyValue(key, strings.Join(md[strings.ToLower(key)], ";")))
@@ -390,7 +389,10 @@ func customHeader(egoLogExtraKeys []string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		for _, key := range egoLogExtraKeys {
 			if value := tools.GrpcHeaderValue(ctx, key); value != "" {
-				ctx = transport.WithValue(ctx, key, value)
+				if ctx.Value(key) != nil {
+					ctx = context.WithValue(ctx, key, value)
+				}
+				//ctx = transport.WithValue(ctx, key, value)
 			}
 		}
 		return invoker(ctx, method, req, res, cc, opts...)
