@@ -236,16 +236,10 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 		var event = "normal"
 
 		// 必须在defer外层，因为要赋值，替换ctx
+		// 只有在环境变量里的自定义header，才会写入到context value里
 		for _, key := range loggerKeys {
 			if value := tools.GrpcHeaderValue(ctx, key); value != "" {
-				// 如果信任该Header，将header数据赋值到context上
-				for _, customContextKey := range transport.CustomContextKeys() {
-					// 如果header key和自定义key是一样的，写入到contet value中
-					if customContextKey == key {
-						ctx = transport.WithValue(ctx, key, value)
-					}
-				}
-
+				ctx = transport.WithValue(ctx, key, value)
 			}
 		}
 
