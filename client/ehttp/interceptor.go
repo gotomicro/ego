@@ -61,7 +61,6 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 	for _, key := range loggerKeys {
 		if value := req.Context().Value(key); value != nil {
 			fields = append(fields, elog.FieldCustomKeyValue(key, cast.ToString(value)))
-			req.SetHeader(key, cast.ToString(value))
 		}
 	}
 
@@ -140,6 +139,17 @@ func fixedInterceptor(name string, config *Config, logger *elog.Component, build
 }
 
 func logInterceptor(name string, config *Config, logger *elog.Component, builder resolver.Resolver) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
+	loggerKeys := transport.CustomContextKeys()
+	beforeFn := func(cli *resty.Client, req *resty.Request) error {
+		// 增加header
+		for _, key := range loggerKeys {
+			if value := req.Context().Value(key); value != nil {
+				req.SetHeader(key, cast.ToString(value))
+			}
+		}
+		return nil
+	}
+
 	afterFn := func(cli *resty.Client, response *resty.Response) error {
 		logAccess(name, config, logger, response.Request, response, nil)
 		return nil
@@ -151,7 +161,7 @@ func logInterceptor(name string, config *Config, logger *elog.Component, builder
 			logAccess(name, config, logger, req, nil, err)
 		}
 	}
-	return nil, afterFn, errorFn
+	return beforeFn, afterFn, errorFn
 }
 
 func metricInterceptor(name string, config *Config, logger *elog.Component, builder resolver.Resolver) (resty.RequestMiddleware, resty.ResponseMiddleware, resty.ErrorHook) {
