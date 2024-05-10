@@ -61,6 +61,7 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 	for _, key := range loggerKeys {
 		if value := req.Context().Value(key); value != nil {
 			fields = append(fields, elog.FieldCustomKeyValue(key, cast.ToString(value)))
+			req.SetHeader(key, cast.ToString(value))
 		}
 	}
 
