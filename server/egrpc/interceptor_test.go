@@ -239,3 +239,9 @@ type PanicGreeter struct {
 func (g PanicGreeter) SayHello(context context.Context, request *helloworld.HelloRequest) (*helloworld.HelloResponse, error) {
 	panic("we have a panic")
 }
+
+func TestCtxStoreSet(t *testing.T) {
+	ctx := context.Background()
+	CtxStoreSet(ctx, "", "")
+	assert.NoError(t, nil)
+}

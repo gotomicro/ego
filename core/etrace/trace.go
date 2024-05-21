@@ -64,7 +64,7 @@ func NewTracer(kind trace.SpanKind, opts ...Option) *Tracer {
 	return &Tracer{tracer: otel.Tracer("ego"), kind: kind, opt: &op}
 }
 
-// Start start tracing span
+// Start tracing span
 func (t *Tracer) Start(ctx context.Context, operation string, carrier propagation.TextMapCarrier, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
 	if (t.kind == trace.SpanKindServer || t.kind == trace.SpanKindConsumer) && carrier != nil {
 		ctx = t.opt.propagator.Extract(ctx, carrier)

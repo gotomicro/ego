@@ -10,6 +10,7 @@ import (
 	sentinelconfig "github.com/alibaba/sentinel-golang/core/config"
 	"github.com/alibaba/sentinel-golang/core/flow"
 	"github.com/fsnotify/fsnotify"
+
 	"github.com/gotomicro/ego/core/elog"
 )
 

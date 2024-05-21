@@ -1,12 +1,14 @@
 package file
 
 import (
-	"github.com/gotomicro/ego/core/constant"
 	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/gotomicro/ego/core/constant"
+
 	"github.com/fsnotify/fsnotify"
+
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/econf/manager"
 	"github.com/gotomicro/ego/core/elog"

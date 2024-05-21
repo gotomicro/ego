@@ -5,8 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gotomicro/ego/core/etrace"
 	"go.uber.org/zap"
+
+	"github.com/gotomicro/ego/core/etrace"
 )
 
 // FieldComponent constructs an elog Field with component type name

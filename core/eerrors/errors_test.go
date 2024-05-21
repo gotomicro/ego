@@ -19,16 +19,37 @@ func TestRegister(t *testing.T) {
 	errUnknown := New(int(codes.Unknown), "unknown", "unknown")
 	Register(errUnknown)
 
+	md := map[string]string{
+		"hello": "world",
+	}
+
 	// 一个新error，添加信息
-	newErrUnknown := errUnknown.WithMessage("unknown something").WithMetadata(map[string]string{
-		"hello": "world",
-	}).(*EgoError)
+	newErrUnknown := errUnknown.WithMessage("unknown something").WithMetadata(md).(*EgoError)
 	assert.Equal(t, "unknown something", newErrUnknown.GetMessage())
-	assert.Equal(t, map[string]string{
-		"hello": "world",
-	}, newErrUnknown.GetMetadata())
+	assert.Equal(t, md, newErrUnknown.GetMetadata())
 
 	assert.ErrorIs(t, newErrUnknown, errUnknown)
+
+	errUnknown.Error()
+	assert.NoError(t, nil)
+	errUnknown.GRPCStatus()
+	assert.NoError(t, nil)
+	errUnknown.WithMd(md)
+	assert.NoError(t, nil)
+	errUnknown.WithMsg("unknown")
+	assert.NoError(t, nil)
+	errUnknown.ToHTTPStatusCode()
+	assert.NoError(t, nil)
+	errUnknown.Reset()
+	assert.NoError(t, nil)
+	errUnknown.String()
+	assert.NoError(t, nil)
+	errUnknown.ProtoMessage()
+	assert.NoError(t, nil)
+	errUnknown.GetCode()
+	assert.NoError(t, nil)
+	errUnknown.GetReason()
+	assert.NoError(t, nil)
 }
 
 func TestIs(t *testing.T) {

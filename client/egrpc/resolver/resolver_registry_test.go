@@ -5,10 +5,11 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/gotomicro/ego/core/eregistry"
-	"github.com/gotomicro/ego/server"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/resolver"
+
+	"github.com/gotomicro/ego/core/eregistry"
+	"github.com/gotomicro/ego/server"
 )
 
 func TestResolver(t *testing.T) {
@@ -18,6 +19,7 @@ func TestResolver(t *testing.T) {
 			t: t,
 		},
 	}
+	assert.Equal(t, "test", builder.Scheme())
 	targetName := "test:///hello"
 	target, err := parseTarget(targetName)
 	assert.NoError(t, err)

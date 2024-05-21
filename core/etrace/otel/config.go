@@ -140,7 +140,7 @@ func (config *Config) buildJaegerTP() trace.TracerProvider {
 		tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(config.Fraction))),
 		// Always be sure to batch in production.
 		tracesdk.WithBatcher(exp),
-		// Record information about this application in an Resource.
+		// Record information about this application in a Resource.
 		tracesdk.WithResource(resource.NewSchemaless(
 			semconv.ServiceNameKey.String(config.ServiceName),
 		)),
@@ -193,7 +193,7 @@ func (config *Config) buildOtlpTP() trace.TracerProvider {
 		tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(config.Fraction))),
 		// WithSpanProcessor registers the SpanProcessor with a TracerProvider.
 		tracesdk.WithSpanProcessor(tracesdk.NewBatchSpanProcessor(traceExp)),
-		// Record information about this application in an Resource.
+		// Record information about this application in a Resource.
 		tracesdk.WithResource(res),
 	}
 	tpOptions = append(tpOptions, config.options...)

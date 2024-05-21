@@ -12,6 +12,11 @@ func TestFunctionName(t *testing.T) {
 		want string
 	}{
 		// TODO: Add test cases.
+		{
+			name: "case1",
+			args: args{i: TestFunctionName},
+			want: "github.com/gotomicro/ego/core/util/xstring.TestFunctionName",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -32,6 +37,11 @@ func TestObjectName(t *testing.T) {
 		want string
 	}{
 		// TODO: Add test cases.
+		{
+			name: "",
+			args: args{i: TestObjectName},
+			want: ".",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,6 +62,11 @@ func TestCallerName(t *testing.T) {
 		want string
 	}{
 		// TODO: Add test cases.
+		{
+			name: "",
+			args: args{skip: 0},
+			want: "github.com/gotomicro/ego/core/util/xstring.CallerName",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
