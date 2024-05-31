@@ -1,6 +1,7 @@
 package elog
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -34,7 +35,70 @@ func TestFieldComponentName(t *testing.T) {
 	assert.True(t, reflect.DeepEqual(value, FieldComponentName("ego")))
 }
 
-// func TestFieldCost(t *testing.T) {
-//	value := zap.Field{Key: "compName", Type: zapcore.Float64Type, Integer: int64(math.Float64bits(0.16))}
-//	assert.True(t, reflect.DeepEqual(value, FieldCost(0.16)))
-// }
+func TestFieldCost(t *testing.T) {
+	FieldCost(111)
+	assert.NoError(t, nil)
+}
+
+func TestFieldKey(t *testing.T) {
+	FieldKey("hello")
+	assert.NoError(t, nil)
+
+	FieldName("test")
+	assert.NoError(t, nil)
+
+	FieldType("type")
+	assert.NoError(t, nil)
+
+	FieldKind("kind")
+	assert.NoError(t, nil)
+
+	FieldUniformCode(11)
+	assert.NoError(t, nil)
+
+	FieldTid("tid")
+	assert.NoError(t, nil)
+
+	ctx := context.Background()
+	FieldCtxTid(ctx)
+	assert.NoError(t, nil)
+
+	FieldSize(11)
+	assert.NoError(t, nil)
+
+	FieldValue("")
+	assert.NoError(t, nil)
+
+	FieldValueAny("")
+	assert.NoError(t, nil)
+
+	FieldErrKind("")
+	assert.NoError(t, nil)
+
+	FieldErr(nil)
+	assert.NoError(t, nil)
+
+	FieldErrAny(nil)
+	assert.NoError(t, nil)
+
+	FieldMethod("")
+	assert.NoError(t, nil)
+
+	FieldEvent("")
+	assert.NoError(t, nil)
+
+	FieldIP("")
+	assert.NoError(t, nil)
+
+	FieldPeerIP("")
+	assert.NoError(t, nil)
+
+	FieldPeerName("")
+	assert.NoError(t, nil)
+
+	FieldCustomKeyValue("hello", "world")
+	assert.NoError(t, nil)
+
+	FieldLogName("")
+	assert.NoError(t, nil)
+}

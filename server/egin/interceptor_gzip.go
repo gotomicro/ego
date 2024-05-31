@@ -39,7 +39,7 @@ func (g *gzipWriter) Write(data []byte) (int, error) {
 	return g.writer.Write(data)
 }
 
-// Fix: https://github.com/mholt/caddy/issues/38
+// WriteHeader Fix: https://github.com/mholt/caddy/issues/38
 func (g *gzipWriter) WriteHeader(code int) {
 	g.Header().Del("Content-Length")
 	g.ResponseWriter.WriteHeader(code)

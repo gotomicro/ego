@@ -181,7 +181,7 @@ func TestServerReadTimeout(t *testing.T) {
 	}()
 	time.Sleep(1 * time.Second)
 
-	// Slow client that should timeout.
+	// Slow client that should time out.
 	t1 := time.Now()
 	conn, err := net.Dial("tcp", cmp.Listener().Addr().String())
 	assert.Nil(t, err)
@@ -235,7 +235,7 @@ func TestContextTimeout(t *testing.T) {
 	}()
 	time.Sleep(1 * time.Second)
 
-	// Slow client that should timeout.
+	// Slow client that should time out.
 	t1 := time.Now()
 	err := eginClient(context.Background(), cmp, "/test")
 	assert.Nil(t, err)
@@ -283,7 +283,7 @@ func testServerTimeouts(timeout time.Duration) error {
 			string(got), err, expected)
 	}
 
-	// Slow client that should timeout.
+	// Slow client that should time out.
 	t1 := time.Now()
 	conn, err := net.Dial("tcp", ts.Listener.Addr().String())
 	if err != nil {

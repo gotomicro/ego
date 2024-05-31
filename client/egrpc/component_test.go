@@ -7,14 +7,15 @@ import (
 	"net"
 	"testing"
 
-	"github.com/gotomicro/ego/core/elog"
-	"github.com/gotomicro/ego/internal/test/errcode"
-	"github.com/gotomicro/ego/internal/test/helloworld"
-	"github.com/gotomicro/ego/server/egrpc"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/internal/test/errcode"
+	"github.com/gotomicro/ego/internal/test/helloworld"
+	"github.com/gotomicro/ego/server/egrpc"
 )
 
 var svc *egrpc.Component

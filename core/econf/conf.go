@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"reflect"
 	"strings"
 	"sync"
@@ -124,7 +123,7 @@ func (c *Configuration) Load(content []byte, unmarshal Unmarshaller) error {
 
 // LoadFromReader loads configuration from provided data source.
 func (c *Configuration) LoadFromReader(reader io.Reader, unmarshaller Unmarshaller) error {
-	content, err := ioutil.ReadAll(reader)
+	content, err := io.ReadAll(reader)
 	if err != nil {
 		return err
 	}

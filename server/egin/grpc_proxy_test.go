@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gotomicro/ego/examples/helloworld"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/gotomicro/ego/examples/helloworld"
 )
 
 type GreeterMock struct{}

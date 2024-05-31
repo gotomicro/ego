@@ -1,0 +1,9 @@
+[server.grpc]
+port = 9202
+enableAccessInterceptorReq = true
+enableAccessInterceptorRes = true
+enableSentinel = true
+[server.governor]
+port = 9003
+[sentinel]
+flowRulesFile = "./config_test/sentinel.json"

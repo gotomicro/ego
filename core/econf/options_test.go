@@ -29,4 +29,9 @@ func TestWithTagName(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, "yaml", econf.GetOptionTagName())
 	assert.Equal(t, true, econf.GetOptionWeaklyTypedInput())
+
+	err = v.LoadFromDataSource(provider, parser, econf.WithSquash(true))
+	require.Nil(t, err)
+	econf.WithSquash(true)
+	assert.NoError(t, nil)
 }
