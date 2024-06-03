@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
-	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
@@ -67,20 +66,4 @@ func TestWithLogger(t *testing.T) {
 
 	comp := DefaultContainer().Build(WithLogger(logger))
 	assert.Equal(t, logger, comp.logger)
-}
-
-func TestWithUnaryServerResourceExtractor(t *testing.T) {
-	fn := func(context.Context, interface{}, *grpc.UnaryServerInfo) string {
-		return ""
-	}
-	WithUnaryServerResourceExtractor(fn)
-	assert.NoError(t, nil)
-}
-
-func TestWithUnaryServerBlockFallback(t *testing.T) {
-	fn := func(context.Context, interface{}, *grpc.UnaryServerInfo, *base.BlockError) (interface{}, error) {
-		return "", nil
-	}
-	WithUnaryServerBlockFallback(fn)
-	assert.NoError(t, nil)
 }

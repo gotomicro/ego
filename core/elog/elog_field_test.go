@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/gotomicro/ego/core/etrace"
 )
 
 func TestFieldAddr(t *testing.T) {
@@ -35,70 +37,88 @@ func TestFieldComponentName(t *testing.T) {
 	assert.True(t, reflect.DeepEqual(value, FieldComponentName("ego")))
 }
 
-func TestFieldCost(t *testing.T) {
-	FieldCost(111)
-	assert.NoError(t, nil)
+func TestFieldName(t *testing.T) {
+	value := zap.Field{Key: "name", Type: zapcore.StringType, String: "ego"}
+	assert.True(t, reflect.DeepEqual(value, FieldName("ego")))
+}
+
+func TestFieldType(t *testing.T) {
+	value := zap.Field{Key: "type", Type: zapcore.StringType, String: "ego"}
+	assert.True(t, reflect.DeepEqual(value, FieldType("ego")))
+}
+
+func TestFieldKind(t *testing.T) {
+	value := zap.Field{Key: "kind", Type: zapcore.StringType, String: "ego"}
+	assert.True(t, reflect.DeepEqual(value, FieldKind("ego")))
+}
+
+func TestFieldUniformCode(t *testing.T) {
+	value := zap.Field{Key: "ucode", Type: zapcore.Int32Type, Integer: int64(20)}
+	assert.True(t, reflect.DeepEqual(value, FieldUniformCode(20)))
+}
+
+func TestFieldTid(t *testing.T) {
+	value := zap.Field{Key: "tid", Type: zapcore.StringType, String: "111"}
+	assert.True(t, reflect.DeepEqual(value, FieldTid("111")))
+}
+
+func TestFieldCtxTid(t *testing.T) {
+	var ctx context.Context
+	value := zap.Field{Key: "tid", Type: zapcore.StringType, String: etrace.ExtractTraceID(ctx)}
+	assert.True(t, reflect.DeepEqual(value, FieldCtxTid(ctx)))
+}
+
+func TestFieldSize(t *testing.T) {
+	value := zap.Field{Key: "size", Type: zapcore.Int32Type, Integer: int64(1)}
+	assert.True(t, reflect.DeepEqual(value, FieldSize(1)))
 }
 
 func TestFieldKey(t *testing.T) {
-	FieldKey("hello")
-	assert.NoError(t, nil)
+	value := zap.Field{Key: "key", Type: zapcore.StringType, String: "ego"}
+	assert.True(t, reflect.DeepEqual(value, FieldKey("ego")))
+}
 
-	FieldName("test")
-	assert.NoError(t, nil)
+func TestFieldValue(t *testing.T) {
+	value := zap.Field{Key: "value", Type: zapcore.StringType, String: "server"}
+	assert.True(t, reflect.DeepEqual(value, FieldValue("server")))
+}
 
-	FieldType("type")
-	assert.NoError(t, nil)
+func TestFieldErrKind(t *testing.T) {
+	value := zap.Field{Key: "errKind", Type: zapcore.StringType, String: "ego-err"}
+	assert.True(t, reflect.DeepEqual(value, FieldErrKind("ego-err")))
+}
 
-	FieldKind("kind")
-	assert.NoError(t, nil)
+func TestFieldDescription(t *testing.T) {
+	value := zap.Field{Key: "desc", Type: zapcore.StringType, String: "server-ego"}
+	assert.True(t, reflect.DeepEqual(value, FieldDescription("server-ego")))
+}
 
-	FieldUniformCode(11)
-	assert.NoError(t, nil)
+func TestFieldMethod(t *testing.T) {
+	value := zap.Field{Key: "method", Type: zapcore.StringType, String: "ego"}
+	assert.True(t, reflect.DeepEqual(value, FieldMethod("ego")))
+}
 
-	FieldTid("tid")
-	assert.NoError(t, nil)
+func TestFieldEvent(t *testing.T) {
+	value := zap.Field{Key: "event", Type: zapcore.StringType, String: "ego--service"}
+	assert.True(t, reflect.DeepEqual(value, FieldEvent("ego--service")))
+}
 
-	ctx := context.Background()
-	FieldCtxTid(ctx)
-	assert.NoError(t, nil)
+func TestFieldIP(t *testing.T) {
+	value := zap.Field{Key: "ip", Type: zapcore.StringType, String: "127.162.1.1"}
+	assert.True(t, reflect.DeepEqual(value, FieldIP("127.162.1.1")))
+}
 
-	FieldSize(11)
-	assert.NoError(t, nil)
+func TestFieldPeerIP(t *testing.T) {
+	value := zap.Field{Key: "peerIp", Type: zapcore.StringType, String: "197.162.1.1"}
+	assert.True(t, reflect.DeepEqual(value, FieldPeerIP("197.162.1.1")))
+}
 
-	FieldValue("")
-	assert.NoError(t, nil)
+func TestFieldPeerName(t *testing.T) {
+	value := zap.Field{Key: "peerName", Type: zapcore.StringType, String: "ego-peer"}
+	assert.True(t, reflect.DeepEqual(value, FieldPeerName("ego-peer")))
+}
 
-	FieldValueAny("")
-	assert.NoError(t, nil)
-
-	FieldErrKind("")
-	assert.NoError(t, nil)
-
-	FieldErr(nil)
-	assert.NoError(t, nil)
-
-	FieldErrAny(nil)
-	assert.NoError(t, nil)
-
-	FieldMethod("")
-	assert.NoError(t, nil)
-
-	FieldEvent("")
-	assert.NoError(t, nil)
-
-	FieldIP("")
-	assert.NoError(t, nil)
-
-	FieldPeerIP("")
-	assert.NoError(t, nil)
-
-	FieldPeerName("")
-	assert.NoError(t, nil)
-
-	FieldCustomKeyValue("hello", "world")
-	assert.NoError(t, nil)
-
-	FieldLogName("")
-	assert.NoError(t, nil)
+func TestFieldLogName(t *testing.T) {
+	value := zap.Field{Key: "lname", Type: zapcore.StringType, String: "logger"}
+	assert.True(t, reflect.DeepEqual(value, FieldLogName("logger")))
 }

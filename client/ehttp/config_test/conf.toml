@@ -1,5 +1,4 @@
 [test]
-"name" = "hello"
-
-[test1]
-"name" = "world"
+Addr = "https://test.com"
+Debug = true
+RawDebug = false

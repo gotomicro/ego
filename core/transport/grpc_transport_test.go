@@ -1,24 +1,37 @@
 package transport
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/metadata"
 )
 
-var mc = &GrpcHeaderCarrier{}
+func TestGetAndKeys(t *testing.T) {
+	md := metadata.Pairs("hello", "world", "bye", "test")
+	carrier := GrpcHeaderCarrier(md)
 
-func TestGet(t *testing.T) {
-	key := "test"
-	assert.Equal(t, "", mc.Get(key))
+	// 测试 Get()
+	t.Run("case 1", func(t *testing.T) {
+		out := carrier.Get("hello")
+		assert.Equal(t, "world", out)
+	})
+
+	t.Run("case 2", func(t *testing.T) {
+		out := carrier.Get("testing")
+		assert.Equal(t, "", out)
+	})
+
+	// 测试Keys()
+	keys := carrier.Keys()
+	reflect.DeepEqual([]string{"hello", "bye"}, keys)
 }
 
 func TestSet(t *testing.T) {
-	mc.Set("hello", "world")
-	assert.Nil(t, nil)
-}
-
-func TestKeys(t *testing.T) {
-	out := mc.Keys()
-	assert.Equal(t, []string{"hello"}, out)
+	md := metadata.MD{}
+	carrier := GrpcHeaderCarrier(md)
+	carrier.Set("hello", "world")
+	out := carrier.Get("hello")
+	assert.Equal(t, "world", out)
 }

@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -22,34 +24,33 @@ func TestRegister(t *testing.T) {
 	md := map[string]string{
 		"hello": "world",
 	}
+	in := "error: code = 2 reason = unknown message = unknown metadata = map[]"
+	out := errUnknown.Error()
+	assert.Equal(t, in, out)
 
 	// 一个新error，添加信息
 	newErrUnknown := errUnknown.WithMessage("unknown something").WithMetadata(md).(*EgoError)
 	assert.Equal(t, "unknown something", newErrUnknown.GetMessage())
 	assert.Equal(t, md, newErrUnknown.GetMetadata())
-
 	assert.ErrorIs(t, newErrUnknown, errUnknown)
+	assert.Equal(t, 500, errUnknown.ToHTTPStatusCode())
+}
 
-	errUnknown.Error()
-	assert.NoError(t, nil)
-	errUnknown.GRPCStatus()
-	assert.NoError(t, nil)
-	errUnknown.WithMd(md)
-	assert.NoError(t, nil)
-	errUnknown.WithMsg("unknown")
-	assert.NoError(t, nil)
-	errUnknown.ToHTTPStatusCode()
-	assert.NoError(t, nil)
+func TestGetCode(t *testing.T) {
+	errUnknown := New(int(codes.Unknown), "unknown", "unknown")
+	assert.Equal(t, int32(codes.Unknown), errUnknown.GetCode())
+	assert.Equal(t, "unknown", errUnknown.GetReason())
 	errUnknown.Reset()
-	assert.NoError(t, nil)
-	errUnknown.String()
-	assert.NoError(t, nil)
-	errUnknown.ProtoMessage()
-	assert.NoError(t, nil)
-	errUnknown.GetCode()
-	assert.NoError(t, nil)
-	errUnknown.GetReason()
-	assert.NoError(t, nil)
+	assert.Equal(t, "", errUnknown.String())
+}
+
+func TestGRPCStatus(t *testing.T) {
+	errUnknown := New(int(codes.Unknown), "unknown", "unknown")
+	in, _ := status.New(codes.Unknown, "unknown").WithDetails(&errdetails.ErrorInfo{
+		Reason: "unknown",
+	})
+	out := errUnknown.GRPCStatus()
+	assert.Equal(t, in, out)
 }
 
 func TestIs(t *testing.T) {

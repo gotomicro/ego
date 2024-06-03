@@ -28,5 +28,10 @@ addr = ":9091"
 	err := econf.LoadFromReader(strings.NewReader(conf), toml.Unmarshal)
 	assert.NoError(t, err)
 	Load("test").Build()
-	assert.NoError(t, nil)
+	in := &Container{
+		name:   "test",
+		config: DefaultConfig(),
+		logger: DefaultContainer().logger.With(elog.FieldComponentName("test")),
+	}
+	assert.Equal(t, in, Load("test"))
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/gotomicro/ego/internal/ecode"
 )
 
-// Error defines an grpc error that can be transformed between micro-service caller and micro-service callee.
+// Error defines a grpc error that can be transformed between microservice caller and microservice callee.
 type Error interface {
 	error
 	WithMetadata(map[string]string) Error

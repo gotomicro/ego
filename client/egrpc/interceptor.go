@@ -392,7 +392,7 @@ func customHeader(egoLogExtraKeys []string) grpc.UnaryClientInterceptor {
 				if ctx.Value(key) != nil {
 					ctx = context.WithValue(ctx, key, value)
 				}
-				//ctx = transport.WithValue(ctx, key, value)
+				// ctx = transport.WithValue(ctx, key, value)
 			}
 		}
 		return invoker(ctx, method, req, res, cc, opts...)

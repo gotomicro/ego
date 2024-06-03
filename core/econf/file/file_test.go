@@ -39,8 +39,7 @@ func TestReadConfig(t *testing.T) {
 name1 = "hello"
 name2 = "world"`)},
 		{in: "./conf_test/conf.yaml", expected: []byte(`Test:
-  name1: "hello"
-  name2: "world"`)},
+  hello: world`)},
 		{in: "./conf_test/cfg.json", expected: []byte(``)},
 	}
 

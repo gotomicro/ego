@@ -201,7 +201,8 @@ func TestServerReadTimeout(t *testing.T) {
 		return
 	}
 	fmt.Printf("path.Join(logger.ConfigDir(), logger.ConfigName())--------------->"+"%+v\n", path.Join(logger.ConfigDir(), logger.ConfigName()))
-	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	err1 := os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	assert.NoError(t, err1)
 }
 
 func TestContextTimeout(t *testing.T) {
@@ -242,7 +243,8 @@ func TestContextTimeout(t *testing.T) {
 
 	latency := time.Since(t1)
 	logger.Info("cost2", zap.Duration("cost", latency))
-	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	err1 := os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	assert.NoError(t, err1)
 }
 
 func TestServerTimeouts(t *testing.T) {

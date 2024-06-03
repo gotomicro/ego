@@ -38,7 +38,7 @@ func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 	// implementations which expect the endpoint without the leading "/". So, we
 	// end up stripping the leading "/" here. But this will result in an
 	// incorrect parsing for something like "unix:///path/to/socket". Since we
-	// own the "unix" resolver, we can workaround in the unix resolver by using
+	// own the "unix" resolver, we can work around in the unix resolver by using
 	// the `URL` field instead of the `Endpoint` field.
 
 	endpoint := target.URL.Path

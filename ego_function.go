@@ -10,6 +10,10 @@ import (
 	"syscall"
 
 	sentinelmetrics "github.com/alibaba/sentinel-golang/metrics"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/automaxprocs/maxprocs"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
 	"github.com/gotomicro/ego/core/econf"
@@ -21,9 +25,6 @@ import (
 	"github.com/gotomicro/ego/core/etrace/otel"
 	"github.com/gotomicro/ego/core/util/xcolor"
 	"github.com/gotomicro/ego/internal/retry"
-	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/automaxprocs/maxprocs"
-	"golang.org/x/sync/errgroup"
 )
 
 // waitSignals wait signal

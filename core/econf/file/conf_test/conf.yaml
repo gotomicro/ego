@@ -1,3 +1,2 @@
 Test:
-  name1: "hello"
-  name2: "world"
+  hello: world

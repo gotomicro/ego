@@ -42,7 +42,7 @@ func Sub(key string) *Configuration {
 }
 
 // LoadFromDataSource load configuration from data source
-// if data source supports dynamic config, a monitor goroutinue
+// if data source supports dynamic config, a monitor goroutine
 // would be
 func LoadFromDataSource(ds DataSource, unmarshaller Unmarshaller, opts ...Option) error {
 	return defaultConfiguration.LoadFromDataSource(ds, unmarshaller, opts...)

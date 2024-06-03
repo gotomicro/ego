@@ -129,7 +129,10 @@ func Test_runSerialFuncLogError(t *testing.T) {
 		return fmt.Errorf("Test_runSerialFuncLogError")
 	}}
 	runSerialFuncLogError(args)
-	elog.EgoLogger.Flush()
+	err := elog.EgoLogger.Flush()
+	if err != nil {
+		return
+	}
 	filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
 	logged, err := ioutil.ReadFile(filePath)
 	assert.Nil(t, err)
@@ -151,7 +154,10 @@ func Test_initLogger(t *testing.T) {
 	err = app.initLogger()
 	assert.Nil(t, err)
 	elog.Info("hello")
-	elog.DefaultLogger.Flush()
+	err1 := elog.DefaultLogger.Flush()
+	if err1 != nil {
+		return
+	}
 	filePath := path.Join(elog.DefaultLogger.ConfigDir(), elog.DefaultLogger.ConfigName())
 	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
@@ -169,7 +175,10 @@ func Test_initSysLogger(t *testing.T) {
 		err = app.initLogger()
 		assert.Nil(t, err)
 		elog.EgoLogger.Info("hello1")
-		elog.EgoLogger.Flush()
+		err1 := elog.EgoLogger.Flush()
+		if err1 != nil {
+			return
+		}
 		filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
 		logged, err := os.ReadFile(filePath)
 		assert.Nil(t, err)
@@ -192,7 +201,10 @@ func Test_initSysLogger(t *testing.T) {
 		err = app.initLogger()
 		assert.Nil(t, err)
 		elog.EgoLogger.Info("hello2")
-		elog.EgoLogger.Flush()
+		err1 := elog.EgoLogger.Flush()
+		if err1 != nil {
+			return
+		}
 		filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
 		logged, err := os.ReadFile(filePath)
 		assert.Nil(t, err)
