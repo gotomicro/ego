@@ -8,11 +8,11 @@ import (
 
 // Config 配置
 type Config struct {
-	Host              string
-	Port              int
-	EnableLocalMainIP bool
-	EnableConnTcp     bool
-	Network           string
+	Host                string
+	Port                int
+	EnableLocalMainIP   bool
+	EnableConnTcpMetric bool
+	Network             string
 }
 
 // DefaultConfig 默认配置
