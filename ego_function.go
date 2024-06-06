@@ -12,6 +12,7 @@ import (
 	sentinelmetrics "github.com/alibaba/sentinel-golang/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/automaxprocs/maxprocs"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/gotomicro/ego/core/constant"
@@ -46,6 +47,9 @@ func (e *Ego) waitSignals() {
 				signal.Stop(sig)
 				cancel()
 			}()
+
+			elog.Info("server stop", zap.Bool("graceful", grace))
+
 			_ = e.Stop(stopCtx, grace)
 			<-stopCtx.Done()
 			// 记录服务器关闭时候，由于关闭过慢，无法正常关闭，被强制cancel

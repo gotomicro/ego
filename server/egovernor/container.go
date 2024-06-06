@@ -3,6 +3,7 @@ package egovernor
 import (
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/emetric"
 	"github.com/gotomicro/ego/core/util/xnet"
 )
 
@@ -53,5 +54,13 @@ func (c *Container) Build(options ...Option) *Component {
 	for _, option := range options {
 		option(c)
 	}
+	if c.config.EnableConnTcp {
+		obj, err := emetric.NewTCPStatCollector()
+		if err != nil {
+			c.logger.Panic("NewTCPStatCollector fail", elog.FieldErr(err))
+		}
+		obj.Update()
+	}
+
 	return newComponent(c.name, c.config, c.logger)
 }
