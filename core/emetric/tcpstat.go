@@ -219,7 +219,7 @@ func (st tcpConnectionState) String() string {
 // 只解析IPV4
 // 34190A0A:3D2D
 func parseIpV4(s string) (string, error) {
-	if len(s) == 13 {
+	if len(s) != 13 {
 		return "", fmt.Errorf("not ipv4")
 	}
 	hexIP := s[:len(s)-5]
