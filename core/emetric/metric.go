@@ -137,11 +137,11 @@ var (
 	}.Build()
 
 	// ConnGauge ...
-	ConnGauge = GaugeVecOpts{
-		Namespace: DefaultNamespace,
-		Name:      "connection_states",
-		Labels:    []string{"state"},
-	}.Build()
+	//ConnGauge = GaugeVecOpts{
+	//	Namespace: DefaultNamespace,
+	//	Name:      "connection_states",
+	//	Labels:    []string{"state", "addr"},
+	//}.Build()
 )
 
 func init() {

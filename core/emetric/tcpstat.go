@@ -13,8 +13,11 @@
 package emetric
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path"
 	"strconv"
@@ -72,10 +75,14 @@ func (c *TcpStatCollector) Update() error {
 			return
 		}
 		for {
-			for name, value := range tcpStats {
-				ConnGauge.WithLabelValues(
-					name.String(),
-				).Set(value)
+			for index, value := range tcpStats {
+				for addr, number := range value {
+					ClientStatsGauge.WithLabelValues(
+						"conn_states",
+						addr,
+						index.String(),
+					).Set(number)
+				}
 				time.Sleep(5 * time.Second)
 			}
 		}
@@ -100,7 +107,7 @@ func (c *TcpStatCollector) Update() error {
 	return nil
 }
 
-func getTCPStats(statsFile string) (map[tcpConnectionState]float64, error) {
+func getTCPStats(statsFile string) (map[tcpConnectionState]map[string]float64, error) {
 	file, err := os.Open(statsFile)
 	if err != nil {
 		return nil, err
@@ -110,8 +117,19 @@ func getTCPStats(statsFile string) (map[tcpConnectionState]float64, error) {
 	return parseTCPStats(file)
 }
 
-func parseTCPStats(r io.Reader) (map[tcpConnectionState]float64, error) {
-	tcpStats := map[tcpConnectionState]float64{}
+/*
+46: 010310AC:9C4C 030310AC:1770 01
+   |      |      |      |      |   |--> connection state（套接字状态）
+   |      |      |      |      |------> remote TCP port number（远端端口，主机字节序）
+   |      |      |      |-------------> remote IPv4 address（远端IP，网络字节序）
+   |      |      |--------------------> local TCP port number（本地端口，主机字节序）
+   |      |---------------------------> local IPv4 address（本地IP，网络字节序）
+   |----------------------------------> number of entry
+*/
+
+func parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, error) {
+	//tcpStats := map[tcpConnectionState]float64{}
+	tcpStatsMap := map[tcpConnectionState]map[string]float64{}
 	contents, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -143,16 +161,25 @@ func parseTCPStats(r io.Reader) (map[tcpConnectionState]float64, error) {
 		//}
 		//tcpStats[tcpConnectionState(tcpRxQueuedBytes)] += float64(rx)
 
+		ipv4, _ := parseIpV4(parts[2])
 		st, err := strconv.ParseInt(parts[3], 16, 8)
 		if err != nil {
 			return nil, err
 		}
 
-		tcpStats[tcpConnectionState(st)]++
+		info, flag := tcpStatsMap[tcpConnectionState(st)]
+		if !flag {
+			info[ipv4] = 1
+		} else {
+			info[ipv4]++
+		}
+		tcpStatsMap[tcpConnectionState(st)] = info
+
+		//tcpStats[tcpConnectionState(st)]++
 
 	}
 
-	return tcpStats, nil
+	return tcpStatsMap, nil
 }
 
 func (st tcpConnectionState) String() string {
@@ -187,3 +214,26 @@ func (st tcpConnectionState) String() string {
 		return "unknown"
 	}
 }
+
+// 只解析IPV4
+// 34190A0A:3D2D
+func parseIpV4(s string) (string, error) {
+	if len(s) == 13 {
+		return "", fmt.Errorf("not ipv4")
+	}
+	hexIP := s[:len(s)-5]
+	hexPort := s[len(s)-4:]
+	bytesIP, err := hex.DecodeString(hexIP)
+	if err != nil {
+		return "", nil
+	}
+	uint32IP := binary.LittleEndian.Uint32(bytesIP) //转换为主机字节序
+	IP := make(net.IP, 4)
+	binary.BigEndian.PutUint32(IP, uint32IP)
+	port, err := strconv.ParseUint(hexPort, 16, 16)
+	return fmt.Sprintf("%s:%d", IP.String(), port), err
+}
+
+//func parsePort(portStr string) (int64, error) {
+//	return strconv.ParseInt(portStr, 16, 16)
+//}
