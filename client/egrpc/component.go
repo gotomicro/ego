@@ -37,7 +37,7 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 	if config.EnableBlock {
 		if config.DialTimeout > time.Duration(0) {
 			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, config.DialTimeout)
+			ctx, cancel = context.WithTimeoutCause(ctx, config.DialTimeout, fmt.Errorf("grpc client conn dial timeout"))
 			defer cancel()
 		}
 

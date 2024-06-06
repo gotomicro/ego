@@ -11,6 +11,7 @@ type Config struct {
 	Host              string
 	Port              int
 	EnableLocalMainIP bool
+	EnableConnTcp     bool
 	Network           string
 }
 

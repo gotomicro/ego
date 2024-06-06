@@ -23,6 +23,8 @@ var (
 	TypeMySQL = "mysql"
 	// DefaultNamespace ...
 	DefaultNamespace = "ego"
+	// Conn 连接信息
+	Conn = "conn"
 )
 
 var (
@@ -132,6 +134,13 @@ var (
 		Namespace: DefaultNamespace,
 		Name:      "build_info",
 		Labels:    []string{"name", "mode", "region", "zone", "app_version", "ego_version", "start_time", "build_time", "go_version"},
+	}.Build()
+
+	// ConnGauge ...
+	ConnGauge = GaugeVecOpts{
+		Namespace: DefaultNamespace,
+		Name:      "connection_states",
+		Labels:    []string{"state"},
 	}.Build()
 )
 

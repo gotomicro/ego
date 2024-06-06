@@ -301,7 +301,7 @@ func (c *Container) timeoutUnaryClientInterceptor() grpc.UnaryClientInterceptor 
 		_, ok := ctx.Deadline()
 		if !ok {
 			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, c.config.ReadTimeout)
+			ctx, cancel = context.WithTimeoutCause(ctx, c.config.ReadTimeout, fmt.Errorf("grpc client read timeout"))
 			defer cancel()
 		}
 		return invoker(ctx, method, req, reply, cc, opts...)
