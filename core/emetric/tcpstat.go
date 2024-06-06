@@ -129,7 +129,7 @@ func getTCPStats(statsFile string) (map[tcpConnectionState]map[string]float64, e
 
 func parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, error) {
 	//tcpStats := map[tcpConnectionState]float64{}
-	tcpStatsMap := map[tcpConnectionState]map[string]float64{}
+	tcpStatsMap := make(map[tcpConnectionState]map[string]float64, 0)
 	contents, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -169,6 +169,7 @@ func parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, erro
 
 		info, flag := tcpStatsMap[tcpConnectionState(st)]
 		if !flag {
+			info = make(map[string]float64, 0)
 			info[ipv4] = 1
 		} else {
 			info[ipv4]++
