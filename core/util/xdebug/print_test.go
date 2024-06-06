@@ -7,53 +7,43 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	compName = "Test"
+	addr     = "test"
+	cost     = 150 * time.Millisecond
+	req      = "test"
+	reply    = "test"
+	line     = "test"
+	err      = "test"
+)
+
 func TestMakeReqResInfo(t *testing.T) {
-	compName := "TestComponent"
-	addr := "test.address.com"
-	cost := 150 * time.Millisecond
-	req := "test request"
-	reply := "test reply"
-	MakeReqResInfo(compName, addr, cost, req, reply)
-	assert.NoError(t, nil)
+	out := MakeReqResInfo(compName, addr, cost, req, reply)
+	exp := "\x1b[32mTest\x1b[0m \x1b[32mtest\x1b[0m \x1b[33m[150ms]\x1b[0m \x1b[34mtest\x1b[0m => \x1b[34mtest\x1b[0m\n"
+	assert.Equal(t, exp, out)
 }
 
 func TestMakeReqResError(t *testing.T) {
-	compName := "Test"
-	addr := "test"
-	cost := 150 * time.Millisecond
-	req := "test"
 	err := "test"
-	MakeReqResError(compName, addr, cost, req, err)
-	assert.NoError(t, nil)
+	out := MakeReqResError(compName, addr, cost, req, err)
+	exp := "\x1b[31mTest\x1b[0m \x1b[31mtest\x1b[0m \x1b[33m[150ms]\x1b[0m \x1b[34mtest\x1b[0m => \x1b[31mtest\x1b[0m\n"
+	assert.Equal(t, exp, out)
 }
 
 func TestMakeReqResErrorV2(t *testing.T) {
-	compName := "Test"
-	addr := "test"
-	cost := 150 * time.Millisecond
-	req := "test"
-	MakeReqResErrorV2(11, compName, addr, cost, req, "")
-	assert.NoError(t, nil)
+	out := MakeReqResErrorV2(11, compName, addr, cost, req, "")
+	exp := "\x1b[32m:0\x1b[0m \x1b[31mTest\x1b[0m \x1b[31mtest\x1b[0m \x1b[33m[150ms]\x1b[0m \x1b[34mtest\x1b[0m => \x1b[31m\x1b[0m \n"
+	assert.Equal(t, exp, out)
 }
 
 func TestMakeReqAndResError(t *testing.T) {
-	line := "test"
-	compName := "Test"
-	addr := "test"
-	cost := 150 * time.Millisecond
-	req := "test"
-	err := "test"
-	MakeReqAndResError(line, compName, addr, cost, req, err)
-	assert.NoError(t, nil)
+	out := MakeReqAndResError(line, compName, addr, cost, req, err)
+	exp := "\x1b[32mtest\x1b[0m \x1b[31mTest\x1b[0m \x1b[31mtest\x1b[0m \x1b[33m[150ms]\x1b[0m \x1b[34mtest\x1b[0m => \x1b[31mtest\x1b[0m"
+	assert.Equal(t, exp, out)
 }
 
 func TestMakeReqAndResInfo(t *testing.T) {
-	line := "test"
-	compName := "Test"
-	addr := "test"
-	cost := 150 * time.Millisecond
-	req := "test"
-	reply := "test"
-	MakeReqAndResInfo(line, compName, addr, cost, req, reply)
-	assert.NoError(t, nil)
+	out := MakeReqAndResInfo(line, compName, addr, cost, req, reply)
+	exp := "\x1b[32mtest\x1b[0m \x1b[32mTest\x1b[0m \x1b[32mtest\x1b[0m \x1b[33m[150ms]\x1b[0m \x1b[34mtest\x1b[0m => \x1b[34mtest\x1b[0m"
+	assert.Equal(t, exp, out)
 }

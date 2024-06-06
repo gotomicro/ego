@@ -6,12 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildOtlpTP(t *testing.T) {
+func TestConfig(t *testing.T) {
+	conf := DefaultConfig()
+	out := Load("")
+	assert.Equal(t, conf, out)
 	Load("").Build()
-	assert.NoError(t, nil)
-	c := DefaultConfig()
-	c.buildJaegerTP()
-	assert.NoError(t, nil)
-	err := c.Stop()
+	out1 := conf.buildJaegerTP()
+	assert.True(t, true, out1)
+	err := conf.Stop()
 	assert.NoError(t, err)
 }

@@ -4,15 +4,16 @@ import (
 	"context"
 
 	"github.com/alibaba/sentinel-golang/core/base"
-	"github.com/gotomicro/ego/core/elog"
 	"google.golang.org/grpc"
+
+	"github.com/gotomicro/ego/core/elog"
 )
 
 // Option overrides a Container's default configuration.
 type Option func(c *Container)
 
 // WithServerOption inject server option to grpc server
-// User should not inject interceptor option, which is recommend by WithStreamInterceptor
+// User should not inject interceptor option, which is recommended by WithStreamInterceptor
 // and WithUnaryInterceptor
 func WithServerOption(options ...grpc.ServerOption) Option {
 	return func(c *Container) {

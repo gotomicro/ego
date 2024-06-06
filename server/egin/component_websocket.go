@@ -38,7 +38,7 @@ type WebSocket struct {
 	*websocket.Upgrader
 }
 
-// Upgrade get upgrage request
+// Upgrade get upgrade request
 func (ws *WebSocket) Upgrade(w http.ResponseWriter, r *http.Request, c *gin.Context, handler WebSocketFunc) {
 	// todo response Header
 	conn, err := ws.Upgrader.Upgrade(w, r, nil)

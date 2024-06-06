@@ -11,7 +11,8 @@ import (
 )
 
 func TestApply(t *testing.T) {
-	_ = os.Setenv(constant.EgoConfigPath, "config/env.toml")
+	err1 := os.Setenv(constant.EgoConfigPath, "config/env.toml")
+	assert.NoError(t, err1)
 	defer os.Unsetenv(constant.EgoConfigPath)
 	resetFlagSet()
 
@@ -22,17 +23,16 @@ func TestApply(t *testing.T) {
 		EnvVar:  constant.EgoConfigPath,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	_ = Parse()
+	err2 := Parse()
+	assert.NoError(t, err2)
 	_ = flag.Set("config", ConfigFlagToml)
 
 	err := ParseWithArgs([]string{"--watch-false"})
 	assert.NoError(t, err)
-
-	Float64("watch")
-	assert.NoError(t, nil)
-	_, err1 := Float64E("watch")
-	assert.NoError(t, err1)
-
+	assert.Equal(t, float64(0), Float64("watch"))
+	out, err3 := Float64E("watch")
+	assert.NoError(t, err3)
+	assert.Equal(t, float64(0), out)
 }
 
 func TestInt(t *testing.T) {
@@ -50,14 +50,14 @@ func TestInt(t *testing.T) {
 	_ = flag.Set("config", ConfigFlagToml)
 	err := ParseWithArgs([]string{"--watch-false"})
 	assert.NoError(t, err)
-	Int("watch")
-	assert.NoError(t, nil)
+	assert.Equal(t, int64(0), Int("watch"))
 	_, err1 := IntE("watch")
 	assert.NoError(t, err1)
 }
 
 func TestUint(t *testing.T) {
-	_ = os.Setenv(constant.EgoConfigPath, "config/env.toml")
+	err1 := os.Setenv(constant.EgoConfigPath, "config/env.toml")
+	assert.NoError(t, err1)
 	defer os.Unsetenv(constant.EgoConfigPath)
 	resetFlagSet()
 	Register(&UintFlag{
@@ -67,18 +67,21 @@ func TestUint(t *testing.T) {
 		EnvVar:  constant.EgoConfigPath,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	_ = Parse()
+	err2 := Parse()
+	assert.NoError(t, err2)
 	_ = flag.Set("config", ConfigFlagToml)
 	err := ParseWithArgs([]string{"--watch-false"})
 	assert.NoError(t, err)
 	Uint("watch")
-	assert.NoError(t, nil)
-	_, err1 := UintE("watch")
+	assert.Equal(t, uint64(0), Uint("watch"))
+	out, err1 := UintE("watch")
 	assert.NoError(t, err1)
+	assert.Equal(t, uint64(0), out)
 }
 
 func TestString(t *testing.T) {
-	_ = os.Setenv(constant.EgoConfigPath, "config/env.toml")
+	err := os.Setenv(constant.EgoConfigPath, "config/env.toml")
+	assert.NoError(t, err)
 	defer os.Unsetenv(constant.EgoConfigPath)
 	resetFlagSet()
 	Register(&StringFlag{
@@ -88,12 +91,13 @@ func TestString(t *testing.T) {
 		EnvVar:  constant.EgoConfigPath,
 		Action:  func(name string, fs *FlagSet) {},
 	})
-	_ = Parse()
-	_ = flag.Set("config", ConfigFlagToml)
-	err := ParseWithArgs([]string{"--watch-false"})
-	assert.NoError(t, err)
-	String("watch")
-	assert.NoError(t, nil)
-	_, err1 := StringE("watch")
+	err1 := Parse()
 	assert.NoError(t, err1)
+	_ = flag.Set("config", ConfigFlagToml)
+	err2 := ParseWithArgs([]string{"--watch-false"})
+	assert.NoError(t, err2)
+	assert.Equal(t, "config/env.toml", String("watch"))
+	out, err3 := StringE("watch")
+	assert.NoError(t, err3)
+	assert.Equal(t, "config/env.toml", out)
 }

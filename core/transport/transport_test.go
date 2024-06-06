@@ -21,6 +21,4 @@ func TestValue(t *testing.T) {
 	ctx = WithValue(ctx, "X-EGO-Test", "hello")
 	val := ctx.Value("X-EGO-Test")
 	assert.Equal(t, "hello", val)
-	Value(ctx, "test")
-	assert.NoError(t, nil)
 }

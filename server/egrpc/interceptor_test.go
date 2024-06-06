@@ -93,7 +93,7 @@ func Test_ServerAccessLogger(t *testing.T) {
 	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), "/helloworld.Greeter/SayHello")
-	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
 func Test_ServerPanicAccessLogger(t *testing.T) {
@@ -128,7 +128,7 @@ func Test_ServerPanicAccessLogger(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), "500")
 	assert.Contains(t, string(logged), `"code":13`)
-	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
 func Test_ServerAccessAppName(t *testing.T) {
@@ -161,7 +161,7 @@ func Test_ServerAccessAppName(t *testing.T) {
 	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"peerName":"ego"`)
-	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 }
 
 func TestPrometheus(t *testing.T) {
@@ -198,7 +198,7 @@ func TestPrometheus(t *testing.T) {
 	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"peerName":"ego"`)
-	os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
 
 	pc := ts.Client()
 	res, err := pc.Get(ts.URL)
@@ -242,6 +242,11 @@ func (g PanicGreeter) SayHello(context context.Context, request *helloworld.Hell
 
 func TestCtxStoreSet(t *testing.T) {
 	ctx := context.Background()
-	CtxStoreSet(ctx, "", "")
-	assert.NoError(t, nil)
+	Ctx := context.WithValue(ctx, ctxStoreStruct{}, &ctxStore{kvs: make(map[string]interface{})})
+	CtxStore := Ctx.Value(ctxStoreStruct{}).(*ctxStore)
+	assert.NotNil(t, CtxStore)
+	CtxStoreSet(Ctx, "hello", "world")
+	storeValue, out := CtxStore.kvs["hello"]
+	assert.Equal(t, "world", storeValue)
+	assert.True(t, true, out)
 }
