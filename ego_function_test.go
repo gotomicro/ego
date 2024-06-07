@@ -3,7 +3,6 @@ package ego
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -42,7 +41,7 @@ func Test_loadConfig(t *testing.T) {
 func Test_startJobsNoJob(t *testing.T) {
 	app := &Ego{}
 	err := app.startJobs()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func Test_startJobsOneJobErrNil(t *testing.T) {
@@ -55,7 +54,7 @@ func Test_startJobsOneJobErrNil(t *testing.T) {
 	}))
 
 	err := app.startJobs()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func Test_startJobsOneJobErrNotNil(t *testing.T) {
@@ -69,8 +68,8 @@ func Test_startJobsOneJobErrNotNil(t *testing.T) {
 	)
 	err := eflag.Parse()
 	assert.NoError(t, err)
-	err = flag.Set("job", "test")
-	assert.NoError(t, err)
+	err1 := flag.Set("job", "test")
+	assert.NoError(t, err1)
 
 	app := &Ego{
 		jobs:   make(map[string]ejob.Ejob),
@@ -80,8 +79,8 @@ func Test_startJobsOneJobErrNotNil(t *testing.T) {
 		return fmt.Errorf("test")
 	}))
 
-	err = app.startJobs()
-	assert.Equal(t, "test", err.Error())
+	err2 := app.startJobs()
+	assert.Equal(t, "test", err2.Error())
 }
 
 func resetFlagSet() {
@@ -115,7 +114,7 @@ func Test_runSerialFuncReturnError(t *testing.T) {
 		return nil
 	}}
 	err := runSerialFuncReturnError(args)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	args2 := []func() error{func() error {
 		return fmt.Errorf("error")
@@ -130,37 +129,33 @@ func Test_runSerialFuncLogError(t *testing.T) {
 	}}
 	runSerialFuncLogError(args)
 	err := elog.EgoLogger.Flush()
-	if err != nil {
-		return
-	}
+	assert.NoError(t, err)
 	filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
-	logged, err := ioutil.ReadFile(filePath)
-	assert.Nil(t, err)
+	logged, err1 := os.ReadFile(filePath)
+	assert.NoError(t, err1)
 	assert.Contains(t, string(logged), `"Test_runSerialFuncLogError"`)
 }
 
 func Test_initLogger(t *testing.T) {
 	app := &Ego{}
 	err := os.Setenv(constant.EgoDebug, "true")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	cfg := `
 [logger.default]
    debug = true
    enableAddCaller = true
 `
-	err = econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
-	assert.NoError(t, err)
+	err1 := econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
+	assert.NoError(t, err1)
 
-	err = app.initLogger()
-	assert.Nil(t, err)
+	err2 := app.initLogger()
+	assert.NoError(t, err2)
 	elog.Info("hello")
-	err1 := elog.DefaultLogger.Flush()
-	if err1 != nil {
-		return
-	}
+	err3 := elog.DefaultLogger.Flush()
+	assert.NoError(t, err3)
 	filePath := path.Join(elog.DefaultLogger.ConfigDir(), elog.DefaultLogger.ConfigName())
-	logged, err := os.ReadFile(filePath)
-	assert.Nil(t, err)
+	logged, err4 := os.ReadFile(filePath)
+	assert.NoError(t, err4)
 	// 验证日志打印的caller是否正确 当前位置为ego/ego_function_test.go:150
 	assert.Contains(t, string(logged), "hello", `ego/ego_function_test.go:150`)
 }
@@ -172,16 +167,14 @@ func Test_initSysLogger(t *testing.T) {
 		err := econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
 		assert.NoError(t, err)
 
-		err = app.initLogger()
-		assert.Nil(t, err)
+		err1 := app.initLogger()
+		assert.NoError(t, err1)
 		elog.EgoLogger.Info("hello1")
-		err1 := elog.EgoLogger.Flush()
-		if err1 != nil {
-			return
-		}
+		err2 := elog.EgoLogger.Flush()
+		assert.NoError(t, err2)
 		filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
-		logged, err := os.ReadFile(filePath)
-		assert.Nil(t, err)
+		logged, err3 := os.ReadFile(filePath)
+		assert.NoError(t, err3)
 		// 验证日志是否打印了hello
 		assert.Contains(t, string(logged), "hello1")
 		// 验证日志文件名是否为ego.sys
@@ -198,16 +191,14 @@ func Test_initSysLogger(t *testing.T) {
 		err := econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
 		assert.NoError(t, err)
 
-		err = app.initLogger()
-		assert.Nil(t, err)
+		err1 := app.initLogger()
+		assert.NoError(t, err1)
 		elog.EgoLogger.Info("hello2")
-		err1 := elog.EgoLogger.Flush()
-		if err1 != nil {
-			return
-		}
+		err2 := elog.EgoLogger.Flush()
+		assert.NoError(t, err2)
 		filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
-		logged, err := os.ReadFile(filePath)
-		assert.Nil(t, err)
+		logged, err3 := os.ReadFile(filePath)
+		assert.NoError(t, err3)
 		// 验证日志是否打印了hello
 		assert.Contains(t, string(logged), "hello2")
 		// 验证日志文件名是否为ego.sys
@@ -226,13 +217,14 @@ func Test_initSysLogger(t *testing.T) {
 		err := econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
 		assert.NoError(t, err)
 
-		err = app.initLogger()
-		assert.Nil(t, err)
+		err1 := app.initLogger()
+		assert.NoError(t, err1)
 		elog.EgoLogger.Info("hello3")
-		elog.EgoLogger.Flush()
+		err2 := elog.EgoLogger.Flush()
+		assert.NoError(t, err2)
 		filePath := path.Join(elog.EgoLogger.ConfigDir(), elog.EgoLogger.ConfigName())
-		logged, err := os.ReadFile(filePath)
-		assert.Nil(t, err)
+		logged, err3 := os.ReadFile(filePath)
+		assert.NoError(t, err3)
 		// 验证日志是否打印了hello
 		assert.Contains(t, string(logged), "hello3")
 		// 验证日志文件名是否为ego.sys.log

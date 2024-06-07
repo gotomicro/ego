@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -252,7 +251,7 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 }
 
 // func copyBody(r io.Reader, w io.Writer) io.ReadCloser {
-//	return ioutil.NopCloser(io.TeeReader(r, w))
+//	return os.NopCloser(io.TeeReader(r, w))
 // }
 
 // stack returns a nicely formatted stack frame, skipping skip frames.
@@ -270,7 +269,7 @@ func stack(skip int) []byte {
 		// Print this much at least.  If we can't find the source, it won't show.
 		fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
 		if file != lastFile {
-			data, err := ioutil.ReadFile(file)
+			data, err := os.ReadFile(file)
 			if err != nil {
 				continue
 			}
