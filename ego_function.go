@@ -12,6 +12,7 @@ import (
 	sentinelmetrics "github.com/alibaba/sentinel-golang/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/automaxprocs/maxprocs"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
   "go.uber.org/zap"
 
