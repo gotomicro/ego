@@ -54,7 +54,7 @@ func (c *Container) Build(options ...Option) *Component {
 	for _, option := range options {
 		option(c)
 	}
-	if c.config.EnableConnTcp {
+	if c.config.EnableConnTcpMetric {
 		obj, err := emetric.NewTCPStatCollector()
 		if err != nil {
 			c.logger.Panic("NewTCPStatCollector fail", elog.FieldErr(err))
