@@ -55,12 +55,8 @@ func (c *Container) Build(options ...Option) *Component {
 		option(c)
 	}
 	if c.config.EnableConnTcpMetric {
-		obj, err := emetric.NewTCPStatCollector()
-		if err != nil {
-			c.logger.Panic("NewTCPStatCollector fail", elog.FieldErr(err))
-		}
+		obj := emetric.NewTCPStatCollector(c.config.ConnTcpMetricPorts)
 		obj.Update()
 	}
-
 	return newComponent(c.name, c.config, c.logger)
 }

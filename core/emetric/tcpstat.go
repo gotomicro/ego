@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/samber/lo"
 )
 
 type tcpConnectionState int
@@ -59,18 +60,21 @@ const (
 )
 
 type TcpStatCollector struct {
+	ForeignPorts []uint64
 }
 
 // NewTCPStatCollector returns a new Collector exposing network stats.
-func NewTCPStatCollector() (*TcpStatCollector, error) {
-	return &TcpStatCollector{}, nil
+func NewTCPStatCollector(foreignPorts []uint64) *TcpStatCollector {
+	return &TcpStatCollector{
+		ForeignPorts: foreignPorts,
+	}
 }
 
 func (c *TcpStatCollector) Update() error {
 	go func() {
 		for {
 			statsFile := path.Join("/proc", strconv.Itoa(os.Getpid()), "net", "tcp")
-			tcpStats, err := getTCPStats(statsFile)
+			tcpStats, err := c.getTCPStats(statsFile)
 			if err != nil {
 				elog.EgoLogger.Error(fmt.Errorf("couldn't get tcpstats: %w", err).Error())
 				return
@@ -87,34 +91,17 @@ func (c *TcpStatCollector) Update() error {
 			time.Sleep(5 * time.Second)
 		}
 	}()
-
-	// if enabled ipv6 system
-	//tcp6File := procFilePath("net/tcp6")
-	//if _, hasIPv6 := os.Stat(tcp6File); hasIPv6 == nil {
-	//	tcp6Stats, err := getTCPStats(tcp6File)
-	//	if err != nil {
-	//		return fmt.Errorf("couldn't get tcp6stats: %w", err)
-	//	}
-	//
-	//	for st, value := range tcp6Stats {
-	//		tcpStats[st] += value
-	//	}
-	//}
-
-	//for st, value := range tcpStats {
-	//	ch <- c.desc.mustNewConstMetric(value, st.String())
-	//}
 	return nil
 }
 
-func getTCPStats(statsFile string) (map[tcpConnectionState]map[string]float64, error) {
+func (c *TcpStatCollector) getTCPStats(statsFile string) (map[tcpConnectionState]map[string]float64, error) {
 	file, err := os.Open(statsFile)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	return parseTCPStats(file)
+	return c.parseTCPStats(file)
 }
 
 /*
@@ -127,8 +114,7 @@ func getTCPStats(statsFile string) (map[tcpConnectionState]map[string]float64, e
    |----------------------------------> number of entry
 */
 
-func parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, error) {
-	//tcpStats := map[tcpConnectionState]float64{}
+func (c *TcpStatCollector) parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, error) {
 	tcpStatsMap := make(map[tcpConnectionState]map[string]float64, 0)
 	contents, err := io.ReadAll(r)
 	if err != nil {
@@ -144,24 +130,7 @@ func parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, erro
 			return nil, fmt.Errorf("invalid TCP stats line: %q", line)
 		}
 
-		//qu := strings.Split(parts[4], ":")
-		//if len(qu) < 2 {
-		//	return nil, fmt.Errorf("cannot parse tx_queues and rx_queues: %q", line)
-		//}
-		//
-		//tx, err := strconv.ParseUint(qu[0], 16, 64)
-		//if err != nil {
-		//	return nil, err
-		//}
-		//tcpStats[tcpConnectionState(tcpTxQueuedBytes)] += float64(tx)
-		//
-		//rx, err := strconv.ParseUint(qu[1], 16, 64)
-		//if err != nil {
-		//	return nil, err
-		//}
-		//tcpStats[tcpConnectionState(tcpRxQueuedBytes)] += float64(rx)
-
-		ipv4, _ := parseIpV4(parts[2])
+		ipv4, _ := c.parseIpV4(parts[2])
 		st, err := strconv.ParseInt(parts[3], 16, 8)
 		if err != nil {
 			return nil, err
@@ -175,9 +144,6 @@ func parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, erro
 			info[ipv4]++
 		}
 		tcpStatsMap[tcpConnectionState(st)] = info
-
-		//tcpStats[tcpConnectionState(st)]++
-
 	}
 
 	return tcpStatsMap, nil
@@ -218,12 +184,21 @@ func (st tcpConnectionState) String() string {
 
 // 只解析IPV4
 // 34190A0A:3D2D
-func parseIpV4(s string) (string, error) {
+func (ts *TcpStatCollector) parseIpV4(s string) (string, error) {
 	if len(s) != 13 {
 		return "", fmt.Errorf("not ipv4")
 	}
 	hexIP := s[:len(s)-5]
 	hexPort := s[len(s)-4:]
+	port, err := strconv.ParseUint(hexPort, 16, 16)
+	if err != nil {
+		return "", nil
+	}
+	// 防止端口过多，导致prometheus监控数据太大
+	if !lo.Contains(ts.ForeignPorts, port) {
+		return "all", nil
+	}
+
 	bytesIP, err := hex.DecodeString(hexIP)
 	if err != nil {
 		return "", nil
@@ -231,10 +206,5 @@ func parseIpV4(s string) (string, error) {
 	uint32IP := binary.LittleEndian.Uint32(bytesIP) //转换为主机字节序
 	IP := make(net.IP, 4)
 	binary.BigEndian.PutUint32(IP, uint32IP)
-	port, err := strconv.ParseUint(hexPort, 16, 16)
 	return fmt.Sprintf("%s:%d", IP.String(), port), err
 }
-
-//func parsePort(portStr string) (int64, error) {
-//	return strconv.ParseInt(portStr, 16, 16)
-//}
