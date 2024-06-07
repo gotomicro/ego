@@ -3,7 +3,7 @@ package egrpc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http/httptest"
 	"os"
@@ -90,7 +90,7 @@ func Test_ServerAccessLogger(t *testing.T) {
 	cli := helloworld.NewGreeterClient(client)
 	_, err = cli.SayHello(context.Background(), &helloworld.HelloRequest{})
 	assert.Nil(t, err)
-	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	logged, err := os.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), "/helloworld.Greeter/SayHello")
 	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
@@ -123,7 +123,7 @@ func Test_ServerPanicAccessLogger(t *testing.T) {
 	_, err = cli.SayHello(context.Background(), &helloworld.HelloRequest{})
 	assert.Contains(t, err.Error(), "panic recover, origin err: we have a panic")
 
-	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	logged, err := os.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	fmt.Printf("logged--------------->"+"%+v\n", string(logged))
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), "500")
@@ -158,7 +158,7 @@ func Test_ServerAccessAppName(t *testing.T) {
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "app", "ego")
 	_, err = cli.SayHello(ctx, &helloworld.HelloRequest{})
 	assert.Nil(t, err)
-	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	logged, err := os.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"peerName":"ego"`)
 	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
@@ -195,7 +195,7 @@ func TestPrometheus(t *testing.T) {
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "app", "ego")
 	_, err = cli.SayHello(ctx, &helloworld.HelloRequest{})
 	assert.Nil(t, err)
-	logged, err := ioutil.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
+	logged, err := os.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"peerName":"ego"`)
 	_ = os.Remove(path.Join(logger.ConfigDir(), logger.ConfigName()))
@@ -205,7 +205,7 @@ func TestPrometheus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	text, err := ioutil.ReadAll(res.Body)
+	text, err := io.ReadAll(res.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

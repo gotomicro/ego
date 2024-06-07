@@ -2,7 +2,6 @@ package elog
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -10,10 +9,11 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
-	"github.com/gotomicro/ego/core/econf"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/gotomicro/ego/core/econf"
 )
 
 func TestRotateLogger(t *testing.T) {
@@ -303,7 +303,7 @@ func TestDebug(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Debug("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"debug"`)
 	os.Remove(filePath)
@@ -315,7 +315,7 @@ func TestDebug(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.Debug("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[34mDEBUG\x1b")
 	os.Remove(filePath)
@@ -330,7 +330,7 @@ func TestDebugW(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Debugw("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"debug"`)
 	os.Remove(filePath)
@@ -342,7 +342,7 @@ func TestDebugW(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.Debugw("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[34mDEBUG\x1b")
 	os.Remove(filePath)
@@ -357,7 +357,7 @@ func TestDebugf(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Debugf("hello,%s", "debug")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"debug"`)
 	assert.Contains(t, string(logged), `"msg":"hello,debug"`)
@@ -373,7 +373,7 @@ func TestInfo(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Info("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"info"`)
 	os.Remove(filePath)
@@ -385,7 +385,7 @@ func TestInfo(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.Info("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[32mINFO\x1b")
 	os.Remove(filePath)
@@ -400,7 +400,7 @@ func TestInfow(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Infow("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"info"`)
 	os.Remove(filePath)
@@ -412,7 +412,7 @@ func TestInfow(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.Infow("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[32mINFO\x1b")
 	os.Remove(filePath)
@@ -427,7 +427,7 @@ func TestInfof(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Infof("hello,%s", "info")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"info"`)
 	assert.Contains(t, string(logged), `"msg":"hello,info"`)
@@ -443,7 +443,7 @@ func TestWarn(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Warn("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"warn"`)
 	os.Remove(filePath)
@@ -455,7 +455,7 @@ func TestWarn(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.Warn("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[33mWARN\x1b")
 	os.Remove(filePath)
@@ -470,7 +470,7 @@ func TestWarnw(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Warnw("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"warn"`)
 	os.Remove(filePath)
@@ -482,7 +482,7 @@ func TestWarnw(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.Warnw("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[33mWARN\x1b")
 	os.Remove(filePath)
@@ -497,7 +497,7 @@ func TestWarnf(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Warnf("hello,%s", "warn")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"warn"`)
 	assert.Contains(t, string(logged), `"msg":"hello,warn"`)
@@ -513,7 +513,7 @@ func TestError(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Error("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"error"`)
 	os.Remove(filePath)
@@ -525,7 +525,7 @@ func TestError(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.Error("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[31mERROR\x1b")
 	os.Remove(filePath)
@@ -540,7 +540,7 @@ func TestErrorw(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Errorw("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"error"`)
 	os.Remove(filePath)
@@ -552,7 +552,7 @@ func TestErrorw(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.Errorw("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[31mERROR\x1b")
 	os.Remove(filePath)
@@ -567,7 +567,7 @@ func TestErrorf(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.Errorf("hello,%s", "error")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"error"`)
 	assert.Contains(t, string(logged), `"msg":"hello,error"`)
@@ -587,7 +587,7 @@ func TestPanic(t *testing.T) {
 
 	})
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"panic"`)
 	os.Remove(filePath)
@@ -604,7 +604,7 @@ func TestPanic(t *testing.T) {
 
 	})
 	filePath2 := path.Join(logger2.ConfigDir(), logger2.ConfigName())
-	logged2, err2 := ioutil.ReadFile(filePath2)
+	logged2, err2 := os.ReadFile(filePath2)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[31mPANIC\x1b")
 	os.Remove(filePath)
@@ -623,7 +623,7 @@ func TestPanicw(t *testing.T) {
 
 	})
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"panic"`)
 	os.Remove(filePath)
@@ -640,7 +640,7 @@ func TestPanicw(t *testing.T) {
 
 	})
 	filePath2 := path.Join(logger2.ConfigDir(), logger2.ConfigName())
-	logged2, err2 := ioutil.ReadFile(filePath2)
+	logged2, err2 := os.ReadFile(filePath2)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[31mPANIC\x1b")
 	os.Remove(filePath)
@@ -658,7 +658,7 @@ func TestPanicf(t *testing.T) {
 		logger.Panicf("hello,%s", "panic")
 	})
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"panic"`)
 	assert.Contains(t, string(logged), `"msg":"hello,panic"`)
@@ -674,7 +674,7 @@ func TestDPanic(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.DPanic("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"dpanic"`)
 	os.Remove(filePath)
@@ -686,7 +686,7 @@ func TestDPanic(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.DPanic("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[31mDPANIC\x1b")
 	os.Remove(filePath)
@@ -701,7 +701,7 @@ func TestDPanicw(t *testing.T) {
 	)
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
 	logger.DPanicw("some")
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"dpanic"`)
 	os.Remove(filePath)
@@ -713,7 +713,7 @@ func TestDPanicw(t *testing.T) {
 		WithEnableAsync(false),
 	)
 	logger2.DPanicw("some2")
-	logged2, err2 := ioutil.ReadFile(filePath)
+	logged2, err2 := os.ReadFile(filePath)
 	assert.Nil(t, err2)
 	assert.Contains(t, string(logged2), "\x1b[31mDPANIC\x1b")
 	os.Remove(filePath)
@@ -728,7 +728,7 @@ func TestDPanicf(t *testing.T) {
 	)
 	logger.DPanicf("hello,%s", "dpanic")
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"lv":"dpanic"`)
 	assert.Contains(t, string(logged), `"msg":"hello,dpanic"`)
@@ -744,7 +744,7 @@ func TestWithZapConfig(t *testing.T) {
 	)
 	logger.Info("hello")
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `"L":"INFO"`)
 	os.Remove(filePath)
@@ -758,7 +758,7 @@ func TestConfig_AddCaller(t *testing.T) {
 	)
 	logger.Info("hello")
 	filePath := path.Join(logger.ConfigDir(), logger.ConfigName())
-	logged, err := ioutil.ReadFile(filePath)
+	logged, err := os.ReadFile(filePath)
 	assert.Nil(t, err)
 	assert.Contains(t, string(logged), `elog/component_test.go:`)
 	os.Remove(filePath)

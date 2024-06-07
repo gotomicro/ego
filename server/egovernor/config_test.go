@@ -10,9 +10,10 @@ import (
 
 func TestDefaultConfig(t *testing.T) {
 	in := &Config{
-		Host:    eflag.String("host"),
-		Network: "tcp4",
-		Port:    9003,
+		Host:               eflag.String("host"),
+		Network:            "tcp4",
+		Port:               9003,
+		ConnTcpMetricPorts: []uint64{6379, 3306, 8635, 27017, 9092},
 	}
 	out := DefaultConfig()
 	assert.Equal(t, in, out)

@@ -6,11 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_parsePort(t *testing.T) {
-	//got, err := parsePort("18EB")
-	//assert.Equal(t, nil, err)
-	//assert.Equal(t, 6379, got)
-	got1, err1 := parseIpV4("95141EAC:18EB")
-	assert.Equal(t, nil, err1)
-	assert.Equal(t, "172.30.20.149:6379", string(got1))
+var f []uint64
+var ts = NewTCPStatCollector(f)
+
+func TestParseIpV4(t *testing.T) {
+	got, err := ts.parseIpV4("95141EAC:18EB")
+	assert.Equal(t, nil, err)
+	// assert.Equal(t, "172.30.20.149:6379", string(got))
+	assert.Equal(t, "all", string(got))
 }

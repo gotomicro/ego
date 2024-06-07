@@ -33,10 +33,12 @@ Network = "tcp4"
 	l := Load("test")
 	c := &Container{
 		config: &Config{
-			Host:              "172.16.21.157",
-			Port:              8080,
-			EnableLocalMainIP: true,
-			Network:           "tcp4",
+			Host:                "172.16.21.157",
+			Port:                8080,
+			EnableLocalMainIP:   true,
+			Network:             "tcp4",
+			EnableConnTcpMetric: false,
+			ConnTcpMetricPorts:  []uint64{6379, 3306, 8635, 27017, 9092},
 		},
 		name:   "test",
 		logger: DefaultContainer().logger.With(elog.FieldComponentName("test")),
