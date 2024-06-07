@@ -3,20 +3,20 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/dave/dst"
 	"github.com/dave/dst/decorator"
-	"github.com/gotomicro/ego/internal/tools"
 	orderedmap "github.com/wk8/go-ordered-map"
 	"golang.org/x/tools/imports"
+
+	"github.com/gotomicro/ego/internal/tools"
 )
 
 func checkAndMerge(f *file) ([]byte, error) {
-	origBytes, err := ioutil.ReadFile(f.orig)
+	origBytes, err := os.ReadFile(f.orig)
 	if err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("read origFile fail, %w", err)
 	}

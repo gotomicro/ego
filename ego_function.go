@@ -14,7 +14,6 @@ import (
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-  "go.uber.org/zap"
 
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"

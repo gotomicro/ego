@@ -1,3 +1,5 @@
+package emetric
+
 // Copyright 2015 The Prometheus Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -10,7 +12,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package emetric
 
 import (
 	"encoding/binary"
@@ -53,9 +54,9 @@ const (
 	// TCP_CLOSING
 	tcpClosing
 	// TCP_RX_BUFFER
-	//tcpRxQueuedBytes
+	// tcpRxQueuedBytes
 	// TCP_TX_BUFFER
-	//tcpTxQueuedBytes
+	// tcpTxQueuedBytes
 )
 
 type TcpStatCollector struct {
@@ -89,8 +90,8 @@ func (c *TcpStatCollector) Update() error {
 	}()
 
 	// if enabled ipv6 system
-	//tcp6File := procFilePath("net/tcp6")
-	//if _, hasIPv6 := os.Stat(tcp6File); hasIPv6 == nil {
+	// tcp6File := procFilePath("net/tcp6")
+	// if _, hasIPv6 := os.Stat(tcp6File); hasIPv6 == nil {
 	//	tcp6Stats, err := getTCPStats(tcp6File)
 	//	if err != nil {
 	//		return fmt.Errorf("couldn't get tcp6stats: %w", err)
@@ -99,11 +100,11 @@ func (c *TcpStatCollector) Update() error {
 	//	for st, value := range tcp6Stats {
 	//		tcpStats[st] += value
 	//	}
-	//}
+	// }
 
-	//for st, value := range tcpStats {
+	// for st, value := range tcpStats {
 	//	ch <- c.desc.mustNewConstMetric(value, st.String())
-	//}
+	// }
 	return nil
 }
 
@@ -128,7 +129,7 @@ func getTCPStats(statsFile string) (map[tcpConnectionState]map[string]float64, e
 */
 
 func parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, error) {
-	//tcpStats := map[tcpConnectionState]float64{}
+	// tcpStats := map[tcpConnectionState]float64{}
 	tcpStatsMap := make(map[tcpConnectionState]map[string]float64, 0)
 	contents, err := io.ReadAll(r)
 	if err != nil {
@@ -144,22 +145,22 @@ func parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, erro
 			return nil, fmt.Errorf("invalid TCP stats line: %q", line)
 		}
 
-		//qu := strings.Split(parts[4], ":")
-		//if len(qu) < 2 {
+		// qu := strings.Split(parts[4], ":")
+		// if len(qu) < 2 {
 		//	return nil, fmt.Errorf("cannot parse tx_queues and rx_queues: %q", line)
-		//}
+		// }
 		//
-		//tx, err := strconv.ParseUint(qu[0], 16, 64)
-		//if err != nil {
+		// tx, err := strconv.ParseUint(qu[0], 16, 64)
+		// if err != nil {
 		//	return nil, err
-		//}
-		//tcpStats[tcpConnectionState(tcpTxQueuedBytes)] += float64(tx)
+		// }
+		// tcpStats[tcpConnectionState(tcpTxQueuedBytes)] += float64(tx)
 		//
-		//rx, err := strconv.ParseUint(qu[1], 16, 64)
-		//if err != nil {
+		// rx, err := strconv.ParseUint(qu[1], 16, 64)
+		// if err != nil {
 		//	return nil, err
-		//}
-		//tcpStats[tcpConnectionState(tcpRxQueuedBytes)] += float64(rx)
+		// }
+		// tcpStats[tcpConnectionState(tcpRxQueuedBytes)] += float64(rx)
 
 		ipv4, _ := parseIpV4(parts[2])
 		st, err := strconv.ParseInt(parts[3], 16, 8)
@@ -176,7 +177,7 @@ func parseTCPStats(r io.Reader) (map[tcpConnectionState]map[string]float64, erro
 		}
 		tcpStatsMap[tcpConnectionState(st)] = info
 
-		//tcpStats[tcpConnectionState(st)]++
+		// tcpStats[tcpConnectionState(st)]++
 
 	}
 
@@ -207,9 +208,9 @@ func (st tcpConnectionState) String() string {
 		return "listen"
 	case tcpClosing:
 		return "closing"
-	//case tcpRxQueuedBytes:
+	// case tcpRxQueuedBytes:
 	//	return "rx_queued_bytes"
-	//case tcpTxQueuedBytes:
+	// case tcpTxQueuedBytes:
 	//	return "tx_queued_bytes"
 	default:
 		return "unknown"
@@ -228,13 +229,13 @@ func parseIpV4(s string) (string, error) {
 	if err != nil {
 		return "", nil
 	}
-	uint32IP := binary.LittleEndian.Uint32(bytesIP) //转换为主机字节序
+	uint32IP := binary.LittleEndian.Uint32(bytesIP) // 转换为主机字节序
 	IP := make(net.IP, 4)
 	binary.BigEndian.PutUint32(IP, uint32IP)
 	port, err := strconv.ParseUint(hexPort, 16, 16)
 	return fmt.Sprintf("%s:%d", IP.String(), port), err
 }
 
-//func parsePort(portStr string) (int64, error) {
+// func parsePort(portStr string) (int64, error) {
 //	return strconv.ParseInt(portStr, 16, 16)
-//}
+// }
