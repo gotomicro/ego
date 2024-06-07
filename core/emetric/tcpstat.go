@@ -68,13 +68,13 @@ func NewTCPStatCollector() (*TcpStatCollector, error) {
 
 func (c *TcpStatCollector) Update() error {
 	go func() {
-		statsFile := path.Join("/proc", strconv.Itoa(os.Getpid()), "net", "tcp")
-		tcpStats, err := getTCPStats(statsFile)
-		if err != nil {
-			elog.EgoLogger.Error(fmt.Errorf("couldn't get tcpstats: %w", err).Error())
-			return
-		}
 		for {
+			statsFile := path.Join("/proc", strconv.Itoa(os.Getpid()), "net", "tcp")
+			tcpStats, err := getTCPStats(statsFile)
+			if err != nil {
+				elog.EgoLogger.Error(fmt.Errorf("couldn't get tcpstats: %w", err).Error())
+				return
+			}
 			for index, value := range tcpStats {
 				for addr, number := range value {
 					ClientStatsGauge.WithLabelValues(
@@ -83,8 +83,8 @@ func (c *TcpStatCollector) Update() error {
 						index.String(),
 					).Set(number)
 				}
-				time.Sleep(5 * time.Second)
 			}
+			time.Sleep(5 * time.Second)
 		}
 	}()
 
