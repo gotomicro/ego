@@ -1,7 +1,6 @@
 package econf
 
 import (
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type mockDataSource struct {
@@ -72,11 +70,11 @@ func TestWatchFile(t *testing.T) {
 		v, configFile, cleanup, wg := newWithConfigFile(t)
 		defer cleanup()
 		_, err := os.Stat(configFile)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		t.Logf("test config file: %s\n", configFile)
 		// when overwriting the file and waiting for the custom change notification handler to be triggered
-		err = os.WriteFile(configFile, []byte(`foo= "baz"`), 0640)
-		require.Nil(t, err)
+		err1 := os.WriteFile(configFile, []byte(`foo= "baz"`), 0640)
+		assert.NoError(t, err1)
 		// wg.Wait()
 		wg.Done()
 		// then the config value should have changed
@@ -92,26 +90,24 @@ func TestWatchFile(t *testing.T) {
 		// when link to another `config.toml` file
 		dataDir2 := path.Join(watchDir, "data2")
 		err := os.Mkdir(dataDir2, 0777)
-		require.Nil(t, err)
+		assert.NoError(t, err)
 		configFile2 := path.Join(dataDir2, "config.toml")
-		err = os.WriteFile(configFile2, []byte(`foo= "baz"`), 0640)
-		require.Nil(t, err)
+		err1 := os.WriteFile(configFile2, []byte(`foo= "baz"`), 0640)
+		assert.NoError(t, err1)
 		// change the symlink using the `ln -sfn` command
-		err = exec.Command("ln", "-sfn", dataDir2, path.Join(watchDir, "data")).Run()
-		require.Nil(t, err)
+		err2 := exec.Command("ln", "-sfn", dataDir2, path.Join(watchDir, "data")).Run()
+		assert.NoError(t, err2)
 		wg.Wait()
 		// then
-		require.Nil(t, err)
 		assert.Equal(t, "baz", v.Get("foo"))
 	})
 }
 
 func newWithConfigFile(t *testing.T) (*Configuration, string, func(), *sync.WaitGroup) {
-	watchDir, err := ioutil.TempDir("", "")
-	require.Nil(t, err)
+	var watchDir = os.TempDir()
 	configFile := path.Join(watchDir, "config.toml")
-	err = os.WriteFile(configFile, []byte(`foo= "baz"`), 0640)
-	require.Nil(t, err)
+	err := os.WriteFile(configFile, []byte(`foo= "baz"`), 0640)
+	assert.NoError(t, err)
 	content, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Panicf("Error: %v\n", err)
@@ -119,8 +115,7 @@ func newWithConfigFile(t *testing.T) (*Configuration, string, func(), *sync.Wait
 	t.Logf("Content of configFile: %v\n", string(content))
 
 	cleanup := func() {
-		err1 := os.RemoveAll(watchDir)
-		assert.NoError(t, err1)
+		os.RemoveAll(watchDir)
 	}
 
 	v := New()
@@ -138,34 +133,32 @@ func newWithConfigFile(t *testing.T) (*Configuration, string, func(), *sync.Wait
 		wg.Done()
 	})
 
-	err = v.LoadFromDataSource(provider, toml.Unmarshal)
-	assert.Nil(t, err)
+	err1 := v.LoadFromDataSource(provider, toml.Unmarshal)
+	assert.NoError(t, err1)
 	assert.Equal(t, "baz", v.Get("foo"))
 	return v, configFile, cleanup, wg
 }
 
 func newWithSymlinkedConfigFile(t *testing.T) (*Configuration, string, string, func(), *sync.WaitGroup) {
-	watchDir, err := ioutil.TempDir("", "")
-	require.Nil(t, err)
+	watchDir := os.TempDir()
 	dataDir1 := path.Join(watchDir, "data1")
-	err = os.Mkdir(dataDir1, 0777)
-	require.Nil(t, err)
+	err := os.Mkdir(dataDir1, 0777)
+	assert.NoError(t, err)
 	realConfigFile := path.Join(dataDir1, "config.toml")
 	t.Logf("Real config file location: %s\n", realConfigFile)
-	err = os.WriteFile(realConfigFile, []byte(`foo= "baz"`), 0640)
-	require.Nil(t, err)
+	err1 := os.WriteFile(realConfigFile, []byte(`foo= "baz"`), 0640)
+	assert.NoError(t, err1)
 	cleanup := func() {
-		err1 := os.RemoveAll(watchDir)
-		assert.NoError(t, err1)
+		os.RemoveAll(watchDir)
 	}
 	// now, symlink the tm `data1` dir to `data` in the baseDir
-	err = os.Symlink(dataDir1, path.Join(watchDir, "data"))
-	require.Nil(t, err)
+	err2 := os.Symlink(dataDir1, path.Join(watchDir, "data"))
+	assert.NoError(t, err2)
 
 	// and link the `<watchdir>/datadir1/config.toml` to `<watchdir>/config.toml`
 	configFile := path.Join(watchDir, "config.toml")
-	err = os.Symlink(path.Join(watchDir, "data", "config.toml"), configFile)
-	require.Nil(t, err)
+	err3 := os.Symlink(path.Join(watchDir, "data", "config.toml"), configFile)
+	assert.NoError(t, err3)
 	t.Logf("Config file location: %s\n", path.Join(watchDir, "config.toml"))
 
 	v := New()
@@ -182,8 +175,8 @@ func newWithSymlinkedConfigFile(t *testing.T) (*Configuration, string, string, f
 		}
 		wg.Done()
 	})
-	err = v.LoadFromDataSource(provider, toml.Unmarshal)
-	require.Nil(t, err)
-	require.Equal(t, "bar", v.Get("foo"))
+	err4 := v.LoadFromDataSource(provider, toml.Unmarshal)
+	assert.NoError(t, err4)
+	assert.Equal(t, "bar", v.Get("foo"))
 	return v, watchDir, configFile, cleanup, wg
 }

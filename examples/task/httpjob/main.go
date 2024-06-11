@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
+
+	"go.uber.org/zap"
 
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server/egovernor"
 	"github.com/gotomicro/ego/task/ejob"
-	"go.uber.org/zap"
 )
 
 // 如果是Job 命令行执行  export EGO_DEBUG=true && go run main.go --config=config.toml --job=job --job-data='{"username":"ego"}' --job-header='test=1'
@@ -30,7 +31,7 @@ type data struct {
 }
 
 func job(ctx ejob.Context) error {
-	bytes, _ := ioutil.ReadAll(ctx.Request.Body)
+	bytes, _ := io.ReadAll(ctx.Request.Body)
 	d := data{}
 	_ = json.Unmarshal(bytes, &d)
 	fmt.Println(d.Username)

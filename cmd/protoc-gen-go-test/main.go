@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,7 +30,7 @@ func main() {
 	if len(os.Args) > 1 {
 		exit(fmt.Errorf("unknown argument %q (this program should be run by protoc, not directly)", os.Args[1]))
 	}
-	in, err := ioutil.ReadAll(os.Stdin)
+	in, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		exit(err)
 	}

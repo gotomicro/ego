@@ -1,3 +1,5 @@
+package emetric
+
 // Copyright 2015 The Prometheus Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -10,7 +12,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package emetric
 
 import (
 	"encoding/binary"
@@ -24,8 +25,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gotomicro/ego/core/elog"
 	"github.com/samber/lo"
+
+	"github.com/gotomicro/ego/core/elog"
 )
 
 type tcpConnectionState int
@@ -54,9 +56,9 @@ const (
 	// TCP_CLOSING
 	tcpClosing
 	// TCP_RX_BUFFER
-	//tcpRxQueuedBytes
+	// tcpRxQueuedBytes
 	// TCP_TX_BUFFER
-	//tcpTxQueuedBytes
+	// tcpTxQueuedBytes
 )
 
 type TcpStatCollector struct {
@@ -173,9 +175,9 @@ func (st tcpConnectionState) String() string {
 		return "listen"
 	case tcpClosing:
 		return "closing"
-	//case tcpRxQueuedBytes:
+	// case tcpRxQueuedBytes:
 	//	return "rx_queued_bytes"
-	//case tcpTxQueuedBytes:
+	// case tcpTxQueuedBytes:
 	//	return "tx_queued_bytes"
 	default:
 		return "unknown"
@@ -203,7 +205,7 @@ func (ts *TcpStatCollector) parseIpV4(s string) (string, error) {
 	if err != nil {
 		return "", nil
 	}
-	uint32IP := binary.LittleEndian.Uint32(bytesIP) //转换为主机字节序
+	uint32IP := binary.LittleEndian.Uint32(bytesIP) // 转换为主机字节序
 	IP := make(net.IP, 4)
 	binary.BigEndian.PutUint32(IP, uint32IP)
 	return fmt.Sprintf("%s:%d", IP.String(), port), err

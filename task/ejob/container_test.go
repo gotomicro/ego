@@ -2,7 +2,7 @@ package ejob
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -81,7 +81,7 @@ func TestHandleJobList(t *testing.T) {
 	defer ts.Close()
 	resp := performRequest(mux, "GET", "/jobList")
 	jobList := make([]string, 0)
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := io.ReadAll(resp.Body)
 	assert.Nil(t, err)
 	err = json.Unmarshal(bytes, &jobList)
 	assert.Nil(t, err)
