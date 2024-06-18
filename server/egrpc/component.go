@@ -2,6 +2,7 @@ package egrpc
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"github.com/gotomicro/ego/core/constant"
@@ -157,7 +158,11 @@ func (c *Component) GracefulStop(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			err := ctx.Err()
+			if err != nil {
+				return fmt.Errorf("egrpc GracefulStop, err: %w", err)
+			}
+			return nil
 		case <-c.quit:
 			return nil
 		}

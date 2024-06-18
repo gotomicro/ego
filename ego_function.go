@@ -8,11 +8,11 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	sentinelmetrics "github.com/alibaba/sentinel-golang/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/automaxprocs/maxprocs"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/gotomicro/ego/core/constant"
@@ -42,23 +42,26 @@ func (e *Ego) waitSignals() {
 		grace := s != syscall.SIGQUIT
 		go func() {
 			// todo 父节点传context待考虑
-			stopCtx, cancel := context.WithTimeout(context.Background(), e.opts.stopTimeout)
+			e.stopInfo = stopInfo{
+				stopStartTime:  time.Now(),
+				isGracefulStop: grace,
+			}
+			stopCtx, cancel := context.WithTimeoutCause(context.Background(), e.opts.stopTimeout, fmt.Errorf("stop timeout %v", e.opts.stopTimeout))
+
 			defer func() {
 				signal.Stop(sig)
 				cancel()
 			}()
 
-			elog.Info("server stop", zap.Bool("graceful", grace))
-
 			_ = e.Stop(stopCtx, grace)
 			<-stopCtx.Done()
 			// 记录服务器关闭时候，由于关闭过慢，无法正常关闭，被强制cancel
 			if errors.Is(stopCtx.Err(), context.DeadlineExceeded) {
-				elog.Error("waitSignals stop context err", elog.FieldErr(stopCtx.Err()))
+				e.logger.Error("waitSignals stop context err", elog.FieldErr(stopCtx.Err()))
 			}
 		}()
 		<-sig
-		elog.Error("waitSignals quit")
+		e.logger.Error("waitSignals quit")
 		// 因为os.Signal长度为2，那么这里会阻塞住，如果发送两次信号量，强制退出
 		os.Exit(128 + int(s.(syscall.Signal))) // second signal. Exit directly.
 	}()
