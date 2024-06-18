@@ -9,7 +9,7 @@ import (
 	"github.com/gotomicro/ego/server/egin"
 )
 
-//  export EGO_DEBUG=true && go run main.go --config=config.toml
+// export EGO_DEBUG=true && go run main.go --config=config.toml
 func main() {
 	if err := ego.New().Serve(func() *egin.Component {
 		server := egin.Load("server.http").Build()
@@ -26,6 +26,10 @@ func main() {
 		})
 
 		server.GET("/hello", func(ctx *gin.Context) {
+			ctx.JSON(200, "Hello client: "+ctx.GetHeader("app"))
+		})
+		server.POST("/hello", func(ctx *gin.Context) {
+			fmt.Printf("ctx.Request.Body--------------->"+"%+v\n", ctx.Request.Body)
 			ctx.JSON(200, "Hello client: "+ctx.GetHeader("app"))
 		})
 

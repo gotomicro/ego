@@ -1,5 +1,5 @@
 [server.http]
-port = 9007
+port = 9004
 EnableAccessInterceptor = true
 EnableAccessInterceptorReq = true
 EnableAccessInterceptorRes = true

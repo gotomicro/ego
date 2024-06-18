@@ -68,9 +68,20 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 	if config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
 		fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(req.Context())))
 	}
+	if config.EnableAccessInterceptor {
+		if config.EnableAccessInterceptorReq {
+			fields = append(fields, elog.Any("req", map[string]interface{}{
+				"metadata": req.Header,
+				"payload":  req.Body,
+			}))
+		}
 
-	if config.EnableAccessInterceptorRes {
-		fields = append(fields, elog.FieldValueAny(respBody))
+		if config.EnableAccessInterceptorRes {
+			fields = append(fields, elog.Any("res", map[string]interface{}{
+				"metadata": res.Header(),
+				"payload":  respBody,
+			}))
+		}
 	}
 
 	if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {

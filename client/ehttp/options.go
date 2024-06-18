@@ -89,6 +89,13 @@ func WithEnableAccessInterceptor(enableAccessInterceptor bool) Option {
 	}
 }
 
+// WithEnableAccessInterceptorReq 设置开启请求日志响应参数
+func WithEnableAccessInterceptorReq(enableAccessInterceptorReq bool) Option {
+	return func(c *Container) {
+		c.config.EnableAccessInterceptorReq = enableAccessInterceptorReq
+	}
+}
+
 // WithEnableAccessInterceptorRes 设置开启请求日志响应参数
 func WithEnableAccessInterceptorRes(enableAccessInterceptorRes bool) Option {
 	return func(c *Container) {
