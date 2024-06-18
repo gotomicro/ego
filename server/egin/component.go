@@ -181,7 +181,10 @@ func (c *Component) Stop() error {
 	c.mu.Lock()
 	err := c.Server.Close()
 	c.mu.Unlock()
-	return err
+	if err != nil {
+		return fmt.Errorf("egin Stop, err: %w", err)
+	}
+	return nil
 }
 
 // GracefulStop implements server.Component interface
@@ -190,7 +193,10 @@ func (c *Component) GracefulStop(ctx context.Context) error {
 	c.mu.Lock()
 	err := c.Server.Shutdown(ctx)
 	c.mu.Unlock()
-	return err
+	if err != nil {
+		return fmt.Errorf("egin GracefulStop, err: %w", err)
+	}
+	return nil
 }
 
 // Info returns server info, used by governor and consumer balancer

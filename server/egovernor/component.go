@@ -3,6 +3,7 @@ package egovernor
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -153,12 +154,20 @@ func (c *Component) Start() error {
 
 // Stop ..
 func (c *Component) Stop() error {
-	return c.Server.Close()
+	err := c.Server.Close()
+	if err != nil {
+		return fmt.Errorf("egovernor Stop, err: %w", err)
+	}
+	return nil
 }
 
 // GracefulStop ..
 func (c *Component) GracefulStop(ctx context.Context) error {
-	return c.Server.Shutdown(ctx)
+	err := c.Server.Shutdown(ctx)
+	if err != nil {
+		return fmt.Errorf("egovernor GracefulStop, err: %w", err)
+	}
+	return nil
 }
 
 // Info ..

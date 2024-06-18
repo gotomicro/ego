@@ -17,6 +17,7 @@ import (
 	"github.com/gotomicro/ego/server"
 	"github.com/gotomicro/ego/task/ecron"
 	"github.com/gotomicro/ego/task/ejob"
+	"go.uber.org/zap"
 )
 
 // Ego 分为三大部分
@@ -43,6 +44,13 @@ type Ego struct {
 
 	// 第三部分 可选方法
 	opts opts
+
+	// stopStartTime
+	stopInfo stopInfo
+}
+type stopInfo struct {
+	stopStartTime  time.Time
+	isGracefulStop bool
 }
 
 type opts struct {
@@ -232,11 +240,11 @@ func (e *Ego) Run() error {
 
 	// 阻塞，等待信号量
 	if err := <-e.cycle.Wait(e.opts.hang); err != nil {
-		e.logger.Error("Ego shutdown with error", elog.FieldComponent("app"), elog.FieldErr(err))
+		e.logger.Error("Ego shutdown with error", elog.FieldComponent("app"), elog.FieldErr(err), elog.FieldCost(time.Since(e.stopInfo.stopStartTime)), zap.Bool("grace", e.stopInfo.isGracefulStop), zap.String("stopTimeout", e.opts.stopTimeout.String()))
 		runSerialFuncLogError(e.opts.afterStopClean)
 		return err
 	}
-	e.logger.Info("stop Ego, bye!", elog.FieldComponent("app"))
+	e.logger.Info("stop ego, bye!", elog.FieldComponent("app"), elog.FieldCost(time.Since(e.stopInfo.stopStartTime)), zap.Bool("grace", e.stopInfo.isGracefulStop), zap.String("stopTimeout", e.opts.stopTimeout.String()))
 	// 运行停止后清理
 	runSerialFuncLogError(e.opts.afterStopClean)
 	return nil
