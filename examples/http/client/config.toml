@@ -1,5 +1,8 @@
 [http.test]
-    addr = "http://127.0.0.1:9007" # 开启后并加上export EGO_DEBUG=true，可以看到每次http请求，配置名、地址、耗时、请求数据、响应数据
+    addr = "http://127.0.0.1:9004" # 开启后并加上export EGO_DEBUG=true，可以看到每次http请求，配置名、地址、耗时、请求数据、响应数据
     debug = true
+EnableAccessInterceptor= true
+EnableAccessInterceptorReq=true
+EnableAccessInterceptorRes=true
 [trace]
     ServiceName = "client"

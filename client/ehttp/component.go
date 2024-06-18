@@ -59,8 +59,8 @@ func newComponent(name string, config *Config, logger *elog.Component) *Componen
 		SetTimeout(config.ReadTimeout).
 		SetHeader("app", eapp.Name()).
 		SetBaseURL(addr)
-	for _, interceptor := range interceptors {
-		onBefore, onAfter, onErr := interceptor(name, config, logger, resolverBuild)
+	for _, interceptorValue := range interceptors {
+		onBefore, onAfter, onErr := interceptorValue(name, config, logger, resolverBuild)
 		if onBefore != nil {
 			cli.OnBeforeRequest(onBefore)
 		}

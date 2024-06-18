@@ -13,7 +13,7 @@ require (
 	github.com/felixge/fgprof v0.9.2
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gin-gonic/gin v1.9.1
-	github.com/go-resty/resty/v2 v2.7.0
+	github.com/go-resty/resty/v2 v2.13.1
 	github.com/google/cel-go v0.11.3
 	github.com/gotomicro/logrotate v0.0.0-20211108034117-46d53eedc960
 	github.com/iancoleman/strcase v0.2.0
@@ -93,12 +93,12 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/mod v0.11.0 // indirect
-	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	google.golang.org/genproto v0.0.0-20230711160842-782d3b101e98 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
