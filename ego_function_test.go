@@ -230,4 +230,30 @@ func Test_initSysLogger(t *testing.T) {
 		// 验证日志文件名是否为ego.sys.log
 		assert.Equal(t, fileName, elog.EgoLogger.ConfigName())
 	})
+
+	t.Run("修改EgoLogger本身，ego中的logger同步生效", func(t *testing.T) {
+		econf.Reset()
+		var (
+			app = &Ego{
+				logger: elog.EgoLogger, // logger与ego.New()方法中保持一致
+			}
+			cfg = `
+				[logger.ego]
+				   debug = true
+				   name = "ego.sys.log" 
+				`
+		)
+
+		err := econf.LoadFromReader(strings.NewReader(cfg), toml.Unmarshal)
+		assert.NoError(t, err)
+
+		// 初始化之前使用的默认的name
+		assert.Equal(t, elog.EgoLoggerName, app.logger.ConfigName())
+
+		err1 := app.initLogger()
+		assert.NoError(t, err1)
+
+		// 初始化后验证ego结构体中的logger日志文件名是否为ego.sys.log
+		assert.Equal(t, "ego.sys.log", app.logger.ConfigName())
+	})
 }
