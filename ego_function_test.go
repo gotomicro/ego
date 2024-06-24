@@ -233,6 +233,8 @@ func Test_initSysLogger(t *testing.T) {
 
 	t.Run("修改EgoLogger本身，ego中的logger同步生效", func(t *testing.T) {
 		econf.Reset()
+		// 先还原一下默认的EgoLogger
+		elog.EgoLogger = elog.DefaultContainer().Build(elog.WithFileName(elog.EgoLoggerName))
 		var (
 			app = &Ego{
 				logger: elog.EgoLogger, // logger与ego.New()方法中保持一致
