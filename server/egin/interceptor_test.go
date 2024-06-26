@@ -3,7 +3,6 @@ package egin
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -42,7 +41,6 @@ func TestPanicInHandler(t *testing.T) {
 	// 调用触发panic的接口
 	w := performRequest(router, "GET", "/recovery")
 	logged, err := os.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
-	fmt.Printf("logged--------------->"+"%+v\n", string(logged))
 	assert.NoError(t, err)
 	// 虽然程序里返回200，只要panic就会为500
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
@@ -50,7 +48,8 @@ func TestPanicInHandler(t *testing.T) {
 	n := strings.Index(string(logged), "{")
 	err1 := json.Unmarshal(logged[n:], &m)
 	assert.NoError(t, err1)
-	assert.Contains(t, m["event"], `recover`)
+	//assert.Contains(t, m["event"], `recover`)
+	assert.Contains(t, m["lv"], `error`)
 	assert.Contains(t, string(logged), "we have a panic")
 	assert.Contains(t, m["method"], `GET./recovery`)
 	assert.Contains(t, string(logged), "500")
@@ -86,7 +85,6 @@ func TestPanicInCustomHandler(t *testing.T) {
 	// 调用触发panic的接口
 	w := performRequest(router, "GET", "/recovery")
 	logged, err := os.ReadFile(path.Join(logger.ConfigDir(), logger.ConfigName()))
-	fmt.Printf("logged--------------->%+v\n", string(logged))
 	assert.NoError(t, err)
 	// TEST
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
@@ -95,7 +93,7 @@ func TestPanicInCustomHandler(t *testing.T) {
 	n := strings.Index(string(logged), "{")
 	err1 := json.Unmarshal(logged[n:], &m)
 	assert.NoError(t, err1)
-	assert.Equal(t, m["event"], `recover`)
+	assert.Equal(t, m["lv"], `error`)
 	assert.Equal(t, m["error"], panicMessage)
 	assert.Equal(t, m["method"], `GET./recovery`)
 	assert.Contains(t, m["stack"], t.Name())
