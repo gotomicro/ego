@@ -144,15 +144,14 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 		defer func() {
 			cost := time.Since(beg)
 			fields = append(fields,
-				elog.FieldType("http"), // GET, POST
+				elog.FieldKey(ctx.Request.Method), // GET, POST
 				elog.FieldCost(cost),
 				elog.FieldMethod(ctx.Request.Method+"."+ctx.FullPath()),
 				elog.FieldAddr(ctx.Request.URL.RequestURI()),
 				elog.FieldIP(ctx.ClientIP()),
 				elog.FieldSize(int32(ctx.Writer.Size())),
 				elog.FieldPeerIP(getPeerIP(ctx.Request.RemoteAddr)),
-				// elog.FieldCode(int32(ctx.Writer.Status())),
-				// elog.FieldUniformCode(int32(ctx.Writer.Status())),
+				elog.FieldPeerName(getPeerName(ctx)),
 			)
 
 			for _, key := range loggerKeys {
@@ -168,32 +167,43 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 			c.config.mu.RLock()
 			if c.config.EnableAccessInterceptorReq || c.config.EnableAccessInterceptorRes {
 				out := c.checkFilter(ctx.Request, rw)
-				if c.config.EnableAccessInterceptorReq && out {
-					fields = append(fields, elog.Any("req", map[string]interface{}{
-						"metadata": copyHeaders(ctx.Request.Header),
-						"payload":  rb.String(),
-					}))
-				}
 
+				if c.config.EnableAccessInterceptorReq && out {
+					if len(rb.String()) > c.config.AccessInterceptorReqMaxLength {
+						fields = append(fields, elog.Any("req", map[string]interface{}{
+							"metadata": copyHeaders(ctx.Request.Header),
+							"payload":  rb.String()[:c.config.AccessInterceptorReqMaxLength] + "...",
+						}))
+					} else {
+						fields = append(fields, elog.Any("req", map[string]interface{}{
+							"metadata": copyHeaders(ctx.Request.Header),
+							"payload":  rb.String(),
+						}))
+					}
+				}
 				if c.config.EnableAccessInterceptorRes && out {
-					fields = append(fields, elog.Any("res", map[string]interface{}{
-						"metadata": copyHeaders(ctx.Writer.Header()),
-						"payload":  rw.body.String(),
-					}))
+					if len(rw.body.String()) > c.config.AccessInterceptorResMaxLength {
+						fields = append(fields, elog.Any("res", map[string]interface{}{
+							"metadata": copyHeaders(ctx.Request.Header),
+							"payload":  rw.body.String()[:c.config.AccessInterceptorResMaxLength] + "...",
+						}))
+					} else {
+						fields = append(fields, elog.Any("res", map[string]interface{}{
+							"metadata": copyHeaders(ctx.Writer.Header()),
+							"payload":  rw.body.String(),
+						}))
+					}
 				}
 			}
 			c.config.mu.RUnlock()
 
 			// slow log
+			isSlowLog := false
 			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
 				// 非长连接模式下，记入warn慢日志
 				if ctx.GetHeader("Accept") != "text/event-stream" {
-					// 最后添加状态码
-					fields = append(fields,
-						elog.FieldCode(int32(ctx.Writer.Status())),
-						elog.FieldUniformCode(int32(ctx.Writer.Status())),
-					)
-					c.logger.Warn("slow", fields...)
+					isSlowLog = true
+					event = "slow"
 				}
 			}
 
@@ -221,7 +231,6 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 
 				// 上面BrokenPipe使用的是用户ctx.Writer.Status()
 				// 如果不是BrokenPipe，那么会将Writer.Status()设置为500
-				event = "recover"
 				stackInfo := stack(3)
 				fields = append(fields,
 					elog.FieldEvent(event),
@@ -235,16 +244,20 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 				return
 			}
 			// todo 如果不记录日志的时候，应该早点return
-			if c.config.EnableAccessInterceptor {
+			if c.config.EnableAccessInterceptor || isSlowLog {
 				fields = append(fields,
 					elog.FieldEvent(event),
 					elog.FieldErrAny(ctx.Errors.ByType(gin.ErrorTypePrivate).String()),
 					elog.FieldCode(int32(ctx.Writer.Status())),
 					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
-				c.metricServerInterceptor(ctx, cost)
-				c.logger.Info("access", fields...)
+				if isSlowLog {
+					c.logger.Warn("access", fields...)
+				} else {
+					c.logger.Info("access", fields...)
+				}
 			}
+			c.metricServerInterceptor(ctx, cost)
 		}()
 		ctx.Next()
 	}
@@ -403,6 +416,11 @@ func getPeerIP(addr string) string {
 		return addSlice[0]
 	}
 	return ""
+}
+
+func getPeerName(c *gin.Context) string {
+	value := c.GetHeader("app")
+	return value
 }
 
 func getHeaderValue(c *gin.Context, key string, enableTrustedCustomHeader bool) string {
