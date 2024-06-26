@@ -229,8 +229,6 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					c.config.recoveryFunc(ctx, rec)
 				}
 
-				// 上面BrokenPipe使用的是用户ctx.Writer.Status()
-				// 如果不是BrokenPipe，那么会将Writer.Status()设置为500
 				stackInfo := stack(3)
 				fields = append(fields,
 					elog.FieldEvent(event),
@@ -240,7 +238,12 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
 				c.metricServerInterceptor(ctx, cost)
-				c.logger.Error("access", fields...)
+				// broken pipe 是warning
+				if brokenPipe {
+					c.logger.Warn("access", fields...)
+				} else {
+					c.logger.Error("access", fields...)
+				}
 				return
 			}
 			// todo 如果不记录日志的时候，应该早点return
