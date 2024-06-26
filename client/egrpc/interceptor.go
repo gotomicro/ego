@@ -342,7 +342,7 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		)
 
 		// 开启了链路，那么就记录链路id
-		if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
+		if etrace.IsGlobalTracerRegistered() {
 			fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
 		}
 

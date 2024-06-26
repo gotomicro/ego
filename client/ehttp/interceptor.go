@@ -67,7 +67,7 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 	}
 
 	// 开启了链路，那么就记录链路id
-	if config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
+	if etrace.IsGlobalTracerRegistered() {
 		fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(req.Context())))
 	}
 	if config.EnableAccessInterceptor {

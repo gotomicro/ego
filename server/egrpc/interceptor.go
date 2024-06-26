@@ -305,7 +305,7 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				}
 			}
 
-			if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
+			if etrace.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
 			}
 
