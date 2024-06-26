@@ -251,6 +251,7 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 		// 此处必须使用defer来recover handler内部可能出现的panic
 		defer func() {
 			cost := time.Since(beg)
+			logType := ""
 			if rec := recover(); rec != nil {
 				switch recType := rec.(type) {
 				case error:
@@ -262,7 +263,7 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				stack := make([]byte, 4096)
 				stack = stack[:runtime.Stack(stack, true)]
 				fields = append(fields, elog.FieldStack(stack))
-				event = "recover"
+				logType = "recover"
 				err = status.New(grpcCode.Internal, "panic recover, origin err: "+err.Error()).Err()
 			}
 
@@ -281,6 +282,9 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
+			if logType == "recover" {
+				fields = append(fields, elog.FieldType("recover"))
+			}
 			fields = append(fields,
 				elog.FieldKey("unary"),
 				elog.FieldCode(int32(spbStatus.Code())),
