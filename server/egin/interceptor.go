@@ -232,6 +232,7 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 				stackInfo := stack(3)
 				fields = append(fields,
 					elog.FieldEvent(event),
+					elog.FieldType("recover"),
 					zap.ByteString("stack", stackInfo),
 					elog.FieldErrAny(rec),
 					elog.FieldCode(int32(ctx.Writer.Status())),
