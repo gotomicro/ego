@@ -2,6 +2,7 @@ package egrpc
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -158,14 +159,13 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 				stack := make([]byte, 4096)
 				stack = stack[:runtime.Stack(stack, true)]
 				fields = append(fields, elog.FieldStack(stack))
-				event = "recover"
 				err = status.New(grpcCode.Internal, "panic recover, origin err: "+err.Error()).Err()
 			}
 			spbStatus := ecode.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
 			fields = append(fields,
-				elog.FieldType("stream"),
+				elog.FieldKey("stream"),
 				elog.FieldEvent(event),
 				elog.FieldCode(int32(spbStatus.Code())),
 				elog.FieldUniformCode(int32(httpStatusCode)),
@@ -174,9 +174,10 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 				elog.FieldPeerName(getPeerName(stream.Context())),
 				elog.FieldPeerIP(getPeerIP(stream.Context())),
 			)
-
+			isSlowLog := false
 			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
-				c.logger.Warn("slow", fields...)
+				event = "slow"
+				isSlowLog = true
 			}
 
 			if err != nil {
@@ -192,7 +193,11 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 				c.prometheusStreamServerInterceptor(stream, info, spbStatus, cost)
 				return
 			}
-			c.logger.Info("access", fields...)
+			if isSlowLog {
+				c.logger.Warn("access", fields...)
+			} else {
+				c.logger.Info("access", fields...)
+			}
 			c.prometheusStreamServerInterceptor(stream, info, spbStatus, cost)
 		}()
 		return handler(srv, stream)
@@ -261,14 +266,15 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				err = status.New(grpcCode.Internal, "panic recover, origin err: "+err.Error()).Err()
 			}
 
-			isSlow := false
+			isSlowLog := false
 			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
-				isSlow = true
+				isSlowLog = true
+				event = "slow"
 			}
 
 			spbStatus := ecode.Convert(err)
 			// 如果没有开启日志组件、并且没有错误，没有慢日志，那么直接返回不记录日志
-			if err == nil && !c.config.EnableAccessInterceptor && !isSlow {
+			if err == nil && !c.config.EnableAccessInterceptor && !isSlowLog {
 				c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
 				return
 			}
@@ -276,7 +282,7 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 
 			fields = append(fields,
-				elog.FieldType("unary"),
+				elog.FieldKey("unary"),
 				elog.FieldCode(int32(spbStatus.Code())),
 				elog.FieldUniformCode(int32(httpStatusCode)),
 				elog.FieldDescription(spbStatus.Message()),
@@ -299,27 +305,42 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				}
 			}
 
-			if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
+			if etrace.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
 			}
 
 			if c.config.EnableAccessInterceptorReq {
-				var reqMap = map[string]interface{}{
-					"payload": xstring.JSON(req),
+				reqStr := xstring.JSON(req)
+				if len(reqStr) > c.config.AccessInterceptorReqMaxLength {
+					var reqMap = map[string]any{
+						"payload": reqStr[:c.config.AccessInterceptorReqMaxLength] + "...",
+					}
+					if md, ok := metadata.FromIncomingContext(ctx); ok {
+						reqMap["metadata"] = md
+					}
+					fields = append(fields, elog.Any("req", reqMap))
+				} else {
+					var reqMap = map[string]any{
+						"payload": json.RawMessage(reqStr),
+					}
+					if md, ok := metadata.FromIncomingContext(ctx); ok {
+						reqMap["metadata"] = md
+					}
+					fields = append(fields, elog.Any("req", reqMap))
 				}
-				if md, ok := metadata.FromIncomingContext(ctx); ok {
-					reqMap["metadata"] = md
-				}
-				fields = append(fields, elog.Any("req", reqMap))
-			}
-			if c.config.EnableAccessInterceptorRes {
-				fields = append(fields, elog.Any("res", map[string]interface{}{
-					"payload": xstring.JSON(res),
-				}))
 			}
 
-			if isSlow {
-				c.logger.Warn("slow", fields...)
+			if c.config.EnableAccessInterceptorRes {
+				resStr := xstring.JSON(res)
+				if len(resStr) > c.config.AccessInterceptorResMaxLength {
+					fields = append(fields, elog.Any("res", map[string]any{
+						"payload": resStr[:c.config.AccessInterceptorResMaxLength] + "...",
+					}))
+				} else {
+					fields = append(fields, elog.Any("res", map[string]any{
+						"payload": json.RawMessage(resStr),
+					}))
+				}
 			}
 
 			if err != nil {
@@ -336,8 +357,12 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				return
 			}
 
-			if c.config.EnableAccessInterceptor {
-				c.logger.Info("access", fields...)
+			if c.config.EnableAccessInterceptor || isSlowLog {
+				if isSlowLog {
+					c.logger.Warn("access", fields...)
+				} else {
+					c.logger.Info("access", fields...)
+				}
 			}
 			c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
 		}()

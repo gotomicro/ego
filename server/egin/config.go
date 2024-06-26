@@ -33,7 +33,9 @@ type Config struct {
 	SlowLogThreshold              time.Duration // 服务慢日志，默认500ms
 	EnableAccessInterceptor       bool          // 是否开启，记录请求数据
 	EnableAccessInterceptorReq    bool          // 是否开启记录请求参数，默认不开启
+	AccessInterceptorReqMaxLength int           // 默认4K
 	EnableAccessInterceptorRes    bool          // 是否开启记录响应参数，默认不开启
+	AccessInterceptorResMaxLength int           // 默认4K
 	AccessInterceptorReqResFilter string        // AccessInterceptorReq 过滤器，只有符合过滤器的请求才会记录 Req 和 Res
 	EnableTrustedCustomHeader     bool          // 是否开启自定义header头，记录数据往链路后传递，默认不开启
 	EnableSentinel                bool          // 是否开启限流，默认不开启
@@ -63,18 +65,20 @@ type Config struct {
 // DefaultConfig ...
 func DefaultConfig() *Config {
 	return &Config{
-		Host:                       eflag.String("host"),
-		Port:                       9090,
-		Mode:                       gin.ReleaseMode,
-		Network:                    "tcp",
-		EnableAccessInterceptor:    true,
-		EnableTraceInterceptor:     true,
-		EnableMetricInterceptor:    true,
-		EnableSentinel:             true,
-		SlowLogThreshold:           xtime.Duration("500ms"),
-		EnableWebsocketCheckOrigin: false,
-		TrustedPlatform:            "",
-		recoveryFunc:               defaultRecoveryFunc,
+		Host:                          eflag.String("host"),
+		Port:                          9090,
+		Mode:                          gin.ReleaseMode,
+		Network:                       "tcp",
+		EnableAccessInterceptor:       true,
+		EnableTraceInterceptor:        true,
+		EnableMetricInterceptor:       true,
+		AccessInterceptorReqMaxLength: 4096,
+		AccessInterceptorResMaxLength: 4096,
+		EnableSentinel:                true,
+		SlowLogThreshold:              xtime.Duration("500ms"),
+		EnableWebsocketCheckOrigin:    false,
+		TrustedPlatform:               "",
+		recoveryFunc:                  defaultRecoveryFunc,
 	}
 }
 

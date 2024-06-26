@@ -330,9 +330,9 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		cost := time.Since(beg)
 		spbStatus := ecode.Convert(err)
 		httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
-
+		event := "normal"
 		fields = append(fields,
-			elog.FieldType("unary"),
+			elog.FieldKey("unary"),
 			elog.FieldCode(int32(spbStatus.Code())),
 			elog.FieldUniformCode(int32(httpStatusCode)),
 			elog.FieldDescription(spbStatus.Message()),
@@ -342,12 +342,12 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		)
 
 		// 开启了链路，那么就记录链路id
-		if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
+		if etrace.IsGlobalTracerRegistered() {
 			fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
 		}
 
 		if c.config.EnableAccessInterceptorReq {
-			var reqMap = map[string]interface{}{
+			var reqMap = map[string]any{
 				"payload": xstring.JSON(req),
 			}
 			if md, ok := metadata.FromOutgoingContext(ctx); ok {
@@ -358,13 +358,14 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		if c.config.EnableAccessInterceptorRes {
 			fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
 		}
-
+		isSlowLog := false
 		if c.config.SlowLogThreshold > time.Duration(0) && cost > c.config.SlowLogThreshold {
-			c.logger.Warn("slow", fields...)
+			event = "slow"
+			isSlowLog = true
 		}
 
 		if err != nil {
-			fields = append(fields, elog.FieldEvent("error"), elog.FieldErr(err))
+			fields = append(fields, elog.FieldEvent(event), elog.FieldErr(err))
 			// 只记录系统级别错误
 			if httpStatusCode >= http.StatusInternalServerError {
 				// 只记录系统级别错误
@@ -376,9 +377,13 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			return err
 		}
 
-		if c.config.EnableAccessInterceptor {
-			fields = append(fields, elog.FieldEvent("normal"))
-			c.logger.Info("access", fields...)
+		if c.config.EnableAccessInterceptor || isSlowLog {
+			fields = append(fields, elog.FieldEvent(event))
+			if isSlowLog {
+				c.logger.Warn("access", fields...)
+			} else {
+				c.logger.Info("access", fields...)
+			}
 		}
 		return nil
 	}

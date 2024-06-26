@@ -49,13 +49,15 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 
 	loggerKeys := transport.CustomContextKeys()
 
-	var fields = make([]elog.Field, 0, 16)
+	var fields = make([]elog.Field, 0, 16+transport.CustomContextKeysLength())
 	fields = append(fields,
 		elog.FieldMethod(fullMethod),
 		elog.FieldName(name),
 		elog.FieldCost(cost),
 		elog.FieldAddr(u.Host),
 	)
+
+	event := "normal"
 
 	// 支持自定义log
 	for _, key := range loggerKeys {
@@ -65,31 +67,33 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 	}
 
 	// 开启了链路，那么就记录链路id
-	if config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
+	if etrace.IsGlobalTracerRegistered() {
 		fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(req.Context())))
 	}
 	if config.EnableAccessInterceptor {
 		if config.EnableAccessInterceptorReq {
-			fields = append(fields, elog.Any("req", map[string]interface{}{
+			fields = append(fields, elog.Any("req", map[string]any{
 				"metadata": req.Header,
 				"payload":  req.Body,
 			}))
 		}
 
 		if config.EnableAccessInterceptorRes {
-			fields = append(fields, elog.Any("res", map[string]interface{}{
+			fields = append(fields, elog.Any("res", map[string]any{
 				"metadata": res.Header(),
 				"payload":  respBody,
 			}))
 		}
 	}
 
+	isSlowLog := false
 	if config.SlowLogThreshold > time.Duration(0) && cost > config.SlowLogThreshold {
-		logger.Warn("slow", fields...)
+		event = "slow"
+		isSlowLog = true
 	}
 
 	if err != nil {
-		fields = append(fields, elog.FieldEvent("error"), elog.FieldErr(err))
+		fields = append(fields, elog.FieldEvent(event), elog.FieldErr(err))
 		if res == nil {
 			// 无 res 的是连接超时等系统级错误
 			logger.Error("access", fields...)
@@ -99,9 +103,13 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 		return
 	}
 
-	if config.EnableAccessInterceptor {
-		fields = append(fields, elog.FieldEvent("normal"))
-		logger.Info("access", fields...)
+	if config.EnableAccessInterceptor || isSlowLog {
+		fields = append(fields, elog.FieldEvent(event))
+		if isSlowLog {
+			logger.Warn("access", fields...)
+		} else {
+			logger.Info("access", fields...)
+		}
 	}
 }
 
