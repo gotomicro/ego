@@ -151,6 +151,15 @@ func (config *Config) buildJaegerTP() trace.TracerProvider {
 }
 
 func (config *Config) buildOtlpTP() trace.TracerProvider {
+	var tpOptions []tracesdk.TracerProviderOption
+	// 当开启了采集，才会设置采样率
+	// traceExp 为 nil，不采集，但是目前来看在ego 1.2 版本，怀疑otel升级后，traceExp确实不为空，导致有采集行为，影响性能，所以需要关闭这个
+	// 所以通过这个方式，屏蔽采集
+	if config.Fraction == 0 {
+		tp := tracesdk.NewTracerProvider(tpOptions...)
+		return tp
+	}
+
 	// otlp exporter
 	options := []otlptracegrpc.Option{
 		otlptracegrpc.WithHeaders(config.Otlp.Headers),   // WithHeaders will send the provided headers with each gRPC requests.
@@ -188,14 +197,16 @@ func (config *Config) buildOtlpTP() trace.TracerProvider {
 	}
 
 	// tp
-	tpOptions := []tracesdk.TracerProviderOption{
+	tpOptions = []tracesdk.TracerProviderOption{
 		// Set the sampling rate based on the parent span to 100%
 		tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(config.Fraction))),
 		// WithSpanProcessor registers the SpanProcessor with a TracerProvider.
+		// traceExp 为 nil，不采集，但是目前来看在ego 1.2 版本，怀疑otel升级后，traceExp确实不为空，导致有采集行为，影响性能，所以需要关闭这个
 		tracesdk.WithSpanProcessor(tracesdk.NewBatchSpanProcessor(traceExp)),
 		// Record information about this application in a Resource.
 		tracesdk.WithResource(res),
 	}
+
 	tpOptions = append(tpOptions, config.options...)
 	tp := tracesdk.NewTracerProvider(tpOptions...)
 	return tp
