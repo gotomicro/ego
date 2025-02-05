@@ -7,6 +7,7 @@ require (
 	github.com/RaMin0/gin-health-check v0.0.0-20180807004848-a677317b3f01
 	github.com/alibaba/sentinel-golang v1.0.3
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
+	github.com/coreos/go-systemd v0.0.0-20180511133405-39ca1b05acc7
 	github.com/dave/dst v0.26.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fasthttp/websocket v1.5.2
@@ -22,6 +23,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2
 	github.com/prometheus/client_golang v1.12.1
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/samber/lo v1.39.0
 	github.com/spf13/cast v1.4.1
 	github.com/stretchr/testify v1.8.4
 	github.com/wk8/go-ordered-map v1.0.0
@@ -78,7 +80,6 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/samber/lo v1.39.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/shirou/gopsutil/v3 v3.21.6 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect

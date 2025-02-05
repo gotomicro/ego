@@ -1,0 +1,7 @@
+[server.http]
+    port = 9011
+    host = "0.0.0.0"
+
+[server.governor]
+port = 9012
+host = "0.0.0.0"

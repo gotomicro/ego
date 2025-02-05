@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/server"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestEgoRun(t *testing.T) {
@@ -20,7 +21,7 @@ func TestEgoRun(t *testing.T) {
 		app.Serve(svc)
 		go func() {
 			time.Sleep(time.Millisecond * 100)
-			err := app.Stop(context.Background(), false)
+			err := app.Stop(context.Background(), false, false)
 			assert.Nil(t, err)
 		}()
 		err := app.Run()
@@ -35,7 +36,7 @@ func TestEgoRun(t *testing.T) {
 		app.Serve(svc)
 		go func() {
 			time.Sleep(time.Millisecond * 100)
-			err := app.Stop(context.Background(), false)
+			err := app.Stop(context.Background(), false, false)
 			assert.Nil(t, err)
 		}()
 		err := app.Run()

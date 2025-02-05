@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"reflect"
 
@@ -86,6 +87,16 @@ type OrderServer interface {
 	Info() *ServiceInfo
 	Health() bool
 	Invoker(fns ...func() error) // 用户初始化函数，放在order server里执行
+}
+
+// ReloadServer ...
+// Experimental
+type ReloadServer interface {
+	standard.Component
+
+	GracefulStop(ctx context.Context) error
+	Info() *ServiceInfo
+	Listener() net.Listener
 }
 
 // Route ...

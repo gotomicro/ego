@@ -3,9 +3,12 @@ package ego
 import (
 	"context"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 
 	// econf/file package should be imported first
 	_ "github.com/gotomicro/ego/core/econf/file"
@@ -17,7 +20,6 @@ import (
 	"github.com/gotomicro/ego/server"
 	"github.com/gotomicro/ego/task/ecron"
 	"github.com/gotomicro/ego/task/ejob"
-	"go.uber.org/zap"
 )
 
 // Ego 分为三大部分
@@ -34,13 +36,14 @@ type Ego struct {
 	cancel func()          // cancel
 
 	// 第二部分 运行程序
-	inits        []func() error       // 系统初始化函数
-	invokers     []func() error       // 用户初始化函数
-	servers      []server.Server      // 服务
-	orderServers []server.OrderServer // 有顺序的服务，需要监听health。成功后，才启动下一步
-	crons        []ecron.Ecron        // 定时任务
-	jobs         map[string]ejob.Ejob // 短时任务
-	registerer   eregistry.Registry   // 注册中心
+	inits         []func() error        // 系统初始化函数
+	invokers      []func() error        // 用户初始化函数
+	servers       []server.Server       // 服务
+	orderServers  []server.OrderServer  // 有顺序的服务，需要监听health。成功后，才启动下一步
+	reloadServers []server.ReloadServer // 支持热更新的服务
+	crons         []ecron.Ecron         // 定时任务
+	jobs          map[string]ejob.Ejob  // 短时任务
+	registerer    eregistry.Registry    // 注册中心
 
 	// 第三部分 可选方法
 	opts opts
@@ -51,6 +54,7 @@ type Ego struct {
 type stopInfo struct {
 	stopStartTime  time.Time
 	isGracefulStop bool
+	isReload       bool
 }
 
 type opts struct {
@@ -168,6 +172,14 @@ func (e *Ego) OrderServe(s ...server.OrderServer) *Ego {
 	return e
 }
 
+// ReloadServe 设置服务
+func (e *Ego) ReloadServe(s ...server.ReloadServer) *Ego {
+	e.smu.Lock()
+	defer e.smu.Unlock()
+	e.reloadServers = append(e.reloadServers, s...)
+	return e
+}
+
 // Cron 设置定时任务
 func (e *Ego) Cron(w ...ecron.Ecron) *Ego {
 	e.crons = append(e.crons, w...)
@@ -224,6 +236,7 @@ func (e *Ego) Run() error {
 
 	// 当没有job，才启动服务
 	if len(e.jobs) == 0 {
+		_ = e.startReloadServers(e.ctx)
 		_ = e.startServers(e.ctx)
 	}
 
@@ -251,7 +264,7 @@ func (e *Ego) Run() error {
 }
 
 // Stop 停止程序
-func (e *Ego) Stop(ctx context.Context, isGraceful bool) (err error) {
+func (e *Ego) Stop(ctx context.Context, isGraceful, isReload bool) (err error) {
 	// 运行停止前清理
 	runSerialFuncLogError(e.opts.beforeStopClean)
 
@@ -274,6 +287,29 @@ func (e *Ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 				})
 			}(s)
 		}
+		if isReload {
+			// 启动子进程
+			e.logger.Info("[ego] ... fork child start!", elog.FieldComponent("app"))
+			pid, err := e.forkChild()
+			if err != nil {
+				e.logger.Error("fork child process error", elog.FieldComponent("app"), elog.FieldErr(err))
+				return err
+			}
+			e.SdNotify("MAINPID=" + strconv.Itoa(pid))
+			e.logger.Info("[ego] ... done!", elog.FieldComponent("app"))
+		}
+
+		e.logger.Info("[ego] ... reloadServers start!", elog.FieldComponent("app"))
+
+		for _, s := range e.reloadServers {
+			func(s server.ReloadServer) {
+				e.cycle.Run(func() error {
+					return s.GracefulStop(ctx)
+				})
+			}(s)
+		}
+		e.logger.Info("[ego] ... reloadServers done!", elog.FieldComponent("app"))
+
 	} else {
 		for _, s := range e.servers {
 			func(s server.Server) {
@@ -282,6 +318,11 @@ func (e *Ego) Stop(ctx context.Context, isGraceful bool) (err error) {
 		}
 		for _, s := range e.orderServers {
 			func(s server.OrderServer) {
+				e.cycle.Run(s.Stop)
+			}(s)
+		}
+		for _, s := range e.reloadServers {
+			func(s server.ReloadServer) {
 				e.cycle.Run(s.Stop)
 			}(s)
 		}
