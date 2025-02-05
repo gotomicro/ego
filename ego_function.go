@@ -4,14 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
+	"os/exec"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
 	sentinelmetrics "github.com/alibaba/sentinel-golang/metrics"
+	"github.com/coreos/go-systemd/daemon"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/samber/lo"
 	"go.uber.org/automaxprocs/maxprocs"
 	"golang.org/x/sync/errgroup"
 
@@ -33,18 +38,20 @@ func (e *Ego) waitSignals() {
 	sig := make(chan os.Signal, 2)
 	signal.Notify(
 		sig,
-		e.opts.shutdownSignals...,
+		append(e.opts.shutdownSignals, syscall.SIGUSR1)...,
 	)
 
 	go func() {
 		s := <-sig
 		// 区分强制退出、优雅退出
 		grace := s != syscall.SIGQUIT
+		reload := s == syscall.SIGUSR1
 		go func() {
 			// todo 父节点传context待考虑
 			e.stopInfo = stopInfo{
 				stopStartTime:  time.Now(),
 				isGracefulStop: grace,
+				isReload:       reload,
 			}
 			stopCtx, cancel := context.WithTimeoutCause(context.Background(), e.opts.stopTimeout, fmt.Errorf("stop timeout %v", e.opts.stopTimeout))
 
@@ -53,7 +60,7 @@ func (e *Ego) waitSignals() {
 				cancel()
 			}()
 
-			_ = e.Stop(stopCtx, grace)
+			_ = e.Stop(stopCtx, grace, reload)
 			<-stopCtx.Done()
 			// 记录服务器关闭时候，由于关闭过慢，无法正常关闭，被强制cancel
 			if errors.Is(stopCtx.Err(), context.DeadlineExceeded) {
@@ -70,6 +77,28 @@ func (e *Ego) waitSignals() {
 func (e *Ego) startServers(ctx context.Context) error {
 	// start multi servers
 	for _, s := range e.servers {
+		s := s
+		e.cycle.Run(func() (err error) {
+			_ = s.Init()
+			err = e.registerer.RegisterService(ctx, s.Info())
+			if err != nil {
+				e.logger.Error("register service err", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err))
+			}
+			defer func() {
+				_ = e.registerer.UnregisterService(ctx, s.Info())
+			}()
+			e.logger.Info("start server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldAddr(s.Info().Label()))
+			defer e.logger.Info("stop server", elog.FieldComponent(s.PackageName()), elog.FieldComponentName(s.Name()), elog.FieldErr(err), elog.FieldAddr(s.Info().Label()))
+			err = s.Start()
+			return
+		})
+	}
+	return nil
+}
+
+func (e *Ego) startReloadServers(ctx context.Context) error {
+	// start multi servers
+	for _, s := range e.reloadServers {
 		s := s
 		e.cycle.Run(func() (err error) {
 			_ = s.Init()
@@ -288,6 +317,76 @@ func initMaxProcs() error {
 	}
 	elog.EgoLogger.Info("init app", elog.FieldComponent("app"), elog.Int("pid", os.Getpid()), elog.Int("coreNum", runtime.GOMAXPROCS(-1)))
 	return nil
+}
+
+func (e *Ego) SdNotify(notify string) {
+	ok, err := daemon.SdNotify(false, notify)
+	if !ok {
+		if err != nil {
+			// notification supported, but failure happened (e.g. error connecting to NOTIFY_SOCKET or while sending data)
+			elog.EgoLogger.Error("systemd notification failed", elog.FieldComponent("app"), elog.FieldErr(err))
+			return
+		}
+		// notification not supported (i.e. NOTIFY_SOCKET is unset)
+		elog.EgoLogger.Info("systemd notification not supported", elog.FieldComponent("app"))
+		return
+	}
+	elog.EgoLogger.Info("systemd notification success", elog.FieldComponent("app"))
+}
+
+func (e *Ego) forkChild() (int, error) {
+	var args []string
+	var extraFiles []*os.File
+	var fnames []string
+	path := os.Args[0]
+
+	if len(os.Args) > 1 {
+		args = os.Args[1:]
+	}
+
+	var lc int
+	for _, ln := range e.reloadServers {
+		tl, ok := ln.Listener().(*net.TCPListener)
+		if !ok {
+			elog.EgoLogger.Panic("listener is not tcp listener", elog.FieldComponent("app"))
+		}
+		f, err := tl.File()
+		if err != nil {
+			elog.EgoLogger.Panic("get listener file failed", elog.FieldComponent("app"), elog.FieldErr(err))
+		}
+		fnames = append(fnames, f.Name())
+
+		elog.EgoLogger.Info("set ExtraFiles", elog.FieldComponent("app"), elog.Any("ExtraFiles", f.Name()))
+
+		extraFiles = append(extraFiles, f)
+		lc++
+	}
+
+	if err := os.Setenv("LISTEN_FDS", fmt.Sprintf("%d", lc)); err != nil {
+		elog.EgoLogger.Panic("set env LISTEN_FDS failed", elog.FieldComponent("app"), elog.FieldErr(err))
+	}
+	if err := os.Setenv("LISTEN_FDNAMES", strings.Join(fnames, ":")); err != nil {
+		elog.EgoLogger.Panic("set env LISTEN_FDNAMES failed", elog.FieldComponent("app"), elog.FieldErr(err))
+	}
+	if err := os.Setenv("FORK_CHILD", "1"); err != nil {
+		elog.EgoLogger.Panic("set env FORK_CHILD failed", elog.FieldComponent("app"), elog.FieldErr(err))
+	}
+	if !lo.Contains(args, "-reload") {
+		args = append(args, "-reload")
+	}
+	cmd := exec.Command(path, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.ExtraFiles = extraFiles
+	cmd.Env = os.Environ()
+	elog.EgoLogger.Info("cmd", elog.FieldComponent("app"), elog.Any("Path", cmd.Path), elog.Any("Args", cmd.Args))
+
+	err := cmd.Start()
+	if err != nil {
+		return 0, err
+	}
+
+	return cmd.Process.Pid, nil
 }
 
 // printBanner init

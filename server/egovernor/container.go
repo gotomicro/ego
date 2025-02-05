@@ -1,6 +1,8 @@
 package egovernor
 
 import (
+	"fmt"
+
 	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/core/emetric"
@@ -56,7 +58,10 @@ func (c *Container) Build(options ...Option) *Component {
 	}
 	if c.config.EnableConnTcpMetric {
 		obj := emetric.NewTCPStatCollector(c.config.ConnTcpMetricPorts)
-		obj.Update()
+		err := obj.Update()
+		if err != nil {
+			elog.EgoLogger.Error(fmt.Errorf("egovernor build failed, enable conn tcp metric err: %w", err).Error())
+		}
 	}
 	return newComponent(c.name, c.config, c.logger)
 }
