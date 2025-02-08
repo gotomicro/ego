@@ -251,10 +251,12 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 			if c.config.EnableAccessInterceptor || isSlowLog {
 				fields = append(fields,
 					elog.FieldEvent(event),
-					elog.FieldErrAny(ctx.Errors.ByType(gin.ErrorTypePrivate).String()),
 					elog.FieldCode(int32(ctx.Writer.Status())),
 					elog.FieldUniformCode(int32(ctx.Writer.Status())),
 				)
+				if errStr := ctx.Errors.ByType(gin.ErrorTypePrivate).String(); errStr != "" {
+					fields = append(fields, elog.FieldErrAny(errStr))
+				}
 				if isSlowLog {
 					c.logger.Warn("access", fields...)
 				} else {
@@ -356,7 +358,7 @@ func traceServerInterceptor() gin.HandlerFunc {
 	}
 	return func(c *gin.Context) {
 		// 该方法会在v0.9.0移除
-		//etrace.CompatibleExtractHTTPTraceID(c.Request.Header)
+		// etrace.CompatibleExtractHTTPTraceID(c.Request.Header)
 		ctx, span := tracer.Start(c.Request.Context(), c.Request.Method+"."+c.FullPath(), propagation.HeaderCarrier(c.Request.Header), trace.WithAttributes(attrs...))
 		span.SetAttributes(
 			semconv.HTTPURLKey.String(c.Request.URL.String()),
