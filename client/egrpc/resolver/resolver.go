@@ -68,7 +68,7 @@ func (b *baseBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 		cancel:   cancel,
 		nodeInfo: make(map[string]*attributes.Attributes),
 	}
-	br.run(endpoints)
+	br.run(endpoints, egoTarget)
 	return br, nil
 }
 
@@ -102,17 +102,17 @@ func (b *baseResolver) Close() {
 // run 更新节点信息
 // State
 //
-//	     Addresses   []Address{  IP列表
-//	                 	Addr: IP 地址,
-//							ServerName: 应用名称, 如：svc-user
-//							Attributes: 节点基本信息： server.ServiceInfo
-//	                 }
-//	     Attributes： {  用于负载均衡的配置，目前需要通过后台来设置
-//							constant.KeyRouteConfig    路由配置
-//							constant.KeyProviderConfig 服务提供方元信息
-//							constant.KeyConsumerConfig 服务消费方配置信息
-//	                  }
-func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
+//	Addresses   []Address{  IP列表
+//	             Addr: IP 地址,
+//	 ServerName: 应用名称, 如：svc-user
+//	 Attributes: 节点基本信息： server.ServiceInfo
+//	            }
+//	Attributes： {  用于负载均衡的配置，目前需要通过后台来设置
+//	 constant.KeyRouteConfig    路由配置
+//	 constant.KeyProviderConfig 服务提供方元信息
+//	 constant.KeyConsumerConfig 服务消费方配置信息
+//	             }
+func (b *baseResolver) run(endpoints chan eregistry.Endpoints, egoTarget eregistry.Target) {
 	go func() {
 		for {
 			select {
@@ -135,6 +135,8 @@ func (b *baseResolver) run(endpoints chan eregistry.Endpoints) {
 				}
 
 				_ = b.cc.UpdateState(state)
+				// todo 如果有多个配置一样的服务，那么这里数据会被覆盖
+				instances.Store(egoTarget.Endpoint, state.Addresses)
 			case <-b.stop:
 				return
 			}
