@@ -371,8 +371,8 @@ func (e *Ego) forkChild() (int, error) {
 	if err := os.Setenv("FORK_CHILD", "1"); err != nil {
 		elog.EgoLogger.Panic("set env FORK_CHILD failed", elog.FieldComponent("app"), elog.FieldErr(err))
 	}
-	if !lo.Contains(args, "-reload") {
-		args = append(args, "-reload")
+	if !lo.Contains(args, "-r") {
+		args = append(args, "-r")
 	}
 	cmd := exec.Command(path, args...)
 	cmd.Stdout = os.Stdout
