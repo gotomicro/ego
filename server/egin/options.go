@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"embed"
 	"net"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -118,5 +119,11 @@ func WithRecoveryFunc(f gin.RecoveryFunc) Option {
 func WithListener(listener net.Listener) Option {
 	return func(c *Container) {
 		c.config.listener = listener
+	}
+}
+
+func WithCompatibleOtherTrace(f func(http.Header)) Option {
+	return func(c *Container) {
+		c.config.compatibleTrace = f
 	}
 }

@@ -351,12 +351,17 @@ func (c *Container) metricServerInterceptor(ctx *gin.Context, cost time.Duration
 }
 
 // todo 如果业务崩了，logger recover
-func traceServerInterceptor() gin.HandlerFunc {
+func traceServerInterceptor(compatibleTraceFunc ...func(http.Header)) gin.HandlerFunc {
 	tracer := etrace.NewTracer(trace.SpanKindServer)
 	attrs := []attribute.KeyValue{
 		semconv.RPCSystemKey.String("http"),
 	}
 	return func(c *gin.Context) {
+		// 执行自定义的trace处理函数
+		if len(compatibleTraceFunc) > 0 && compatibleTraceFunc[0] != nil {
+			compatibleTraceFunc[0](c.Request.Header)
+		}
+
 		// 该方法会在v0.9.0移除
 		// etrace.CompatibleExtractHTTPTraceID(c.Request.Header)
 		ctx, span := tracer.Start(c.Request.Context(), c.Request.Method+"."+c.FullPath(), propagation.HeaderCarrier(c.Request.Header), trace.WithAttributes(attrs...))
