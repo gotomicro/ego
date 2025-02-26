@@ -127,3 +127,9 @@ func WithCompatibleOtherTrace(f func(http.Header)) Option {
 		c.config.compatibleTrace = f
 	}
 }
+
+func WithCustomGinMiddleware(f ...gin.HandlerFunc) Option {
+	return func(c *Container) {
+		c.config.customGinMiddleware = f
+	}
+}

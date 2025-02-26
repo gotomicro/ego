@@ -111,6 +111,9 @@ func (c *Container) Build(options ...Option) *Component {
 	// if c.config.EnableMetricInterceptor {
 	//	server.Use(metricServerInterceptor())
 	// }
+	if len(c.config.customGinMiddleware) > 0 {
+		server.Use(c.config.customGinMiddleware...)
+	}
 
 	if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
 		server.Use(traceServerInterceptor(c.config.compatibleTrace))
