@@ -26,6 +26,26 @@ func GrpcHeaderValue(ctx context.Context, key string) string {
 	return ""
 }
 
+// GrpcHeaderValues 获取多个context value，获取不到的key则返回空字符串
+func GrpcHeaderValues(ctx context.Context, keys ...string) (values []string) {
+	values = make([]string, 0, len(keys))
+	if len(keys) == 0 {
+		return
+	}
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return
+	}
+	for _, key := range keys {
+		if len(md.Get(key)) > 0 {
+			values = append(values, md.Get(key)[0])
+		} else {
+			values = append(values, "")
+		}
+	}
+	return
+}
+
 // ContextValue gRPC日志获取context value
 func ContextValue(ctx context.Context, key string) string {
 	if key == "" {
