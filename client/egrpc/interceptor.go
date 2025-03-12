@@ -333,9 +333,13 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		}
 
 		err := invoker(ctx, method, req, res, cc, opts...)
+		cost := time.Since(beg)
+		isSlowLog := false
+		if c.config.SlowLogThreshold > time.Duration(0) && cost > c.config.SlowLogThreshold {
+			isSlowLog = true
+		}
 		// 开启了AccessInterceptor或发生错误时记日志
-		if c.config.EnableAccessInterceptor || err != nil {
-			cost := time.Since(beg)
+		if c.config.EnableAccessInterceptor || err != nil || isSlowLog {
 			spbStatus := ecode.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 			event := "normal"
@@ -366,13 +370,8 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			if c.config.EnableAccessInterceptorRes {
 				fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
 			}
-			isSlowLog := false
-			if c.config.SlowLogThreshold > time.Duration(0) && cost > c.config.SlowLogThreshold {
-				event = "slow"
-				isSlowLog = true
-			}
 
-			// rpc处理报错时，记录额外的错误信息
+			// err != nil，rpc处理报错时，记录额外的错误信息
 			if err != nil {
 				fields = append(fields, elog.FieldEvent(event), elog.FieldErr(err))
 				// 只记录系统级别错误
@@ -386,11 +385,13 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 				return err
 			}
 
-			// 为慢日志时，记录日志
-			fields = append(fields, elog.FieldEvent(event))
 			if isSlowLog {
+				// isSlowLog == true，表示为慢日志时，记录日志
+				fields = append(fields, elog.FieldEvent("slow"))
 				c.logger.Warn("access", fields...)
 			} else {
+				// c.config.EnableAccessInterceptor == true，表示开启了记录Access日志时，记录日志
+				fields = append(fields, elog.FieldEvent(event))
 				c.logger.Info("access", fields...)
 			}
 		}
