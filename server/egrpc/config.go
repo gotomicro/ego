@@ -6,10 +6,9 @@ import (
 	"time"
 
 	"github.com/alibaba/sentinel-golang/core/base"
-	"github.com/gotomicro/ego/core/eflag"
-
 	"google.golang.org/grpc"
 
+	"github.com/gotomicro/ego/core/eflag"
 	"github.com/gotomicro/ego/core/util/xtime"
 )
 
@@ -49,7 +48,7 @@ func DefaultConfig() *Config {
 		EnableMetricInterceptor:       true,
 		EnableSkipHealthLog:           true,
 		EnableTraceInterceptor:        true,
-		EnableSentinel:                true,
+		EnableSentinel:                false,
 		SlowLogThreshold:              xtime.Duration("500ms"),
 		EnableAccessInterceptor:       true,
 		EnableAccessInterceptorReq:    false,

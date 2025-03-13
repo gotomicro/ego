@@ -12,14 +12,14 @@ import (
 	"time"
 
 	sentinel "github.com/alibaba/sentinel-golang/api"
-	sentinelBase "github.com/alibaba/sentinel-golang/core/base"
+	sentinelbase "github.com/alibaba/sentinel-golang/core/base"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
-	grpcCode "google.golang.org/grpc/codes"
+	grpccode "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
@@ -36,6 +36,21 @@ import (
 	"github.com/gotomicro/ego/internal/tools"
 )
 
+const (
+	mdKeyPeerName = "app"
+	mdKeyPeerIp   = "client-ip"
+)
+
+func getPeerNameAndIp(ctx context.Context) (name string, ip string) {
+	headers := tools.GrpcHeaderValues(ctx, mdKeyPeerName, mdKeyPeerIp)
+	name = headers[0]
+	ip = headers[1]
+	if ip == "" {
+		ip = getPeerIpFromContext(ctx)
+	}
+	return name, ip
+}
+
 func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	tracer := etrace.NewTracer(trace.SpanKindServer)
 	attrs := []attribute.KeyValue{
@@ -48,12 +63,13 @@ func traceUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 			md = metadata.New(nil)
 		}
 		// Deprecated 该方法会在v0.9.0移除
-		//etrace.CompatibleExtractGrpcTraceID(md)
+		// etrace.CompatibleExtractGrpcTraceID(md)
 		ctx, span := tracer.Start(ctx, info.FullMethod, transport.GrpcHeaderCarrier(md), trace.WithAttributes(attrs...))
+		peerName, peerIp := getPeerNameAndIp(ctx)
 		span.SetAttributes(
 			semconv.RPCMethodKey.String(info.FullMethod),
-			semconv.NetPeerNameKey.String(getPeerName(ctx)),
-			semconv.NetPeerIPKey.String(getPeerIP(ctx)),
+			semconv.NetPeerNameKey.String(peerName),
+			semconv.NetPeerIPKey.String(peerIp),
 		)
 		defer func() {
 			if err != nil {
@@ -116,12 +132,13 @@ func traceStreamServerInterceptor() grpc.StreamServerInterceptor {
 			md = metadata.New(nil)
 		}
 		// Deprecated 该方法会在v0.9.0移除
-		//etrace.CompatibleExtractGrpcTraceID(md)
+		// etrace.CompatibleExtractGrpcTraceID(md)
 		ctx, span := tracer.Start(ss.Context(), info.FullMethod, transport.GrpcHeaderCarrier(md), trace.WithAttributes(attrs...))
+		peerName, peerIp := getPeerNameAndIp(ctx)
 		span.SetAttributes(
 			semconv.RPCMethodKey.String(info.FullMethod),
-			semconv.NetPeerNameKey.String(getPeerName(ctx)),
-			semconv.NetPeerIPKey.String(getPeerIP(ctx)),
+			semconv.NetPeerNameKey.String(peerName),
+			semconv.NetPeerIPKey.String(peerIp),
 			etrace.CustomTag("rpc.grpc.kind", "stream"),
 		)
 		defer span.End()
@@ -145,10 +162,23 @@ func traceStreamServerInterceptor() grpc.StreamServerInterceptor {
 func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		var beg = time.Now()
-		var fields = make([]elog.Field, 0, 20)
+		var fields []elog.Field
 		var event = "normal"
+		var spbStatus *status.Status
+		var isSlowLog = false
+
+		err = handler(srv, stream)
+		cost := time.Since(beg)
+		if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
+			event = "slow"
+			isSlowLog = true
+		}
+
+		peerName, peerIp := getPeerNameAndIp(stream.Context())
+		if c.config.EnableAccessInterceptor {
+			fields = make([]elog.Field, 0, 20+transport.CustomContextKeysLength())
+		}
 		defer func() {
-			cost := time.Since(beg)
 			if rec := recover(); rec != nil {
 				switch rec := rec.(type) {
 				case error:
@@ -159,11 +189,18 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 				stack := make([]byte, 4096)
 				stack = stack[:runtime.Stack(stack, true)]
 				fields = append(fields, elog.FieldStack(stack))
-				err = status.New(grpcCode.Internal, "panic recover, origin err: "+err.Error()).Err()
+				err = status.New(grpccode.Internal, "panic recover, origin err: "+err.Error()).Err()
+				fields = append(fields, elog.FieldKey("unary"), elog.FieldCode(int32(grpccode.Internal)),
+					elog.FieldUniformCode(int32(http.StatusInternalServerError)), elog.FieldMethod(info.FullMethod),
+					elog.FieldCost(time.Since(beg)), elog.FieldPeerName(peerName), elog.FieldType("recover"),
+					elog.FieldPeerIP(peerIp), elog.FieldErr(err), elog.FieldStack(stack))
+				c.logger.Error("access", fields...)
 			}
-			spbStatus := ecode.Convert(err)
-			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
+		}()
 
+		if c.config.EnableAccessInterceptor || err != nil || isSlowLog {
+			spbStatus = ecode.Convert(err)
+			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
 			fields = append(fields,
 				elog.FieldKey("stream"),
 				elog.FieldEvent(event),
@@ -171,16 +208,12 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 				elog.FieldUniformCode(int32(httpStatusCode)),
 				elog.FieldDescription(spbStatus.Message()),
 				elog.FieldCost(time.Since(beg)),
-				elog.FieldPeerName(getPeerName(stream.Context())),
-				elog.FieldPeerIP(getPeerIP(stream.Context())),
+				elog.FieldPeerName(peerName),
+				elog.FieldPeerIP(peerIp),
 			)
-			isSlowLog := false
-			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
-				event = "slow"
-				isSlowLog = true
-			}
 
 			if err != nil {
+				// err!=nil, rpc处理报错时，记录额外的错误信息
 				fields = append(fields, elog.FieldErr(err))
 				// 只记录系统级别错误
 				if httpStatusCode >= http.StatusInternalServerError {
@@ -190,17 +223,17 @@ func (c *Container) defaultStreamServerInterceptor() grpc.StreamServerIntercepto
 					// 非核心报错只做warning
 					c.logger.Warn("access", fields...)
 				}
-				c.prometheusStreamServerInterceptor(stream, info, spbStatus, cost)
-				return
-			}
-			if isSlowLog {
+			} else if isSlowLog {
+				// isSlowLog==true, 为慢日志时，记录日志
 				c.logger.Warn("access", fields...)
 			} else {
+				// EnableAccessInterceptor==true, 开启了access日志，记录日志
 				c.logger.Info("access", fields...)
 			}
-			c.prometheusStreamServerInterceptor(stream, info, spbStatus, cost)
-		}()
-		return handler(srv, stream)
+		}
+
+		c.prometheusStreamServerInterceptor(stream, info, spbStatus, cost)
+		return
 	}
 }
 
@@ -235,23 +268,30 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 		}
 
 		var beg = time.Now()
-		// 为了性能考虑，如果要加日志字段，需要改变slice大小
-		loggerKeys := transport.CustomContextKeys()
-		var fields = make([]elog.Field, 0, 20+transport.CustomContextKeysLength())
+		var fields []elog.Field
 		var event = "normal"
+		var spbStatus *status.Status
+		var isSlowLog = false
 
 		// 必须在defer外层，因为要赋值，替换ctx
 		// 只有在环境变量里的自定义header，才会写入到context value里
-		for _, key := range loggerKeys {
-			if value := tools.GrpcHeaderValue(ctx, key); value != "" {
-				ctx = transport.WithValue(ctx, key, value)
-			}
+		loggerKeys := transport.CustomContextKeys()
+		headerKeys := append(loggerKeys, mdKeyPeerName, mdKeyPeerIp)
+		headers := tools.GrpcHeaderValues(ctx, headerKeys...)
+		for i, key := range headers[:len(headers)-2] {
+			ctx = transport.WithValue(ctx, key, headers[i])
+		}
+		peerName := headers[len(headers)-2]
+		peerIp := headers[len(headers)-1]
+		if peerIp == "" {
+			peerIp = getPeerIpFromContext(ctx)
+		}
+		if c.config.EnableAccessInterceptor {
+			fields = make([]elog.Field, 0, 20+transport.CustomContextKeysLength())
 		}
 
 		// 此处必须使用defer来recover handler内部可能出现的panic
 		defer func() {
-			cost := time.Since(beg)
-			logType := ""
 			if rec := recover(); rec != nil {
 				switch recType := rec.(type) {
 				case error:
@@ -262,29 +302,25 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 
 				stack := make([]byte, 4096)
 				stack = stack[:runtime.Stack(stack, true)]
-				fields = append(fields, elog.FieldStack(stack))
-				logType = "recover"
-				err = status.New(grpcCode.Internal, "panic recover, origin err: "+err.Error()).Err()
+				err = status.New(grpccode.Internal, "panic recover, origin err: "+err.Error()).Err()
+				fields = append(fields, elog.FieldKey("unary"), elog.FieldCode(int32(grpccode.Internal)),
+					elog.FieldUniformCode(int32(http.StatusInternalServerError)), elog.FieldMethod(info.FullMethod),
+					elog.FieldCost(time.Since(beg)), elog.FieldPeerName(peerName), elog.FieldType("recover"),
+					elog.FieldPeerIP(peerIp), elog.FieldErr(err), elog.FieldStack(stack))
+				c.logger.Error("access", fields...)
 			}
+		}()
 
-			isSlowLog := false
-			if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
-				isSlowLog = true
-				event = "slow"
-			}
+		res, err = handler(ctx, req)
+		cost := time.Since(beg)
+		if c.config.SlowLogThreshold > time.Duration(0) && c.config.SlowLogThreshold < cost {
+			isSlowLog = true
+			event = "slow"
+		}
 
-			spbStatus := ecode.Convert(err)
-			// 如果没有开启日志组件、并且没有错误，没有慢日志，那么直接返回不记录日志
-			if err == nil && !c.config.EnableAccessInterceptor && !isSlowLog {
-				c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
-				return
-			}
-
+		if c.config.EnableAccessInterceptor || err != nil || isSlowLog {
+			spbStatus = ecode.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
-
-			if logType == "recover" {
-				fields = append(fields, elog.FieldType("recover"))
-			}
 			fields = append(fields,
 				elog.FieldKey("unary"),
 				elog.FieldCode(int32(spbStatus.Code())),
@@ -293,8 +329,8 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 				elog.FieldEvent(event),
 				elog.FieldMethod(info.FullMethod),
 				elog.FieldCost(time.Since(beg)),
-				elog.FieldPeerName(getPeerName(ctx)),
-				elog.FieldPeerIP(getPeerIP(ctx)),
+				elog.FieldPeerName(peerName),
+				elog.FieldPeerIP(peerIp),
 			)
 
 			skv, skvOk := ctx.Value(ctxStoreStruct{}).(*ctxStore)
@@ -348,6 +384,7 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 			}
 
 			if err != nil {
+				// err!=nil, rpc处理报错时，记录额外的错误信息
 				fields = append(fields, elog.FieldErr(err))
 				// 只记录系统级别错误
 				if httpStatusCode >= http.StatusInternalServerError {
@@ -357,33 +394,17 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 					// 非核心报错只做warning
 					c.logger.Warn("access", fields...)
 				}
-				c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
-				return
+			} else if isSlowLog {
+				// isSlowLog==true, 为慢日志时，记录日志
+				c.logger.Warn("access", fields...)
+			} else {
+				// EnableAccessInterceptor==true, 开启了access日志，记录日志
+				c.logger.Info("access", fields...)
 			}
+		}
 
-			if c.config.EnableAccessInterceptor || isSlowLog {
-				if isSlowLog {
-					c.logger.Warn("access", fields...)
-				} else {
-					c.logger.Info("access", fields...)
-				}
-			}
-			c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
-		}()
-
-		// if enableCPUUsage(ctx) {
-		//	var stat = xcpu.Stat{}
-		//	xcpu.ReadStat(&stat)
-		//	if stat.Usage > 0 {
-		//		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
-		//		header := metadata.Pairs("cpu-usage", strconv.Itoa(int(stat.Usage)))
-		//		err = grpc.SetHeader(ctx, header)
-		//		if err != nil {
-		//			c.logger.Error("set header error", elog.FieldErr(err))
-		//		}
-		//	}
-		// }
-		return handler(ctx, req)
+		c.prometheusUnaryServerInterceptor(ctx, info, spbStatus, cost)
+		return res, err
 	}
 }
 
@@ -400,24 +421,23 @@ func (c *Container) prometheusUnaryServerInterceptor(ctx context.Context, info *
 	emetric.ServerHandleCounter.Inc(emetric.TypeGRPCUnary, info.FullMethod, getPeerName(ctx), pbStatus.Code().String(), strconv.Itoa(ecode.GrpcToHTTPStatusCode(pbStatus.Code())), serviceName)
 }
 
-// enableCPUUsage 是否开启cpu利用率
-// func enableCPUUsage(ctx context.Context) bool {
-//	return tools.GrpcHeaderValue(ctx, "enable-cpu-usage") == "true"
-// }
-
 // getPeerName 获取对端应用名称
 func getPeerName(ctx context.Context) string {
-	return tools.GrpcHeaderValue(ctx, "app")
+	return tools.GrpcHeaderValue(ctx, mdKeyPeerName)
 }
 
 // getPeerIP 获取对端ip
 func getPeerIP(ctx context.Context) string {
-	clientIP := tools.GrpcHeaderValue(ctx, "client-ip")
+	clientIP := tools.GrpcHeaderValue(ctx, mdKeyPeerIp)
 	if clientIP != "" {
 		return clientIP
 	}
 
-	// 从grpc里取对端ip
+	return getPeerIpFromContext(ctx)
+}
+
+// getPeerIpFromContext 从grpc里取对端ip
+func getPeerIpFromContext(ctx context.Context) string {
 	pr, ok2 := peer.FromContext(ctx)
 	if !ok2 {
 		return ""
@@ -450,18 +470,18 @@ func (c *Container) sentinelInterceptor() grpc.UnaryServerInterceptor {
 			return handler(ctx, req)
 		}
 
-		// var entry *sentinelBase.SentinelEntry = nil
+		// var entry *sentinelbase.SentinelEntry = nil
 		entry, blockErr := sentinel.Entry(
 			resourceName,
-			sentinel.WithResourceType(sentinelBase.ResTypeRPC),
-			sentinel.WithTrafficType(sentinelBase.Inbound),
+			sentinel.WithResourceType(sentinelbase.ResTypeRPC),
+			sentinel.WithTrafficType(sentinelbase.Inbound),
 		)
 		if blockErr != nil {
 			if c.config.unaryServerBlockFallback != nil {
 				return c.config.unaryServerBlockFallback(ctx, req, info, blockErr)
 			}
 
-			return nil, eerrors.New(int(grpcCode.ResourceExhausted), "blocked by sentinel", blockErr.Error())
+			return nil, eerrors.New(int(grpccode.ResourceExhausted), "blocked by sentinel", blockErr.Error())
 		}
 		defer entry.Exit()
 
