@@ -391,7 +391,7 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			}
 		}
 
-		return nil
+		return err
 	}
 }
 
