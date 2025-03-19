@@ -174,7 +174,6 @@ func (w *clientStream) SendMsg(m interface{}) error {
 
 func (w *clientStream) Header() (metadata.MD, error) {
 	md, err := w.ClientStream.Header()
-
 	if err != nil {
 		w.sendStreamEvent(errorEvent, err)
 	}
@@ -184,7 +183,6 @@ func (w *clientStream) Header() (metadata.MD, error) {
 
 func (w *clientStream) CloseSend() error {
 	err := w.ClientStream.CloseSend()
-
 	if err != nil {
 		w.sendStreamEvent(errorEvent, err)
 	}
@@ -310,82 +308,90 @@ func (c *Container) timeoutUnaryClientInterceptor() grpc.UnaryClientInterceptor 
 
 // loggerUnaryClientInterceptor returns log interceptor for logging
 func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		beg := time.Now()
-		loggerKeys := transport.CustomContextKeys()
-		var fields = make([]elog.Field, 0, 20+transport.CustomContextKeysLength())
+	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
+		var beg = time.Now()
+		var fields []elog.Field
+		var event = "normal"
+		var isSlowLog = false
 
+		if c.config.EnableAccessInterceptor {
+			fields = make([]elog.Field, 0, 20+transport.CustomContextKeysLength())
+		}
+
+		loggerKeys := transport.CustomContextKeys()
 		for _, key := range loggerKeys {
 			if value := tools.ContextValue(ctx, key); value != "" {
 				// 替换context
 				ctx = metadata.AppendToOutgoingContext(ctx, key, value)
 				// grpc metadata 存在同一个 key set 多次，客户端可通过日志排查这种错误使用。
-				if md, ok := metadata.FromOutgoingContext(ctx); ok {
-					fields = append(fields, elog.FieldCustomKeyValue(key, strings.Join(md[strings.ToLower(key)], ";")))
+				if c.config.EnableAccessInterceptor {
+					if md, ok := metadata.FromOutgoingContext(ctx); ok {
+						fields = append(fields, elog.FieldCustomKeyValue(key, strings.Join(md[strings.ToLower(key)], ";")))
+					}
 				}
 			}
 		}
 
-		err := invoker(ctx, method, req, res, cc, opts...)
+		err = invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
-		spbStatus := ecode.Convert(err)
-		httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
-		event := "normal"
-		fields = append(fields,
-			elog.FieldKey("unary"),
-			elog.FieldCode(int32(spbStatus.Code())),
-			elog.FieldUniformCode(int32(httpStatusCode)),
-			elog.FieldDescription(spbStatus.Message()),
-			elog.FieldMethod(method),
-			elog.FieldCost(cost),
-			elog.FieldName(cc.Target()),
-		)
-
-		// 开启了链路，那么就记录链路id
-		if etrace.IsGlobalTracerRegistered() {
-			fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
-		}
-
-		if c.config.EnableAccessInterceptorReq {
-			var reqMap = map[string]any{
-				"payload": xstring.JSON(req),
-			}
-			if md, ok := metadata.FromOutgoingContext(ctx); ok {
-				reqMap["metadata"] = md
-			}
-			fields = append(fields, elog.Any("req", reqMap))
-		}
-		if c.config.EnableAccessInterceptorRes {
-			fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
-		}
-		isSlowLog := false
 		if c.config.SlowLogThreshold > time.Duration(0) && cost > c.config.SlowLogThreshold {
-			event = "slow"
 			isSlowLog = true
+			event = "slow"
 		}
+		// 开启了AccessInterceptor或发生错误时记日志
+		if c.config.EnableAccessInterceptor || err != nil || isSlowLog {
+			spbStatus := ecode.Convert(err)
+			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
+			fields = append(fields,
+				elog.FieldKey("unary"),
+				elog.FieldEvent(event),
+				elog.FieldCode(int32(spbStatus.Code())),
+				elog.FieldUniformCode(int32(httpStatusCode)),
+				elog.FieldDescription(spbStatus.Message()),
+				elog.FieldMethod(method),
+				elog.FieldCost(cost),
+				elog.FieldName(cc.Target()),
+			)
 
-		if err != nil {
-			fields = append(fields, elog.FieldEvent(event), elog.FieldErr(err))
-			// 只记录系统级别错误
-			if httpStatusCode >= http.StatusInternalServerError {
-				// 只记录系统级别错误
-				c.logger.Error("access", fields...)
-				return err
+			// 开启了链路，那么就记录链路id
+			if etrace.IsGlobalTracerRegistered() {
+				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx)))
 			}
-			// 业务报错只做warning
-			c.logger.Warn("access", fields...)
-			return err
-		}
 
-		if c.config.EnableAccessInterceptor || isSlowLog {
-			fields = append(fields, elog.FieldEvent(event))
-			if isSlowLog {
+			if c.config.EnableAccessInterceptorReq {
+				var reqMap = map[string]any{
+					"payload": xstring.JSON(req),
+				}
+				if md, ok := metadata.FromOutgoingContext(ctx); ok {
+					reqMap["metadata"] = md
+				}
+				fields = append(fields, elog.Any("req", reqMap))
+			}
+			if c.config.EnableAccessInterceptorRes {
+				fields = append(fields, elog.Any("res", json.RawMessage(xstring.JSON(res))))
+			}
+
+			// err != nil，rpc处理报错时，记录额外的错误信息
+			if err != nil {
+				fields = append(fields, elog.FieldErr(err))
+				// 只记录系统级别错误
+				if httpStatusCode >= http.StatusInternalServerError {
+					// 只记录系统级别错误
+					c.logger.Error("access", fields...)
+				} else {
+					// 业务报错只做warning
+					c.logger.Warn("access", fields...)
+				}
+			} else if isSlowLog {
+				// isSlowLog == true，表示为慢日志时，记录日志
 				c.logger.Warn("access", fields...)
 			} else {
+				// c.config.EnableAccessInterceptor == true，表示开启了记录Access日志时，记录日志
 				c.logger.Info("access", fields...)
 			}
 		}
-		return nil
+
+		return err
 	}
 }
 

@@ -27,6 +27,18 @@ func TestGrpcHeaderValueEmpty(t *testing.T) {
 	assert.Equal(t, "", value)
 }
 
+func TestGrpcHeaderValues(t *testing.T) {
+	value := GrpcHeaderValues(context.Background(), "", "X-Ego-Uid")
+	assert.Equal(t, []string{}, value)
+
+	md := metadata.New(map[string]string{
+		"X-Ego-Uid": "9527",
+	})
+	ctx := metadata.NewIncomingContext(context.Background(), md)
+	value2 := GrpcHeaderValues(ctx, "", "X-Ego-Uid")
+	assert.Equal(t, []string{"", "9527"}, value2)
+}
+
 func TestContextValue(t *testing.T) {
 	value := ContextValue(context.Background(), "")
 	assert.Equal(t, "", value)

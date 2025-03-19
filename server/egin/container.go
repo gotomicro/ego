@@ -108,12 +108,15 @@ func (c *Container) Build(options ...Option) *Component {
 		server.Use(timeoutMiddleware(c.config.ContextTimeout))
 	}
 
-	//if c.config.EnableMetricInterceptor {
+	// if c.config.EnableMetricInterceptor {
 	//	server.Use(metricServerInterceptor())
-	//}
+	// }
+	if len(c.config.customGinMiddleware) > 0 {
+		server.Use(c.config.customGinMiddleware...)
+	}
 
 	if c.config.EnableTraceInterceptor && etrace.IsGlobalTracerRegistered() {
-		server.Use(traceServerInterceptor())
+		server.Use(traceServerInterceptor(c.config.compatibleTrace))
 	}
 
 	if c.config.EnableSentinel {
