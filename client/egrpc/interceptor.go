@@ -174,7 +174,6 @@ func (w *clientStream) SendMsg(m interface{}) error {
 
 func (w *clientStream) Header() (metadata.MD, error) {
 	md, err := w.ClientStream.Header()
-
 	if err != nil {
 		w.sendStreamEvent(errorEvent, err)
 	}
@@ -184,7 +183,6 @@ func (w *clientStream) Header() (metadata.MD, error) {
 
 func (w *clientStream) CloseSend() error {
 	err := w.ClientStream.CloseSend()
-
 	if err != nil {
 		w.sendStreamEvent(errorEvent, err)
 	}
@@ -310,15 +308,17 @@ func (c *Container) timeoutUnaryClientInterceptor() grpc.UnaryClientInterceptor 
 
 // loggerUnaryClientInterceptor returns log interceptor for logging
 func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		beg := time.Now()
-		loggerKeys := transport.CustomContextKeys()
+	return func(ctx context.Context, method string, req, res interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
+		var beg = time.Now()
 		var fields []elog.Field
+		var event = "normal"
+		var isSlowLog = false
 
 		if c.config.EnableAccessInterceptor {
 			fields = make([]elog.Field, 0, 20+transport.CustomContextKeysLength())
 		}
 
+		loggerKeys := transport.CustomContextKeys()
 		for _, key := range loggerKeys {
 			if value := tools.ContextValue(ctx, key); value != "" {
 				// 替换context
@@ -332,19 +332,19 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 			}
 		}
 
-		err := invoker(ctx, method, req, res, cc, opts...)
+		err = invoker(ctx, method, req, res, cc, opts...)
 		cost := time.Since(beg)
-		isSlowLog := false
 		if c.config.SlowLogThreshold > time.Duration(0) && cost > c.config.SlowLogThreshold {
 			isSlowLog = true
+			event = "slow"
 		}
 		// 开启了AccessInterceptor或发生错误时记日志
 		if c.config.EnableAccessInterceptor || err != nil || isSlowLog {
 			spbStatus := ecode.Convert(err)
 			httpStatusCode := ecode.GrpcToHTTPStatusCode(spbStatus.Code())
-			event := "normal"
 			fields = append(fields,
 				elog.FieldKey("unary"),
+				elog.FieldEvent(event),
 				elog.FieldCode(int32(spbStatus.Code())),
 				elog.FieldUniformCode(int32(httpStatusCode)),
 				elog.FieldDescription(spbStatus.Message()),
@@ -373,30 +373,25 @@ func (c *Container) loggerUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 
 			// err != nil，rpc处理报错时，记录额外的错误信息
 			if err != nil {
-				fields = append(fields, elog.FieldEvent(event), elog.FieldErr(err))
+				fields = append(fields, elog.FieldErr(err))
 				// 只记录系统级别错误
 				if httpStatusCode >= http.StatusInternalServerError {
 					// 只记录系统级别错误
 					c.logger.Error("access", fields...)
-					return err
+				} else {
+					// 业务报错只做warning
+					c.logger.Warn("access", fields...)
 				}
-				// 业务报错只做warning
-				c.logger.Warn("access", fields...)
-				return err
-			}
-
-			if isSlowLog {
+			} else if isSlowLog {
 				// isSlowLog == true，表示为慢日志时，记录日志
-				fields = append(fields, elog.FieldEvent("slow"))
 				c.logger.Warn("access", fields...)
 			} else {
 				// c.config.EnableAccessInterceptor == true，表示开启了记录Access日志时，记录日志
-				fields = append(fields, elog.FieldEvent(event))
 				c.logger.Info("access", fields...)
 			}
 		}
 
-		return nil
+		return err
 	}
 }
 
