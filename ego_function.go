@@ -38,14 +38,14 @@ func (e *Ego) waitSignals() {
 	sig := make(chan os.Signal, 2)
 	signal.Notify(
 		sig,
-		append(e.opts.shutdownSignals, syscall.SIGUSR1)...,
+		append(e.opts.shutdownSignals, ReloadSignal)...,
 	)
 
 	go func() {
 		s := <-sig
 		// 区分强制退出、优雅退出
 		grace := s != syscall.SIGQUIT
-		reload := s == syscall.SIGUSR1
+		reload := s == ReloadSignal
 		go func() {
 			// todo 父节点传context待考虑
 			e.stopInfo = stopInfo{
