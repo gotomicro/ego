@@ -122,9 +122,39 @@ func WithListener(listener net.Listener) Option {
 	}
 }
 
+func WithEmbedPath(embedPath string) Option {
+	return func(c *Container) {
+		c.config.EmbedPath = embedPath
+	}
+}
+
+func WithAccessInterceptorReqResFilter(accessInterceptorReqResFilter string) Option {
+	return func(c *Container) {
+		c.config.AccessInterceptorReqResFilter = accessInterceptorReqResFilter
+	}
+}
+
 func WithCompatibleOtherTrace(f func(http.Header)) Option {
 	return func(c *Container) {
 		c.config.compatibleTrace = f
+	}
+}
+
+func WithEnableAccessInterceptor(enableAccessInterceptor bool) Option {
+	return func(c *Container) {
+		c.config.EnableAccessInterceptor = enableAccessInterceptor
+	}
+}
+
+func WithEnableAccessInterceptorReq(enableAccessInterceptorReq bool) Option {
+	return func(c *Container) {
+		c.config.EnableAccessInterceptorReq = enableAccessInterceptorReq
+	}
+}
+
+func WithEnableAccessInterceptorRes(enableAccessInterceptorRes bool) Option {
+	return func(c *Container) {
+		c.config.EnableAccessInterceptorRes = enableAccessInterceptorRes
 	}
 }
 
