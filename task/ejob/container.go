@@ -75,8 +75,10 @@ func Job(name string, startFunc func(Context) error) *Component {
 	return comp
 }
 
+var Handle = http.HandlerFunc(handleFunc)
+
 // Handle ...
-func Handle(w http.ResponseWriter, r *http.Request) {
+func handleFunc(w http.ResponseWriter, r *http.Request) {
 	jobName := r.Header.Get("X-Ego-Job-Name")
 	if jobName == "" {
 		w.Header().Set("X-Ego-Job-Err", "jobName not exist")

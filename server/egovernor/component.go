@@ -8,20 +8,20 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"runtime"
 	"runtime/debug"
 
+	"github.com/felixge/fgprof"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/gotomicro/ego/core/econf"
-	"github.com/gotomicro/ego/task/ejob"
-
-	"github.com/felixge/fgprof"
 	"github.com/gotomicro/ego/core/constant"
 	"github.com/gotomicro/ego/core/eapp"
+	"github.com/gotomicro/ego/core/econf"
 	"github.com/gotomicro/ego/core/elog"
 	"github.com/gotomicro/ego/server"
+	"github.com/gotomicro/ego/task/ejob"
 )
 
 var (
@@ -87,7 +87,7 @@ func init() {
 		}
 		_ = jsoniter.NewEncoder(w).Encode(serverStats)
 	})
-	HandleFunc("/jobs", ejob.Handle)
+	HandleFuncV2("/jobs", ejob.Handle)
 	HandleFunc("/job/list", ejob.HandleJobList)
 }
 
@@ -186,4 +186,24 @@ func HandleFunc(pattern string, handler http.HandlerFunc) {
 	// todo: 增加安全管控
 	DefaultServeMux.HandleFunc(pattern, handler)
 	routes = append(routes, pattern)
+}
+
+// v2 use http.Handler interface instead of http.HandlerFunc
+func HandleFuncV2(pattern string, handler http.Handler) {
+	DefaultServeMux.Handle(pattern, withRecover(handler))
+	routes = append(routes, pattern)
+}
+
+func withRecover(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				const size = 64 << 10
+				buf := make([]byte, size)
+				buf = buf[:runtime.Stack(buf, false)]
+				elog.Error("panic while serving request", elog.FieldType("recover"), elog.FieldErrAny(err), elog.FieldStack(buf))
+			}
+		}()
+		handler.ServeHTTP(w, r)
+	})
 }
