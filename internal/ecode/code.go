@@ -2,6 +2,7 @@ package ecode
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"google.golang.org/grpc/codes"
@@ -20,10 +21,9 @@ func Convert(err error) *status.Status {
 		return se.GRPCStatus()
 	}
 
-	switch err {
-	case context.DeadlineExceeded:
+	if errors.Is(err, context.DeadlineExceeded) {
 		return status.New(codes.DeadlineExceeded, err.Error())
-	case context.Canceled:
+	} else if errors.Is(err, context.Canceled) {
 		return status.New(codes.Canceled, err.Error())
 	}
 
