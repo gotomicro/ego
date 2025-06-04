@@ -299,16 +299,15 @@ func (e *Ego) Stop(ctx context.Context, isGraceful, isReload bool) (err error) {
 			e.logger.Info("[ego] ... done!", elog.FieldComponent("app"))
 		}
 
-		e.logger.Info("[ego] ... reloadServers start!", elog.FieldComponent("app"))
-
 		for _, s := range e.reloadServers {
+			e.logger.Info("[ego] ... reloadServers start!", elog.FieldComponent("app"), elog.String("name", s.Info().Name))
 			func(s server.ReloadServer) {
 				e.cycle.Run(func() error {
 					return s.GracefulStop(ctx)
 				})
 			}(s)
+			e.logger.Info("[ego] ... reloadServers done!", elog.FieldComponent("app"), elog.String("name", s.Info().Name))
 		}
-		e.logger.Info("[ego] ... reloadServers done!", elog.FieldComponent("app"))
 
 	} else {
 		for _, s := range e.servers {
