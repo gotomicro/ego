@@ -40,4 +40,6 @@ const (
 	EgoDefaultConfigExt = "EGO_DEFAULT_CONFIG_EXT"
 	// EgoDeploymentEnv defines deployment environment, such as "k8s", "ecs"
 	EgoDeploymentEnv = "EGO_DEPLOYMENT_ENV"
+	// EgoHeaderExpose header expose, default value is "x-expose"
+	EgoHeaderExpose = "EGO_HEADER_EXPOSE"
 )
