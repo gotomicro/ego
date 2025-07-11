@@ -157,6 +157,11 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 			for _, key := range loggerKeys {
 				if value := tools.ContextValue(ctx.Request.Context(), key); value != "" {
 					fields = append(fields, elog.FieldCustomKeyValue(key, value))
+					// x-expose 需要在这里获取
+					if strings.HasPrefix(key, eapp.EgoHeaderExpose()) {
+						// 设置到ctx response header
+						ctx.Writer.Header().Set(key, value)
+					}
 				}
 			}
 

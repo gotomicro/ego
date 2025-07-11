@@ -22,6 +22,7 @@ var (
 	egoGovernorEnableConfig string
 	egoLogTimeType          string
 	egoLogEnableAddCaller   bool
+	egoHeaderExpose         string
 )
 
 func initEnv() {
@@ -43,6 +44,7 @@ func initEnv() {
 		egoLogTimeType = "%Y-%m-%d %H:%M:%S"
 	}
 	egoLogEnableAddCaller = ienv.EnvOrBool(constant.EgoLogEnableAddCaller, false)
+	egoHeaderExpose = ienv.EnvOrStr(constant.EgoHeaderExpose, "x-expose")
 }
 
 // AppMode returns application running mode.
@@ -113,4 +115,8 @@ func SetEgoDebug(flag string) {
 // EgoLogEnableAddCaller ...
 func EgoLogEnableAddCaller() bool {
 	return egoLogEnableAddCaller
+}
+
+func EgoHeaderExpose() string {
+	return egoHeaderExpose
 }
