@@ -44,7 +44,7 @@ func initEnv() {
 		egoLogTimeType = "%Y-%m-%d %H:%M:%S"
 	}
 	egoLogEnableAddCaller = ienv.EnvOrBool(constant.EgoLogEnableAddCaller, false)
-	egoHeaderExpose = ienv.EnvOrStr(constant.EgoHeaderExpose, "x-expose")
+	egoHeaderExpose = ienv.EnvOrStr(constant.EgoHeaderExpose, "x-res-cost-")
 }
 
 // AppMode returns application running mode.

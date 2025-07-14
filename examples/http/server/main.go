@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gotomicro/ego"
 	"github.com/gotomicro/ego/core/elog"
+	"github.com/gotomicro/ego/core/transport"
 	"github.com/gotomicro/ego/server/egin"
 )
 
@@ -13,6 +15,11 @@ import (
 func main() {
 	if err := ego.New().Serve(func() *egin.Component {
 		server := egin.Load("server.http").Build()
+		server.Use(func(c *gin.Context) {
+			c.Header("haha1", "haha")
+			c.Next()
+			c.Header("haha2", "haha")
+		})
 
 		server.GET("/panic", func(ctx *gin.Context) {
 			<-ctx.Request.Context().Done()
@@ -26,6 +33,8 @@ func main() {
 		})
 
 		server.GET("/hello", func(ctx *gin.Context) {
+			transport.SetHeaderKeys([]string{"x-expose-1"})
+			ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), "x-expose-1", "expose-1"))
 			ctx.JSON(200, "Hello client: "+ctx.GetHeader("app"))
 		})
 		server.POST("/hello", func(ctx *gin.Context) {
