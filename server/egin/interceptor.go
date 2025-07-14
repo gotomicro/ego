@@ -160,16 +160,6 @@ func (c *Container) defaultServerInterceptor() gin.HandlerFunc {
 				}
 			}
 
-			for _, key := range transport.CustomHeaderKeys() {
-				if value := tools.ContextValue(ctx.Request.Context(), key); value != "" {
-					// x-expose 需要在这里获取
-					if strings.HasPrefix(key, eapp.EgoHeaderExpose()) {
-						// 设置到ctx response header
-						ctx.Writer.Header().Set(key, value)
-					}
-				}
-			}
-
 			if etrace.IsGlobalTracerRegistered() {
 				fields = append(fields, elog.FieldTid(etrace.ExtractTraceID(ctx.Request.Context())))
 			}
