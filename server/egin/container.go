@@ -104,7 +104,7 @@ func (c *Container) Build(options ...Option) *Component {
 	server := newComponent(c.name, c.config, c.logger)
 	server.Use(healthcheck.Default())
 	server.Use(c.defaultServerInterceptor())
-	server.Use(NewXResCostTimer)
+	server.Use(NewXResCostTimer(c.config.EnableResHeaderApp))
 	if c.config.ContextTimeout > 0 {
 		server.Use(timeoutMiddleware(c.config.ContextTimeout))
 	}

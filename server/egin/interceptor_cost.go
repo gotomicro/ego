@@ -14,8 +14,9 @@ import (
 // XResCostTimer wrap gin reponse writer add start time
 type XResCostTimer struct {
 	gin.ResponseWriter
-	start  time.Time
-	ginCtx *gin.Context
+	start           time.Time
+	ginCtx          *gin.Context
+	enableHeaderApp bool
 }
 
 // 如果写入header，需要这么处理
@@ -23,7 +24,11 @@ type XResCostTimer struct {
 func (w *XResCostTimer) WriteHeader(statusCode int) {
 	// header必须在c.json响应。
 	cost := float64(time.Since(w.start).Microseconds()) / 1000
-	w.Header().Set(eapp.EgoHeaderExpose()+"time", strconv.FormatFloat(cost, 'f', -1, 64))
+	if w.enableHeaderApp {
+		w.Header().Set(eapp.EgoHeaderExpose()+"time", strconv.FormatFloat(cost, 'f', -1, 64)+"|"+strconv.Itoa(statusCode))
+	} else {
+		w.Header().Set(eapp.EgoHeaderExpose()+"time", strconv.FormatFloat(cost, 'f', -1, 64))
+	}
 	for _, key := range transport.CustomHeaderKeys() {
 		if value := cast.ToString(w.ginCtx.Request.Context().Value(key)); value != "" {
 			// x-expose 需要在这里获取
@@ -41,12 +46,26 @@ func (w *XResCostTimer) Write(b []byte) (int, error) {
 }
 
 // NewXResCostTimer middleware to add X-Res-Cost-Time
-func NewXResCostTimer(c *gin.Context) {
-	blw := &XResCostTimer{
-		ResponseWriter: c.Writer,
-		start:          time.Now(),
-		ginCtx:         c,
+//func NewXResCostTimer(c *gin.Context) {
+//	blw := &XResCostTimer{
+//		ResponseWriter: c.Writer,
+//		start:          time.Now(),
+//		ginCtx:         c,
+//	}
+//	c.Writer = blw
+//	c.Next()
+//}
+
+// NewXResCostTimer middleware to add X-Res-Cost-Time
+func NewXResCostTimer(enableHeaderApp bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		blw := &XResCostTimer{
+			ResponseWriter:  c.Writer,
+			start:           time.Now(),
+			ginCtx:          c,
+			enableHeaderApp: enableHeaderApp,
+		}
+		c.Writer = blw
+		c.Next()
 	}
-	c.Writer = blw
-	c.Next()
 }
