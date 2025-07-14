@@ -25,7 +25,7 @@ func (w *XResCostTimer) WriteHeader(statusCode int) {
 	// header必须在c.json响应。
 	cost := float64(time.Since(w.start).Microseconds()) / 1000
 	if w.enableHeaderApp {
-		w.Header().Set(eapp.EgoHeaderExpose()+"time", strconv.FormatFloat(cost, 'f', -1, 64)+"|"+strconv.Itoa(statusCode))
+		w.Header().Set(eapp.EgoHeaderExpose()+"time", strconv.FormatFloat(cost, 'f', -1, 64)+"|"+eapp.Name())
 	} else {
 		w.Header().Set(eapp.EgoHeaderExpose()+"time", strconv.FormatFloat(cost, 'f', -1, 64))
 	}
