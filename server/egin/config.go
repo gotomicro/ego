@@ -31,6 +31,7 @@ type Config struct {
 	EnableTraceInterceptor        bool          // 是否开启链路追踪，默认开启
 	EnableLocalMainIP             bool          // 自动获取ip地址
 	EnableResHeaderApp            bool          // header展示APP Name
+	EnableResHeaderError          bool          // 是否开启错误响应头，默认不开启
 	SlowLogThreshold              time.Duration // 服务慢日志，默认500ms
 	EnableAccessInterceptor       bool          // 是否开启，记录请求数据
 	EnableAccessInterceptorReq    bool          // 是否开启记录请求参数，默认不开启
@@ -76,7 +77,8 @@ func DefaultConfig() *Config {
 		EnableAccessInterceptor:       true,
 		EnableTraceInterceptor:        true,
 		EnableMetricInterceptor:       true,
-		EnableResHeaderApp:            true,
+		EnableResHeaderApp:            false,
+		EnableResHeaderError:          false,
 		AccessInterceptorReqMaxLength: 4096,
 		AccessInterceptorResMaxLength: 4096,
 		EnableSentinel:                true,
