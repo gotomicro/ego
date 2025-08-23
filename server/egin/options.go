@@ -163,3 +163,10 @@ func WithCustomGinMiddleware(f ...gin.HandlerFunc) Option {
 		c.config.customGinMiddleware = f
 	}
 }
+
+// EnableResHeaderError
+func WithEnableResHeaderError(enableResHeaderError bool) Option {
+	return func(c *Container) {
+		c.config.EnableResHeaderError = enableResHeaderError
+	}
+}
