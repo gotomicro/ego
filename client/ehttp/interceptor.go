@@ -73,8 +73,12 @@ func logAccess(name string, config *Config, logger *elog.Component, req *resty.R
 	if config.EnableAccessInterceptor {
 		if config.EnableAccessInterceptorReq {
 			fields = append(fields, elog.Any("req", map[string]any{
-				"metadata": req.Header,
-				"payload":  req.Body,
+				"metadata":      req.Header,
+				"payload":       req.Body,
+				"queryParam":    req.QueryParam,
+				"formData":      req.FormData,
+				"pathParams":    req.PathParams,
+				"rawPathParams": req.RawPathParams,
 			}))
 		}
 
