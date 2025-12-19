@@ -2,6 +2,12 @@ package otel
 
 import (
 	"context"
+	"os"
+	"regexp"
+	"strings"
+
+	"github.com/spf13/cast"
+	"go.opentelemetry.io/otel/attribute"
 	//lint:ignore SA1019
 	jaegerv2 "go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -17,15 +23,22 @@ import (
 	"github.com/gotomicro/ego/internal/ienv"
 )
 
+type attr struct {
+	Key   string      // attribute 的key
+	Type  string      // attribute 的类型, 可选： bool |  int64 | float64 | string | boolSlice | int64Slice | float64Slice | stringSlice
+	Value interface{} // attribute 的值，需要与类型向匹配，支持通过$操作符读取环境变量
+}
+
 // Config ...
 type Config struct {
-	ServiceName  string
-	OtelType     string  // type: otlp ,jaeger
-	Fraction     float64 // 采样率： 默认0不会采集
-	PanicOnError bool
-	options      []tracesdk.TracerProviderOption
-	Jaeger       jaegerConfig // otel jaeger 配置
-	Otlp         otlpConfig   // otel otlp 配置
+	ServiceName       string                          // 服务名
+	OtelType          string                          // type: otlp ,jaeger
+	Fraction          float64                         // 采样率： 默认0不会采集
+	PanicOnError      bool                            // 异常处理模式
+	DefaultAttributes []attr                          // 默认attributes
+	options           []tracesdk.TracerProviderOption // 额外的traceProviderOptions
+	Jaeger            jaegerConfig                    // otel jaeger 配置
+	Otlp              otlpConfig                      // otel otlp 配置
 }
 
 // otlpConfig otlp上报协议配置
@@ -135,19 +148,101 @@ func (config *Config) buildJaegerTP() trace.TracerProvider {
 	if err != nil {
 		return nil
 	}
+
+	extraDefaultAttributes := generateDefaultAttributes(config.ServiceName, config.DefaultAttributes...)
 	options := []tracesdk.TracerProviderOption{
 		// Set the sampling rate based on the parent span to 100%
 		tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(config.Fraction))),
 		// Always be sure to batch in production.
 		tracesdk.WithBatcher(exp),
 		// Record information about this application in a Resource.
-		tracesdk.WithResource(resource.NewSchemaless(
-			semconv.ServiceNameKey.String(config.ServiceName),
-		)),
+		tracesdk.WithResource(resource.NewSchemaless(extraDefaultAttributes...)),
 	}
 	options = append(options, config.options...)
 	tp := tracesdk.NewTracerProvider(options...)
 	return tp
+}
+
+// envRgx 是判断某个字符串是否是环境变量的正则表达式
+var envRgx = regexp.MustCompile(`^\$([a-zA-Z_][a-zA-Z0-9_]*)$`)
+
+// resolveVal 检查字符串是否为 $ENV 格式，若是则返回环境变量值，否则返回原值
+func resolveVal(val string) string {
+	// 快速判断，减少正则开销（可选）
+	if !strings.HasPrefix(val, "$") {
+		return val
+	}
+
+	match := envRgx.FindStringSubmatch(val)
+	if len(match) <= 1 {
+		return val
+	}
+
+	envVal := os.Getenv(match[1])
+	// 注意：如果环境变量为空，则返回原val
+	if envVal == "" {
+		return val
+	}
+
+	return envVal
+}
+
+// generateDefaultAttributes 生成默认的attributes
+func generateDefaultAttributes(serviceName string, attrs ...attr) []attribute.KeyValue {
+	res := make([]attribute.KeyValue, 0, len(attrs)+1)
+	res = append(res, semconv.ServiceNameKey.String(serviceName))
+	// 目前仅支持对bool\int64\float64\string这四种类型的val尝试从环境变量取值
+	for _, a := range attrs {
+		switch a.Type {
+		case "bool":
+			val := resolveVal(cast.ToString(a.Value))
+			res = append(res, attribute.KeyValue{
+				Key:   attribute.Key(a.Key),
+				Value: attribute.BoolValue(cast.ToBool(val)),
+			})
+		case "int64":
+			val := resolveVal(cast.ToString(a.Value))
+			res = append(res, attribute.KeyValue{
+				Key:   attribute.Key(a.Key),
+				Value: attribute.Int64Value(cast.ToInt64(val)),
+			})
+		case "float64":
+			val := resolveVal(cast.ToString(a.Value))
+			res = append(res, attribute.KeyValue{
+				Key:   attribute.Key(a.Key),
+				Value: attribute.Float64Value(cast.ToFloat64(val)),
+			})
+		case "string":
+			val := resolveVal(cast.ToString(a.Value))
+			res = append(res, attribute.KeyValue{
+				Key:   attribute.Key(a.Key),
+				Value: attribute.StringValue(val),
+			})
+		case "boolSlice":
+			res = append(res, attribute.KeyValue{
+				Key:   attribute.Key(a.Key),
+				Value: attribute.BoolSliceValue(a.Value.([]bool)),
+			})
+		case "int64Slice":
+			res = append(res, attribute.KeyValue{
+				Key:   attribute.Key(a.Key),
+				Value: attribute.Int64SliceValue(a.Value.([]int64)),
+			})
+		case "float64Slice":
+			res = append(res, attribute.KeyValue{
+				Key:   attribute.Key(a.Key),
+				Value: attribute.Float64SliceValue(a.Value.([]float64)),
+			})
+		case "stringSlice":
+			res = append(res, attribute.KeyValue{
+				Key:   attribute.Key(a.Key),
+				Value: attribute.StringSliceValue(a.Value.([]string)),
+			})
+		default:
+			elog.Panic("otel attribute type error", elog.String("key", a.Key), elog.String("type", a.Type), elog.Any("value", a.Value))
+		}
+	}
+	return res
 }
 
 func (config *Config) buildOtlpTP() trace.TracerProvider {
@@ -181,13 +276,11 @@ func (config *Config) buildOtlpTP() trace.TracerProvider {
 	}
 
 	// res
+	extraDefaultAttributes := generateDefaultAttributes(config.ServiceName, config.DefaultAttributes...)
 	resOptions := []resource.Option{
 		resource.WithTelemetrySDK(), // WithTelemetrySDK adds TelemetrySDK version info to the configured resource.
 		resource.WithHost(),         // WithHost adds attributes from the host to the configured resource.
-		resource.WithAttributes(
-			// the service name used to display traces in backends
-			semconv.ServiceNameKey.String(config.ServiceName),
-		),
+		resource.WithAttributes(extraDefaultAttributes...),
 	}
 	resOptions = append(resOptions, config.Otlp.resOptions...)
 	res, err := resource.New(ctx, resOptions...)
