@@ -105,7 +105,7 @@ func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *proto
 			comment = v.Comments.Trailing.String()
 		}
 
-		upperCamelValue := strcase.ToCamel(strings.ToLower(desc))
+		upperCamelValue := strcase.ToCamel(desc)
 		comment = buildComment(upperCamelValue, comment)
 		camelCode, ok := strToCode[eCode.val]
 		if !ok {
@@ -115,8 +115,8 @@ func generationErrorsSection(gen *protogen.Plugin, file *protogen.File, g *proto
 		err := &errorInfo{
 			Name:            string(enum.Desc.Name()),
 			Value:           desc,
-			UpperCamelValue: strcase.ToCamel(strings.ToLower(desc)),
-			LowerCamelValue: strcase.ToLowerCamel(strings.ToLower(desc)),
+			UpperCamelValue: upperCamelValue,
+			LowerCamelValue: strcase.ToLowerCamel(desc),
 			Code:            camelCode,
 			Key:             string(v.Desc.FullName()),
 			Comment:         comment,
