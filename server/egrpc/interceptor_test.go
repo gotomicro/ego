@@ -246,7 +246,9 @@ func TestCtxStoreSet(t *testing.T) {
 	CtxStore := Ctx.Value(ctxStoreStruct{}).(*ctxStore)
 	assert.NotNil(t, CtxStore)
 	CtxStoreSet(Ctx, "hello", "world")
+	CtxStore.mu.RLock()
 	storeValue, out := CtxStore.kvs["hello"]
+	CtxStore.mu.RUnlock()
 	assert.Equal(t, "world", storeValue)
 	assert.True(t, true, out)
 }

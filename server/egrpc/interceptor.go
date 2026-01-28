@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	sentinel "github.com/alibaba/sentinel-golang/api"
@@ -246,6 +247,7 @@ func (c *Container) prometheusStreamServerInterceptor(ss grpc.ServerStream, info
 }
 
 type ctxStore struct {
+	mu  sync.RWMutex
 	kvs map[string]any
 }
 
@@ -255,7 +257,9 @@ type ctxStoreStruct struct{}
 func CtxStoreSet(ctx context.Context, k string, v any) {
 	skv, ok := ctx.Value(ctxStoreStruct{}).(*ctxStore)
 	if ok {
+		skv.mu.Lock()
 		skv.kvs[k] = v
+		skv.mu.Unlock()
 	}
 }
 
@@ -336,7 +340,10 @@ func (c *Container) defaultUnaryServerInterceptor() grpc.UnaryServerInterceptor 
 			skv, skvOk := ctx.Value(ctxStoreStruct{}).(*ctxStore)
 			for _, key := range loggerKeys {
 				if skvOk {
-					if v, ok := skv.kvs[key]; ok {
+					skv.mu.RLock()
+					v, ok := skv.kvs[key]
+					skv.mu.RUnlock()
+					if ok {
 						fields = append(fields, elog.Any(strings.ToLower(key), v))
 					}
 				}
